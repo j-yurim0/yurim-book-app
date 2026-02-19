@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>나만의 독서 기록장 (Cloud + Camera)</title>
+    <title>나만의 독서 기록장</title>
     <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/ridibatang/1.0.0/ridibatang.min.css">
     
@@ -37,7 +37,7 @@
         .btn-logout { position: absolute; top: 20px; right: 20px; font-size: 0.8rem; color: #999; background: none; border: none; cursor: pointer; text-decoration: underline; }
         .btn-reset-all { position: absolute; top: 20px; left: 20px; font-size: 0.8rem; color: #999; background: none; border: none; cursor: pointer; text-decoration: underline; }
 
-        /* 스타일 (기존 유지) */
+        /* 스타일 */
         .home-search-box { margin: 0 20px 20px; background: white; border: 2px solid var(--primary-color); border-radius: 12px; padding: 10px; display: flex; align-items: center; box-shadow: 0 4px 10px rgba(93, 64, 55, 0.1); }
         .search-input { flex: 1; border: none; outline: none; font-size: 1rem; padding: 5px; }
         .btn-camera { font-size: 1.5rem; background: none; border: none; cursor: pointer; padding: 5px; }
@@ -122,13 +122,6 @@
         .btn-delete-red { background: #ffebee; color: #d32f2f; border: 1px solid #d32f2f; padding: 10px; border-radius: 5px; width: 100%; margin-top: 20px; cursor: pointer; font-weight: bold; }
         #scanner-container { width: 100%; height: 250px; background: black; overflow: hidden; position: relative; }
         #scanner-video { width: 100%; height: 100%; object-fit: cover; }
-        
-        /* [NEW] OCR 모달 */
-        #ocr-container { width: 100%; height: 300px; background: black; position: relative; overflow: hidden; border-radius: 10px;}
-        #ocr-video { width: 100%; height: 100%; object-fit: cover; }
-        #ocr-canvas { display: none; }
-        .btn-capture { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); width: 60px; height: 60px; background: white; border-radius: 50%; border: 4px solid #ddd; cursor: pointer; }
-        .ocr-loading { position: absolute; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); color:white; display:flex; justify-content:center; align-items:center; z-index:10; font-weight:bold; display:none; }
     </style>
 </head>
 <body>
@@ -275,25 +268,10 @@
             <select id="qBook" style="padding:8px; border:1px solid #ccc; border-radius:5px;"></select>
             <input type="number" id="qPage" placeholder="페이지 (선택)" style="padding:8px; border:1px solid #ccc; border-radius:5px;">
             <textarea id="qText" rows="4" placeholder="문장을 입력하세요" style="padding:8px; border:1px solid #ccc; border-radius:5px;"></textarea>
-            <button onclick="openOCR()" style="margin-top:5px; background:#eee; border:none; padding:8px; border-radius:5px; cursor:pointer;">📷 글자 스캔 (OCR)</button>
-            
             <div style="display:flex; gap:10px; margin-top:10px;">
                 <button onclick="document.getElementById('quoteModal').style.display='none'" style="flex:1; padding:10px; background:#eee; border:none; border-radius:5px;">취소</button>
                 <button onclick="saveQuote()" style="flex:1; padding:10px; background:var(--primary-color); color:white; border:none; border-radius:5px;">저장</button>
             </div>
-        </div>
-    </div>
-
-    <div id="ocrModal" class="modal-overlay">
-        <div class="modal-box" style="max-width:500px;">
-            <h3>📷 문장 스캔</h3>
-            <div id="ocr-container">
-                <video id="ocr-video" autoplay playsinline></video>
-                <canvas id="ocr-canvas"></canvas>
-                <div class="ocr-loading" id="ocrLoading">분석 중...</div>
-                <button class="btn-capture" onclick="captureAndRecognize()"></button>
-            </div>
-            <button onclick="closeOCR()" style="padding:10px; background:#eee; border:none; border-radius:5px; width:100%; margin-top:10px;">닫기</button>
         </div>
     </div>
 
@@ -318,12 +296,13 @@
     </div>
 
     <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
-    <script src='https://unpkg.com/tesseract.js@v2.1.0/dist/tesseract.min.js'></script> <script type="module">
+    <script type="module">
+        // ================= FIREBASE 설정 =================
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
         import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
         import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
 
-        // ★ Firebase Config ★
+        // ★ 여기를 본인의 Firebase 설정으로 바꿔주세요! ★
         const firebaseConfig = {
             apiKey: "AIzaSyCfalVdpUZ0YaFjt6_gaOBvq1TeIzb40eg",
             authDomain: "book-yum-5babd.firebaseapp.com",
@@ -332,6 +311,7 @@
             messagingSenderId: "131924542195",
             appId: "1:131924542195:web:a6f959517f002c0ca86d86"
         };
+        // ==============================================
 
         let dbRef = null;
         let auth = null;
@@ -341,10 +321,11 @@
             const firestore = getFirestore(app);
             auth = getAuth(app);
 
+            // Auth 상태 감지 (자동 로그인)
             onAuthStateChanged(auth, (user) => {
                 if (user) {
                     console.log("Logged in:", user.email);
-                    dbRef = doc(firestore, "users", user.uid);
+                    dbRef = doc(firestore, "users", user.uid); // 유저별 DB 경로
                     document.getElementById('auth-screen').style.display = 'none';
                     document.getElementById('app-container').style.display = 'block';
                     loadData();
@@ -355,10 +336,13 @@
                 }
             });
 
+            // 전역 함수로 등록 (HTML onclick에서 쓰기 위해)
             window.handleLogin = async () => {
                 const email = document.getElementById('login-email').value;
                 const pw = document.getElementById('login-pw').value;
-                try { await signInWithEmailAndPassword(auth, email, pw); } catch(e) { alert("로그인 실패: " + e.message); }
+                try {
+                    await signInWithEmailAndPassword(auth, email, pw);
+                } catch(e) { alert("로그인 실패: " + e.message); }
             };
 
             window.handleSignup = async () => {
@@ -366,22 +350,23 @@
                 const pw = document.getElementById('signup-pw').value;
                 try {
                     await createUserWithEmailAndPassword(auth, email, pw);
-                    alert("회원가입 성공!");
+                    alert("회원가입 성공! 자동 로그인됩니다.");
                 } catch(e) { alert("가입 실패: " + e.message); }
             };
 
             window.handleLogout = async () => {
                 if(confirm("로그아웃 하시겠습니까?")) {
                     await signOut(auth);
-                    window.db = { reading: [], library: [], wish: [], toread: [], quotes: [], logs: [] };
+                    window.db = { reading: [], library: [], wish: [], toread: [], quotes: [], logs: [] }; // 초기화
                 }
             };
 
         } catch(e) {
             console.error("Firebase Init Error:", e);
-            alert("설정 확인 필요");
+            alert("파이어베이스 설정이 필요합니다. 코드를 확인해주세요.");
         }
 
+        // 전역 변수
         window.API_KEY = 'AIzaSyB9SjdXwflGS-oUZfmaVGE1vWhBEahY4L0';
         window.db = { reading: [], library: [], wish: [], toread: [], quotes: [], logs: [] };
         
@@ -411,13 +396,18 @@
         let currentAction = null;
         let targetIndex = null;
         let html5QrcodeScanner = null;
-        let ocrStream = null; // OCR용 비디오 스트림
 
         function initUI() { renderHome(); renderCalendar(); renderQuotesList(); renderStats(); }
         
+        // 로그인/가입 화면 전환
         function switchAuthMode(mode) {
-            document.getElementById('login-form').style.display = mode === 'signup' ? 'none' : 'block';
-            document.getElementById('signup-form').style.display = mode === 'signup' ? 'block' : 'none';
+            if(mode === 'signup') {
+                document.getElementById('login-form').style.display = 'none';
+                document.getElementById('signup-form').style.display = 'block';
+            } else {
+                document.getElementById('login-form').style.display = 'block';
+                document.getElementById('signup-form').style.display = 'none';
+            }
         }
 
         function switchTab(id, el) {
@@ -446,46 +436,6 @@
         function closeScanner() {
             if(html5QrcodeScanner) html5QrcodeScanner.stop().then(() => document.getElementById('scannerModal').style.display = 'none').catch(console.log);
             else document.getElementById('scannerModal').style.display = 'none';
-        }
-
-        // --- OCR (문장 스캔) ---
-        function openOCR() {
-            document.getElementById('ocrModal').style.display = 'flex';
-            const video = document.getElementById('ocr-video');
-            navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
-                .then(stream => { ocrStream = stream; video.srcObject = stream; })
-                .catch(err => alert("카메라 권한이 필요합니다."));
-        }
-        
-        function closeOCR() {
-            document.getElementById('ocrModal').style.display = 'none';
-            if(ocrStream) { ocrStream.getTracks().forEach(track => track.stop()); ocrStream = null; }
-        }
-
-        function captureAndRecognize() {
-            const video = document.getElementById('ocr-video');
-            const canvas = document.getElementById('ocr-canvas');
-            const loading = document.getElementById('ocrLoading');
-            
-            canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
-            canvas.getContext('2d').drawImage(video, 0, 0);
-            
-            loading.style.display = 'flex'; // 로딩 표시
-            
-            Tesseract.recognize(
-                canvas,
-                'kor', // 한국어 인식
-                { logger: m => console.log(m) }
-            ).then(({ data: { text } }) => {
-                loading.style.display = 'none';
-                document.getElementById('qText').value += text; // 문장 입력창에 추가
-                closeOCR();
-                alert("텍스트 인식 완료!");
-            }).catch(err => {
-                loading.style.display = 'none';
-                alert("인식 실패: " + err);
-            });
         }
 
         // --- 날짜/수정 모달 ---
