@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>나만의 독서 기록장 (Cloud)</title>
+    <title>나만의 독서 기록장</title>
     <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/ridibatang/1.0.0/ridibatang.min.css">
     
@@ -12,7 +12,6 @@
         * { box-sizing: border-box; }
         body { font-family: var(--font-main); background-color: var(--bg-color); color: #333; margin: 0; padding: 0; max-width: 600px; margin: 0 auto; min-height: 100vh; padding-bottom: 90px; border-left: 1px solid #eee; border-right: 1px solid #eee; position: relative;}
 
-        /* 로그인 화면 */
         #auth-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg-color); z-index: 5000; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 20px; }
         .auth-box { background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 25px rgba(93, 64, 55, 0.15); width: 100%; max-width: 400px; text-align: center; }
         .auth-input { width: 100%; padding: 12px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 1rem; }
@@ -20,13 +19,11 @@
         .auth-switch { margin-top: 20px; font-size: 0.9rem; color: #666; cursor: pointer; text-decoration: underline; }
 
         #app-container { display: none; }
-
         header { padding: 20px; text-align: center; position: relative; }
         h2 { font-family: var(--font-book); color: var(--primary-color); margin: 0; font-size: 1.5rem; }
         .btn-logout { position: absolute; top: 20px; right: 20px; font-size: 0.8rem; color: #999; background: none; border: none; cursor: pointer; text-decoration: underline; }
         .btn-reset-all { position: absolute; top: 20px; left: 20px; font-size: 0.8rem; color: #999; background: none; border: none; cursor: pointer; text-decoration: underline; }
 
-        /* 스타일 */
         .home-search-box { margin: 0 20px 20px; background: white; border: 2px solid var(--primary-color); border-radius: 12px; padding: 10px; display: flex; align-items: center; box-shadow: 0 4px 10px rgba(93, 64, 55, 0.1); }
         .search-input { flex: 1; border: none; outline: none; font-size: 1rem; padding: 5px; }
         .btn-camera { font-size: 1.5rem; background: none; border: none; cursor: pointer; padding: 5px; }
@@ -69,29 +66,35 @@
         .btn-back-list { background: white; border: 1px solid #ddd; padding: 8px 15px; border-radius: 20px; cursor: pointer; font-weight: bold; color: #555; margin-bottom: 15px;}
         .quote-list-container { margin-top: 10px; }
         .quote-item { background: white; padding: 20px; margin-bottom: 15px; border-radius: 12px; border-left: 4px solid var(--primary-color); box-shadow: 0 2px 5px rgba(0,0,0,0.05); text-align: left;}
+        
+        /* 랭킹 탭 */
         .rank-box { background:white; padding:20px; border-radius:15px; margin-bottom:20px; box-shadow:0 2px 5px rgba(0,0,0,0.05); }
         .rank-title { margin:0 0 15px; font-size: 1.1rem; color: var(--primary-color); font-weight: bold; }
         .rank-row { margin-bottom: 15px; }
         .rank-info { display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 0.95rem; }
         .rank-bar-bg { background: #eee; height: 10px; border-radius: 5px; overflow: hidden; }
         .rank-bar-fill { background: var(--accent-color); height: 100%; border-radius: 5px; width: 0; transition: width 1s; }
+        
         .full-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg-color); z-index: 2000; overflow-y: auto; }
         .search-header { position: sticky; top: 0; background: var(--bg-color); padding: 15px; display: flex; gap: 10px; border-bottom: 1px solid #ddd; z-index: 10; }
         .search-header input { flex: 1; padding: 12px; border: 1px solid #ccc; border-radius: 8px; font-size: 1rem; }
         .result-item { display: flex; gap: 15px; background: white; padding: 15px; margin: 15px; border-radius: 12px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
         .result-actions button { margin-right: 5px; padding: 6px 12px; font-size: 0.8rem; border-radius: 5px; border: none; cursor: pointer; font-weight: bold; }
+        
         .bottom-nav { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 600px; background: white; border-top: 1px solid #ddd; display: flex; justify-content: space-around; padding: 12px 0; z-index: 1000; }
         .nav-item { text-align: center; cursor: pointer; color: #aaa; flex: 1; }
         .nav-item.active { color: var(--primary-color); font-weight: bold; }
         .tab-content { display: none; }
         .tab-content.active { display: block; animation: fadeIn 0.3s; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        
         .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); background: #eee; gap: 1px; border: 1px solid #eee; margin: 0 20px; }
         .cal-day { background: white; min-height: 100px; position: relative; display: flex; }
         .cal-split { flex: 1; height: 100%; overflow: hidden; position: relative; border-right: 1px solid white; }
         .cal-split:last-child { border-right: none; }
         .cal-img { width: 100%; height: 100%; object-fit: cover; }
         .cal-num { position: absolute; top: 3px; left: 3px; font-size: 0.75rem; font-weight: bold; background: rgba(255,255,255,0.8); padding: 0 4px; border-radius: 3px; z-index: 5;}
+        
         .gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 15px; padding: 0 20px 20px; }
         .gallery-item { text-align: center; position: relative; }
         .gallery-item img { width: 100%; height: 140px; object-fit: cover; border-radius: 5px; box-shadow: 2px 2px 5px rgba(0,0,0,0.1); margin-bottom: 5px; }
@@ -99,8 +102,10 @@
         .gallery-author { font-size: 0.75rem; color: #888; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
         .gallery-date { font-size: 0.7rem; color: var(--accent-color); margin-top: 2px; }
         .btn-gal-edit { position: absolute; top: 5px; right: 5px; background: rgba(255,255,255,0.9); color: #333; width: 25px; height: 25px; border-radius: 50%; border: none; cursor: pointer; font-size: 0.8rem; line-height: 25px; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+        
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 3000; justify-content: center; align-items: center; }
         .modal-box { background: white; width: 90%; max-width: 350px; padding: 25px; border-radius: 15px; display: flex; flex-direction: column; gap: 10px; max-height: 80vh; overflow-y: auto;}
+        
         .mystery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 15px; width: 100%; padding: 10px;}
         .mystery-card { background: #fffaf0; padding: 20px; border-radius: 12px; cursor: pointer; font-family: 'RIDIBatang'; font-size: 0.9rem; line-height: 1.5; color: #444; height: 140px; overflow: hidden; position: relative; box-shadow: 0 3px 8px rgba(0,0,0,0.08); border: 1px solid #eee; transition: 0.3s; display: flex; align-items: center; justify-content: center; text-align: center; }
         .mystery-card:hover { transform: translateY(-5px); box-shadow: 0 5px 12px rgba(0,0,0,0.12); background: #fff; }
@@ -110,7 +115,18 @@
         .placeholder-cover { width: 100%; height: 100%; background: #eee; display: flex; align-items: center; justify-content: center; text-align: center; font-size: 0.8rem; color: #555; padding: 5px; font-weight: bold; border-radius: 4px; }
         .btn-delete-red { background: #ffebee; color: #d32f2f; border: 1px solid #d32f2f; padding: 10px; border-radius: 5px; width: 100%; margin-top: 20px; cursor: pointer; font-weight: bold; }
         #scanner-container { width: 100%; height: 250px; background: black; overflow: hidden; position: relative; }
-        #scanner-video { width: 100%; height: 100%; object-fit: cover; }
+
+        /* [NEW] 단어장 탭 전용 스타일 */
+        .voca-input-box { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); margin: 0 20px 20px; }
+        .voca-input { width: 100%; padding: 12px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 1rem; }
+        .btn-dict-search { width: 100%; padding: 10px; background: #03c75a; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 0.9rem; margin-bottom: 10px; display: flex; align-items: center; justify-content: center; gap: 5px;}
+        .voca-filter { display: flex; justify-content: flex-end; padding: 0 20px; margin-bottom: 10px; }
+        .voca-filter select { padding: 5px 10px; border-radius: 5px; border: 1px solid #ccc; outline: none; }
+        .voca-card { background: white; padding: 15px 20px; margin: 0 20px 15px; border-radius: 12px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); position: relative; border-left: 4px solid #8d6e63; }
+        .voca-word { font-weight: bold; font-size: 1.1rem; color: var(--primary-color); margin-bottom: 5px; }
+        .voca-meaning { font-size: 0.9rem; color: #555; line-height: 1.4; }
+        .btn-voca-del { position: absolute; top: 15px; right: 15px; background: none; border: none; color: #ccc; cursor: pointer; font-size: 1.2rem; }
+        .btn-voca-del:hover { color: red; }
     </style>
 </head>
 <body>
@@ -201,6 +217,29 @@
             </div>
         </div>
 
+        <div id="tab-voca" class="tab-content">
+            <div class="section-title" style="margin-top:10px;">
+                <span>🔖 새 단어 추가</span>
+            </div>
+            <div class="voca-input-box">
+                <input type="text" id="vocaWordInput" class="voca-input" placeholder="모르는 단어를 입력하세요">
+                <button class="btn-dict-search" onclick="searchDict()"><span>📗</span> 네이버 사전에서 뜻 찾기</button>
+                <textarea id="vocaMeaningInput" class="voca-input" rows="2" placeholder="찾은 뜻을 붙여넣거나 직접 적어주세요"></textarea>
+                <button onclick="addVoca()" style="width:100%; padding:12px; background:var(--primary-color); color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer;">단어장에 저장</button>
+            </div>
+
+            <div class="section-title">
+                <span>📚 내 단어장</span>
+            </div>
+            <div class="voca-filter">
+                <select id="vocaSortSelect" onchange="renderVoca()">
+                    <option value="latest">최신순</option>
+                    <option value="abc">가나다순</option>
+                </select>
+            </div>
+            <div id="vocaListContainer" style="padding-bottom: 30px;"></div>
+        </div>
+
         <div id="tab-stats" class="tab-content">
             <div style="padding:20px;">
                 <div class="rank-box"><div class="rank-title">🏆 선호 분야 TOP 5</div><div id="rankCategory"></div></div>
@@ -213,6 +252,7 @@
             <div class="nav-item active" onclick="switchTab('home', this)"><span>🏠</span><div style="font-size:0.7rem">홈</div></div>
             <div class="nav-item" onclick="switchTab('calendar', this)"><span>📅</span><div style="font-size:0.7rem">달력</div></div>
             <div class="nav-item" onclick="switchTab('quotes', this)"><span>✏️</span><div style="font-size:0.7rem">문장</div></div>
+            <div class="nav-item" onclick="switchTab('voca', this)"><span>🔖</span><div style="font-size:0.7rem">단어</div></div>
             <div class="nav-item" onclick="switchTab('stats', this)"><span>📊</span><div style="font-size:0.7rem">랭킹</div></div>
         </div>
     </div>
@@ -243,6 +283,14 @@
             <div id="pageInputWrap" style="display:none;">
                 <label style="font-size:0.8rem; color:#666; margin-top:10px; display:block;">읽은 페이지</label>
                 <input type="number" id="pageInput" placeholder="페이지 수" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:5px;">
+            </div>
+
+            <div id="extraEditWrap" style="display:none; margin-top:10px;">
+                <label style="font-size:0.8rem; color:#666; display:block;">출판사 수정 (랭킹 반영)</label>
+                <input type="text" id="editPublisher" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:5px; margin-bottom:10px;">
+                
+                <label style="font-size:0.8rem; color:#666; display:block;">카테고리 수정 (랭킹 반영)</label>
+                <input type="text" id="editCategory" placeholder="소설, 에세이, 자기계발 등" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:5px;">
             </div>
             
             <div style="display:flex; gap:10px; margin-top:15px;">
@@ -288,7 +336,6 @@
 
     <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
     <script type="module">
-        // ================= FIREBASE 설정 =================
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
         import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
         import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
@@ -344,7 +391,7 @@
             window.handleLogout = async () => {
                 if(confirm("로그아웃 하시겠습니까?")) {
                     await signOut(auth);
-                    window.db = { reading: [], library: [], wish: [], toread: [], quotes: [], logs: [] };
+                    window.db = { reading: [], library: [], wish: [], toread: [], quotes: [], logs: [], voca: [] };
                 }
             };
 
@@ -354,7 +401,7 @@
         }
 
         window.API_KEY = 'AIzaSyB9SjdXwflGS-oUZfmaVGE1vWhBEahY4L0';
-        window.db = { reading: [], library: [], wish: [], toread: [], quotes: [], logs: [] };
+        window.db = { reading: [], library: [], wish: [], toread: [], quotes: [], logs: [], voca: [] };
         window.tempBookData = null;
         
         async function loadData() {
@@ -363,7 +410,9 @@
                     const docSnap = await getDoc(dbRef);
                     if (docSnap.exists()) {
                         window.db = docSnap.data();
+                        // 호환성 처리
                         if(!window.db.logs) window.db.logs = [];
+                        if(!window.db.voca) window.db.voca = [];
                         if(window.db.library) window.db.library.sort((a,b) => new Date(a.date) - new Date(b.date));
                     } else {
                         await setDoc(dbRef, window.db);
@@ -382,7 +431,7 @@
         window.resetAll = async () => {
             if(confirm('모든 데이터를 삭제하시겠습니까? (이 계정의 데이터만 지워집니다)')) {
                 if(confirm('정말 삭제합니다. 복구할 수 없습니다!')) {
-                    window.db = { reading: [], library: [], wish: [], toread: [], quotes: [], logs: [] };
+                    window.db = { reading: [], library: [], wish: [], toread: [], quotes: [], logs: [], voca: [] };
                     await window.save(); 
                     location.reload();   
                 }
@@ -397,7 +446,7 @@
         let targetIndex = null;
         let html5QrcodeScanner = null;
 
-        function initUI() { renderHome(); renderCalendar(); renderQuotesList(); renderStats(); }
+        function initUI() { renderHome(); renderCalendar(); renderQuotesList(); renderVoca(); renderStats(); }
         
         function switchAuthMode(mode) {
             document.getElementById('login-form').style.display = mode === 'signup' ? 'none' : 'block';
@@ -410,6 +459,7 @@
             document.querySelectorAll('.nav-item').forEach(e => e.classList.remove('active'));
             el.classList.add('active');
             if(id === 'calendar') renderCalendar();
+            if(id === 'voca') renderVoca();
             if(id === 'stats') renderStats();
         }
 
@@ -432,7 +482,7 @@
             else document.getElementById('scannerModal').style.display = 'none';
         }
 
-        // --- 통합 날짜 모달 ---
+        // --- 통합 날짜/수정 모달 ---
         function openDateModal(action, index) {
             currentAction = action; targetIndex = index;
             const today = new Date().toISOString().split('T')[0];
@@ -440,9 +490,12 @@
             document.getElementById('dateModal').style.display = 'flex';
             
             const pageWrap = document.getElementById('pageInputWrap');
+            const extraEditWrap = document.getElementById('extraEditWrap');
             const title = document.getElementById('dateModalTitle');
             const delBtn = document.getElementById('btnDeleteBook');
+            
             delBtn.style.display = 'none';
+            extraEditWrap.style.display = 'none'; // 기본 숨김
 
             if (action === 'start_reading_search' || action === 'start_reading_toread') {
                 pageWrap.style.display = 'none';
@@ -457,6 +510,10 @@
                 title.innerText = '완독 정보 수정';
                 document.getElementById('dateInput').value = db.library[index].date;
                 delBtn.style.display = 'block';
+                // 출판사/카테고리 수정 활성화
+                extraEditWrap.style.display = 'block';
+                document.getElementById('editPublisher').value = db.library[index].publisher || '미상';
+                document.getElementById('editCategory').value = db.library[index].category || '기타';
             } else if (action === 'finish') {
                 pageWrap.style.display = 'none';
                 title.innerText = '완독 날짜';
@@ -491,9 +548,13 @@
             } 
             else if(currentAction === 'edit_library') {
                 db.library[targetIndex].date = date;
+                // 출판사 카테고리 업데이트
+                db.library[targetIndex].publisher = document.getElementById('editPublisher').value;
+                db.library[targetIndex].category = document.getElementById('editCategory').value;
+                
                 if(!db.logs.includes(date)) db.logs.push(date);
                 db.library.sort((a,b) => new Date(a.date) - new Date(b.date));
-                window.save().then(() => { renderHome(); renderCalendar(); });
+                window.save().then(() => { renderHome(); renderCalendar(); renderStats(); }); // 랭킹 갱신
             } 
             else if(currentAction === 'finish') {
                 const b = db.reading[targetIndex]; 
@@ -553,38 +614,29 @@
             });
         }
         
-        // 검색/추가 (스마트 바코드 검색 추가됨!)
+        // 검색/추가 (스마트 바코드)
         function openSearch() { document.getElementById('searchModal').style.display='block'; document.getElementById('searchInput').focus(); }
         
         async function searchBooks() {
             let q = document.getElementById('searchInput').value.trim(); 
             if(!q) return;
-            const list = document.getElementById('searchResultList'); 
-            list.innerHTML = '검색중...';
-            
+            const list = document.getElementById('searchResultList'); list.innerHTML = '검색중...';
             try {
-                // 바코드(숫자 10~13자리)인지 확인해서 스마트 검색
                 let isBarcode = /^\d{10,13}$/.test(q);
                 let apiQuery = isBarcode ? `isbn:${q}` : encodeURIComponent(q);
 
                 let res = await fetch(`https://www.googleapis.com/books/v1/volumes?q=${apiQuery}&langRestrict=ko&maxResults=15&key=${window.API_KEY}`);
                 let data = await res.json();
 
-                // 바코드 검색인데 결과가 0개면, isbn: 떼고 한 번 더 시도 (구글 API 한계 극복용)
                 if (isBarcode && (!data.items || data.items.length === 0)) {
                     res = await fetch(`https://www.googleapis.com/books/v1/volumes?q=${q}&langRestrict=ko&maxResults=15&key=${window.API_KEY}`);
                     data = await res.json();
                 }
 
                 list.innerHTML = '';
-                
-                // 그래도 결과가 없으면
                 if(!data.items || data.items.length === 0) { 
-                    if (isBarcode) {
-                        list.innerHTML = '<div style="padding:20px; text-align:center; color:#d84315; line-height:1.5;">구글 도서 데이터베이스에 등록되지 않은 바코드입니다.<br><strong>위 검색창에 책 제목을 직접 입력하여 검색해주세요!</strong></div>';
-                    } else {
-                        list.innerHTML = '<div style="padding:20px; text-align:center; color:#666;">검색 결과가 없습니다.</div>'; 
-                    }
+                    if (isBarcode) list.innerHTML = '<div style="padding:20px; text-align:center; color:#d84315; line-height:1.5;">구글 도서 데이터베이스에 등록되지 않은 바코드입니다.<br><strong>위 검색창에 책 제목을 직접 입력하여 검색해주세요!</strong></div>';
+                    else list.innerHTML = '<div style="padding:20px; text-align:center; color:#666;">검색 결과가 없습니다.</div>'; 
                     return; 
                 }
 
@@ -593,7 +645,7 @@
                     const b = { title: i.title, author: i.authors?i.authors[0]:'미상', publisher: i.publisher||'미상', cover: i.imageLinks?i.imageLinks.thumbnail:'', total: i.pageCount||300, category: translateCat((i.categories||[])[0]||'기타'), current: 0 };
                     const bStr = JSON.stringify(b).replace(/"/g, '&quot;');
                     let img = getCoverHtml(b.cover, b.title);
-                    list.innerHTML += `<div class="result-item"><div style="width:60px; height:90px; flex-shrink:0;">${img}</div><div style="flex:1;"><div style="font-weight:bold;">${b.title}</div><div style="font-size:0.8rem; color:#666;">${b.author} | ${b.category}</div><div class="result-actions" style="margin-top:10px;"><button onclick='addBook("reading",${bStr})' style="background:var(--accent-color); color:white;">읽기</button><button onclick='addBook("wish",${bStr})' style="background:#ffcc80;">위시</button><button onclick='addBook("toread",${bStr})' style="background:#bbdefb;">예정</button></div></div></div>`;
+                    list.innerHTML += `<div class="result-item"><div style="width:60px; height:90px; flex-shrink:0;">${img}</div><div style="flex:1;"><div style="font-weight:bold;">${b.title}</div><div style="font-size:0.8rem; color:#666;">${b.author} | ${b.publisher} | ${b.category}</div><div class="result-actions" style="margin-top:10px;"><button onclick='addBook("reading",${bStr})' style="background:var(--accent-color); color:white;">읽기</button><button onclick='addBook("wish",${bStr})' style="background:#ffcc80;">위시</button><button onclick='addBook("toread",${bStr})' style="background:#bbdefb;">예정</button></div></div></div>`;
                 });
             } catch(e) { list.innerHTML = '오류가 발생했습니다.'; }
         }
@@ -645,7 +697,7 @@
         }
         function changeMonth(n) { curDate.setMonth(curDate.getMonth()+n); renderCalendar(); }
 
-        // 문장 & 랭킹
+        // 문장
         function toggleQuoteView(mode) {
             document.getElementById('quoteMainView').style.display = mode==='list'?'none':'block';
             document.getElementById('quoteListView').style.display = mode==='list'?'block':'none';
@@ -660,10 +712,10 @@
         }
         function saveQuote() {
             const s=document.getElementById('qBook'), t=document.getElementById('qText').value, p=document.getElementById('qPage').value;
-            if(!s.value || !t) return alert('입력!');
+            if(!s.value || !t) return alert('입력해주세요!');
             const opt = s.options[s.selectedIndex];
             db.quotes.push({ book:s.value, page:p, text:t, cover:opt.dataset.cover, author:opt.dataset.author });
-            window.save(); toggleQuoteView('list'); document.getElementById('quoteModal').style.display='none';
+            window.save().then(() => { toggleQuoteView('list'); document.getElementById('quoteModal').style.display='none'; });
         }
         function renderQuotesList() {
             const l=document.getElementById('quoteList'); l.innerHTML='';
@@ -672,7 +724,7 @@
             });
         }
         function openMysteryModal() {
-            if(db.quotes.length===0) return alert('문장 없음');
+            if(db.quotes.length===0) return alert('저장된 문장이 없습니다!');
             const g=document.getElementById('mysteryGrid'); g.innerHTML='';
             [...db.quotes].sort(()=>Math.random()-0.5).forEach(q=>{
                 const c=document.createElement('div'); c.className='mystery-card'; c.innerHTML=`<div class="mystery-card-text">"${q.text}"</div>`;
@@ -694,8 +746,77 @@
             document.getElementById('qdPage').innerText = q.page||'?';
             document.getElementById('quoteDetailModal').style.display = 'flex';
         }
+
+        // [NEW] 단어장 로직
+        function searchDict() {
+            const word = document.getElementById('vocaWordInput').value.trim();
+            if(!word) return alert("단어를 먼저 입력해주세요!");
+            window.open('https://ko.dict.naver.com/#/search?query=' + encodeURIComponent(word), '_blank');
+        }
+
+        function addVoca() {
+            const word = document.getElementById('vocaWordInput').value.trim();
+            const meaning = document.getElementById('vocaMeaningInput').value.trim();
+            if(!word || !meaning) return alert("단어와 뜻을 모두 입력해주세요!");
+            
+            if(!db.voca) db.voca = [];
+            db.voca.push({ word, meaning, date: new Date().toISOString() });
+            
+            window.save().then(() => {
+                document.getElementById('vocaWordInput').value = '';
+                document.getElementById('vocaMeaningInput').value = '';
+                renderVoca();
+                alert("단어장에 추가되었습니다!");
+            });
+        }
+
+        function deleteVoca(index) {
+            if(confirm("이 단어를 삭제하시겠습니까?")) {
+                db.voca.splice(index, 1);
+                window.save().then(() => renderVoca());
+            }
+        }
+
+        function renderVoca() {
+            const container = document.getElementById('vocaListContainer');
+            const sortType = document.getElementById('vocaSortSelect').value;
+            container.innerHTML = '';
+
+            if(!db.voca || db.voca.length === 0) {
+                container.innerHTML = '<div style="text-align:center; color:#999; padding:20px;">단어장이 비어있습니다.</div>';
+                return;
+            }
+
+            // 정렬 로직 복사 (원본 훼손 방지)
+            let vocaList = [...db.voca].map((v, i) => ({...v, originalIndex: i}));
+            
+            if(sortType === 'abc') {
+                vocaList.sort((a,b) => a.word.localeCompare(b.word, 'ko-KR'));
+            } else {
+                // 최신순 (기본적으로 배열 뒤쪽이 최신)
+                vocaList.reverse();
+            }
+
+            vocaList.forEach(v => {
+                container.innerHTML += `
+                    <div class="voca-card">
+                        <button class="btn-voca-del" onclick="deleteVoca(${v.originalIndex})">×</button>
+                        <div class="voca-word">${v.word}</div>
+                        <div class="voca-meaning">${v.meaning.replace(/\n/g, '<br>')}</div>
+                    </div>`;
+            });
+        }
+
+        // 랭킹 (출판사/카테고리 수정 반영)
         function renderStats() {
-            const c={}, a={}, p={}; db.library.forEach(b=>{ const sc=translateCat(b.category); c[sc]=(c[sc]||0)+1; a[b.author]=(a[b.author]||0)+1; p[b.publisher]=(p[b.publisher]||0)+1; });
+            const c={}, a={}, p={}; 
+            db.library.forEach(b=>{ 
+                // 수정된 카테고리를 우선 사용, 없으면 번역 시도
+                const sc = b.category || translateCat(b.category); 
+                c[sc]=(c[sc]||0)+1; 
+                a[b.author]=(a[b.author]||0)+1; 
+                p[b.publisher]=(p[b.publisher]||0)+1; 
+            });
             drawBarChart('rankCategory',c); drawBarChart('rankAuthor',a); drawBarChart('rankPublisher',p);
         }
         function drawBarChart(id,d) {
