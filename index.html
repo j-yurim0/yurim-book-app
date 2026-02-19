@@ -126,8 +126,15 @@
         .voca-input-box { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); margin: 0 20px 20px; }
         .voca-input { width: 100%; padding: 12px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 1rem; font-family: var(--font-main); }
         .btn-dict-search { width: 100%; padding: 12px; background: #f0f0f0; color: #333; border: 1px solid #ccc; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 0.9rem; margin-bottom: 10px; display: flex; align-items: center; justify-content: center; gap: 5px;}
-        .voca-filter { display: flex; justify-content: flex-end; padding: 0 20px; margin-bottom: 10px; }
+        .voca-filter { display: flex; justify-content: space-between; align-items: center; padding: 0 20px; margin-bottom: 10px; }
         .voca-filter select { padding: 5px 10px; border-radius: 5px; border: 1px solid #ccc; outline: none; }
+        
+        /* [NEW] 자음 필터 바 */
+        .voca-cons-bar { display: none; overflow-x: auto; white-space: nowrap; padding: 0 20px 15px; gap: 8px; scroll-behavior: smooth; }
+        .voca-cons-bar::-webkit-scrollbar { display: none; }
+        .btn-cons { background: #eee; border: none; padding: 6px 14px; border-radius: 15px; cursor: pointer; font-weight: bold; color: #555; }
+        .btn-cons.active { background: var(--primary-color); color: white; }
+
         .voca-card { background: white; padding: 15px 20px; margin: 0 20px 15px; border-radius: 12px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); position: relative; border-left: 4px solid #8d6e63; }
         .voca-word { font-weight: bold; font-size: 1.1rem; color: var(--primary-color); margin-bottom: 5px; }
         .voca-meaning { font-size: 0.9rem; color: #555; line-height: 1.4; }
@@ -231,9 +238,9 @@
                 <span>🔖 새 단어 추가</span>
             </div>
             <div class="voca-input-box">
-                <input type="text" id="vocaWordInput" class="voca-input" placeholder="모르는 단어를 입력하세요">
+                <input type="text" id="vocaWordInput" class="voca-input" placeholder="모르는 단어/사자성어를 입력하세요">
                 <button id="btnDictSearch" class="btn-dict-search" onclick="searchDict()"><span>🤖</span> AI 자동 뜻 찾기</button>
-                <textarea id="vocaMeaningInput" class="voca-input" rows="3" placeholder="뜻이 여기에 표시됩니다. 직접 수정할 수도 있어요."></textarea>
+                <textarea id="vocaMeaningInput" class="voca-input" rows="3" placeholder="뜻이 여기에 깔끔하게 표시됩니다. 직접 적을 수도 있어요!"></textarea>
                 <button onclick="addVoca()" style="width:100%; padding:12px; background:var(--primary-color); color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer;">단어장에 저장</button>
             </div>
 
@@ -241,11 +248,32 @@
                 <span>📚 내 단어장</span>
             </div>
             <div class="voca-filter">
-                <select id="vocaSortSelect" onchange="renderVoca()">
+                <div style="font-size:0.8rem; color:#888;">단어 목록</div>
+                <select id="vocaSortSelect" onchange="toggleVocaFilter()">
                     <option value="latest">최신순</option>
                     <option value="abc">가나다순</option>
                 </select>
             </div>
+            
+            <div id="vocaConsonantFilter" class="voca-cons-bar">
+                <button class="btn-cons active" onclick="filterVoca('ALL')">전체</button>
+                <button class="btn-cons" onclick="filterVoca('ㄱ')">ㄱ</button>
+                <button class="btn-cons" onclick="filterVoca('ㄴ')">ㄴ</button>
+                <button class="btn-cons" onclick="filterVoca('ㄷ')">ㄷ</button>
+                <button class="btn-cons" onclick="filterVoca('ㄹ')">ㄹ</button>
+                <button class="btn-cons" onclick="filterVoca('ㅁ')">ㅁ</button>
+                <button class="btn-cons" onclick="filterVoca('ㅂ')">ㅂ</button>
+                <button class="btn-cons" onclick="filterVoca('ㅅ')">ㅅ</button>
+                <button class="btn-cons" onclick="filterVoca('ㅇ')">ㅇ</button>
+                <button class="btn-cons" onclick="filterVoca('ㅈ')">ㅈ</button>
+                <button class="btn-cons" onclick="filterVoca('ㅊ')">ㅊ</button>
+                <button class="btn-cons" onclick="filterVoca('ㅋ')">ㅋ</button>
+                <button class="btn-cons" onclick="filterVoca('ㅌ')">ㅌ</button>
+                <button class="btn-cons" onclick="filterVoca('ㅍ')">ㅍ</button>
+                <button class="btn-cons" onclick="filterVoca('ㅎ')">ㅎ</button>
+                <button class="btn-cons" onclick="filterVoca('기타')">A-Z</button>
+            </div>
+
             <div id="vocaListContainer" style="padding-bottom: 30px;"></div>
         </div>
 
@@ -286,6 +314,7 @@
     <div id="dateModal" class="modal-overlay">
         <div class="modal-box">
             <h3 id="dateModalTitle">날짜 선택</h3>
+            
             <label style="font-size:0.8rem; color:#666;">날짜</label>
             <input type="date" id="dateInput" style="padding:10px; border:1px solid #ddd; border-radius:5px; font-size:1rem;">
             
@@ -300,7 +329,7 @@
                 <label style="font-size:0.8rem; color:#666; display:block;">출판사 (랭킹 반영)</label>
                 <input type="text" id="editPublisher" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:5px; margin-bottom:10px;">
                 <label style="font-size:0.8rem; color:#666; display:block;">카테고리 (랭킹 반영)</label>
-                <input type="text" id="editCategory" placeholder="소설, 에세이, 자기계발 등" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:5px;">
+                <input type="text" id="editCategory" placeholder="소설, 에세이, 경제 등" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:5px;">
             </div>
             
             <div style="display:flex; gap:10px; margin-top:15px;">
@@ -426,6 +455,7 @@
         window.API_KEY = 'AIzaSyB9SjdXwflGS-oUZfmaVGE1vWhBEahY4L0';
         window.db = { reading: [], library: [], wish: [], toread: [], quotes: [], logs: [], voca: [] };
         window.tempBookData = null;
+        window.currentVocaFilter = 'ALL';
         
         async function loadData() {
             if(dbRef) {
@@ -471,7 +501,10 @@
             document.querySelectorAll('.nav-item').forEach(e => e.classList.remove('active'));
             el.classList.add('active');
             if(id === 'calendar') renderCalendar();
-            if(id === 'voca') renderVoca();
+            if(id === 'voca') {
+                document.getElementById('vocaSortSelect').value = 'latest';
+                toggleVocaFilter();
+            }
             if(id === 'stats') renderStats();
         }
 
@@ -482,7 +515,7 @@
             return `<img src="${url}" style="width:100%; height:100%; object-fit:cover; border-radius:4px;">`;
         }
 
-        // 스트릭 동기화
+        // 스트릭 동기화 도우미 (삭제 시 달력 지워짐 완벽 처리)
         function updateLogs() {
             let activeDates = new Set();
             window.db.reading.forEach(b => {
@@ -495,6 +528,7 @@
             window.db.logs = Array.from(activeDates);
         }
 
+        // 오늘 초기화 (버그 수정됨)
         window.resetToday = async () => {
             const today = new Date().toISOString().split('T')[0];
             if(confirm("오늘 기록한 모든 독서 내역(페이지 갱신, 완독)을 취소할까요?")) {
@@ -502,13 +536,17 @@
                     if(db.library[i].date === today) {
                         let b = db.library.splice(i, 1)[0];
                         b.date = null;
+                        b.comment = null;
                         db.reading.push(b);
                     }
                 }
                 db.reading.forEach(b => {
-                    if(b.lastDate === today || b.startDate === today) {
+                    if(b.lastDate === today) {
                         b.lastDate = null;
                         b.current = 0; 
+                    }
+                    if(b.startDate === today) {
+                        b.startDate = null;
                     }
                 });
                 updateLogs();
@@ -540,7 +578,7 @@
             else document.getElementById('scannerModal').style.display = 'none';
         }
 
-        // 모달창 띄우기 (기록/완독/수정)
+        // --- 통합 날짜/수정 모달 ---
         window.openDateModal = function(action, index) {
             currentAction = action; targetIndex = index;
             const today = new Date().toISOString().split('T')[0];
@@ -557,9 +595,16 @@
             extraEditWrap.style.display = 'none';
             commentInput.style.display = 'none';
 
-            if (action === 'start_reading_search' || action === 'start_reading_toread') {
+            if (action === 'start_reading_search') {
                 pageWrap.style.display = 'none';
-                title.innerText = '시작 날짜';
+                title.innerText = '새 책 읽기 시작';
+                // 책 추가할 때 출판사/장르 미리 고칠 수 있게 함!
+                extraEditWrap.style.display = 'block';
+                document.getElementById('editPublisher').value = window.tempBookData.publisher || '미상';
+                document.getElementById('editCategory').value = window.tempBookData.category || '기타';
+            } else if (action === 'start_reading_toread') {
+                pageWrap.style.display = 'none';
+                title.innerText = '읽기 시작';
             } else if (action === 'record' || action === 'edit_reading') {
                 pageWrap.style.display = 'block';
                 title.innerText = action === 'record' ? '독서 기록' : '기록 수정';
@@ -589,6 +634,9 @@
 
             if(currentAction === 'start_reading_search') {
                 window.tempBookData.startDate = date;
+                // 수정한 출판사/카테고리 적용
+                window.tempBookData.publisher = document.getElementById('editPublisher').value;
+                window.tempBookData.category = document.getElementById('editCategory').value;
                 db.reading.push(window.tempBookData);
                 window.tempBookData = null;
             } 
@@ -624,7 +672,7 @@
         }
 
         window.deleteCurrentBook = function() {
-            if(confirm("정말 이 책을 서재에서 삭제하시겠습니까?")) {
+            if(confirm("정말 이 책을 삭제하시겠습니까?")) {
                 db.library.splice(targetIndex, 1);
                 updateLogs();
                 window.save().then(() => { renderHome(); renderCalendar(); renderStats(); });
@@ -694,6 +742,7 @@
             });
         }
         
+        // 검색/추가
         window.openSearch = function() { document.getElementById('searchModal').style.display='block'; document.getElementById('searchInput').focus(); }
         window.searchBooks = async function() {
             let q = document.getElementById('searchInput').value.trim(); 
@@ -843,7 +892,7 @@
             document.getElementById('quoteDetailModal').style.display = 'flex';
         }
 
-        // 단어장 (위키 파싱 수정 - 깔끔하게)
+        // [업그레이드] 단어장 로직 (위키 파싱 스마트 필터링 적용)
         window.searchDict = async function() {
             const word = document.getElementById('vocaWordInput').value.trim();
             if(!word) return alert("단어를 먼저 입력해주세요!");
@@ -859,13 +908,25 @@
                 
                 if (page.pageid && page.extract) {
                     let text = page.extract;
-                    // 위키 기호(== 어원 ==, === 명사 === 등) 제거
-                    text = text.replace(/=+.*?=+/g, '');
-                    // 앞뒤 공백 및 빈 줄 제거
-                    text = text.replace(/^\s*[\r\n]/gm, '').trim();
                     
-                    if(text) {
-                        document.getElementById('vocaMeaningInput').value = text;
+                    // 1. == 한국어 == 같은 제목 기호 줄 지우기
+                    text = text.replace(/=+.*?=+/g, '');
+                    
+                    // 2. 불필요한 문법 정보 줄(어원, 발음, 파생어 등) 완벽 제거
+                    let lines = text.split('\n');
+                    let cleanLines = lines.filter(line => {
+                        let l = line.trim();
+                        if(!l) return false;
+                        // 이런 단어로 시작하는 줄은 아예 날려버림
+                        if(l.match(/^(표준어|IPA|발음|어원|동사|형용사|부사|명사|대명사|수사|관형사|감탄사|조사|유의어|반의어|파생어|참고|번역|속담|관용구|문법)/)) return false;
+                        if(l === word) return false; 
+                        return true;
+                    });
+                    
+                    let finalText = cleanLines.join('\n').trim();
+                    
+                    if(finalText) {
+                        document.getElementById('vocaMeaningInput').value = finalText;
                     } else {
                         alert("사전에 뜻이 명확하게 등록되어 있지 않습니다. 직접 적어주세요!");
                     }
@@ -901,6 +962,41 @@
             }
         }
 
+        // 초성 추출 함수 (단어장 필터용)
+        function getChosung(str) {
+            const cho = ["ㄱ","ㄲ","ㄴ","ㄷ","ㄸ","ㄹ","ㅁ","ㅂ","ㅃ","ㅅ","ㅆ","ㅇ","ㅈ","ㅉ","ㅊ","ㅋ","ㅌ","ㅍ","ㅎ"];
+            let code = str.charCodeAt(0) - 44032;
+            if (code > -1 && code < 11172) return cho[Math.floor(code / 588)];
+            return '기타'; // 영어, 숫자 등
+        }
+
+        window.toggleVocaFilter = function() {
+            const sortType = document.getElementById('vocaSortSelect').value;
+            const filterBar = document.getElementById('vocaConsonantFilter');
+            
+            if(sortType === 'abc') {
+                filterBar.style.display = 'flex'; // 가나다순일때만 자음 버튼 보임
+            } else {
+                filterBar.style.display = 'none';
+                window.currentVocaFilter = 'ALL';
+            }
+            renderVoca();
+        }
+
+        window.filterVoca = function(cons) {
+            window.currentVocaFilter = cons;
+            
+            // 버튼 활성화 스타일 변경
+            document.querySelectorAll('.btn-cons').forEach(btn => {
+                btn.classList.remove('active');
+                if(btn.innerText === cons || (cons === 'ALL' && btn.innerText === '전체') || (cons === '기타' && btn.innerText === 'A-Z')) {
+                    btn.classList.add('active');
+                }
+            });
+            
+            renderVoca();
+        }
+
         window.renderVoca = function() {
             const container = document.getElementById('vocaListContainer');
             const sortType = document.getElementById('vocaSortSelect').value;
@@ -911,9 +1007,23 @@
                 return;
             }
 
+            // 원본 인덱스 유지 복사
             let vocaList = [...db.voca].map((v, i) => ({...v, originalIndex: i}));
-            if(sortType === 'abc') vocaList.sort((a,b) => a.word.localeCompare(b.word, 'ko-KR'));
-            else vocaList.reverse();
+            
+            if(sortType === 'abc') {
+                vocaList.sort((a,b) => a.word.localeCompare(b.word, 'ko-KR'));
+                // 자음 필터 적용
+                if(window.currentVocaFilter !== 'ALL') {
+                    vocaList = vocaList.filter(v => getChosung(v.word) === window.currentVocaFilter);
+                }
+            } else {
+                vocaList.reverse(); // 최신순
+            }
+
+            if(vocaList.length === 0) {
+                container.innerHTML = `<div style="text-align:center; color:#999; padding:20px;">'${window.currentVocaFilter}'(으)로 시작하는 단어가 없습니다.</div>`;
+                return;
+            }
 
             vocaList.forEach(v => {
                 container.innerHTML += `
