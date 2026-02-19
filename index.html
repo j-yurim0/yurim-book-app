@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>나만의 독서 기록장</title>
+    <title>나만의 독서 기록장 (Cloud)</title>
     <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/ridibatang/1.0.0/ridibatang.min.css">
     
@@ -12,6 +12,7 @@
         * { box-sizing: border-box; }
         body { font-family: var(--font-main); background-color: var(--bg-color); color: #333; margin: 0; padding: 0; max-width: 600px; margin: 0 auto; min-height: 100vh; padding-bottom: 90px; border-left: 1px solid #eee; border-right: 1px solid #eee; position: relative;}
 
+        /* 로그인 화면 */
         #auth-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg-color); z-index: 5000; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 20px; }
         .auth-box { background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 25px rgba(93, 64, 55, 0.15); width: 100%; max-width: 400px; text-align: center; }
         .auth-input { width: 100%; padding: 12px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 1rem; }
@@ -19,11 +20,15 @@
         .auth-switch { margin-top: 20px; font-size: 0.9rem; color: #666; cursor: pointer; text-decoration: underline; }
 
         #app-container { display: none; }
+
+        /* 헤더 & 초기화 버튼 */
         header { padding: 20px; text-align: center; position: relative; }
         h2 { font-family: var(--font-book); color: var(--primary-color); margin: 0; font-size: 1.5rem; }
-        .btn-logout { position: absolute; top: 20px; right: 20px; font-size: 0.8rem; color: #999; background: none; border: none; cursor: pointer; text-decoration: underline; }
-        .btn-reset-all { position: absolute; top: 20px; left: 20px; font-size: 0.8rem; color: #999; background: none; border: none; cursor: pointer; text-decoration: underline; }
+        .header-left-btns { position: absolute; top: 20px; left: 20px; display: flex; flex-direction: column; gap: 5px; align-items: flex-start;}
+        .btn-header { font-size: 0.8rem; color: #999; background: none; border: none; cursor: pointer; text-decoration: underline; padding: 0; }
+        .btn-logout { position: absolute; top: 20px; right: 20px; font-size: 0.8rem; color: #999; background: none; border: none; cursor: pointer; text-decoration: underline; padding: 0; }
 
+        /* 스타일 */
         .home-search-box { margin: 0 20px 20px; background: white; border: 2px solid var(--primary-color); border-radius: 12px; padding: 10px; display: flex; align-items: center; box-shadow: 0 4px 10px rgba(93, 64, 55, 0.1); }
         .search-input { flex: 1; border: none; outline: none; font-size: 1rem; padding: 5px; }
         .btn-camera { font-size: 1.5rem; background: none; border: none; cursor: pointer; padding: 5px; }
@@ -49,10 +54,12 @@
         .mini-cover { width: 90px; height: 130px; object-fit: cover; border-radius: 5px; box-shadow: 2px 2px 5px rgba(0,0,0,0.1); }
         .mini-title { font-size: 0.8rem; margin-top: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .btn-mini-del { position: absolute; top: -5px; right: -5px; background: red; color: white; width: 20px; height: 20px; border-radius: 50%; border: none; cursor: pointer; font-size: 0.8rem; }
+        
         .shelf-wrapper { margin: 0 20px; background: #d7ccc8; padding: 40px 20px 20px; border-radius: 5px; box-shadow: inset 2px 2px 10px rgba(0,0,0,0.1); }
         .shelf-flex-container { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 2px; width: 100%; border-bottom: 20px solid #5d4037; padding-bottom: 0; min-height: 180px; }
-        .spine { writing-mode: vertical-rl; text-orientation: mixed; color: rgba(255,255,255,0.95); border: 1px solid rgba(0,0,0,0.1); border-radius: 3px 3px 0 0; padding: 10px 4px; font-size: 0.8rem; box-shadow: 2px 0 4px rgba(0,0,0,0.2); text-align: left; font-family: var(--font-book); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.5; margin-bottom: 0; transition: transform 0.2s; }
+        .spine { writing-mode: vertical-rl; text-orientation: mixed; color: rgba(255,255,255,0.95); border: 1px solid rgba(0,0,0,0.1); border-radius: 3px 3px 0 0; padding: 10px 4px; font-size: 0.8rem; box-shadow: 2px 0 4px rgba(0,0,0,0.2); text-align: left; font-family: var(--font-book); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.5; margin-bottom: 0; transition: transform 0.2s; cursor: pointer; }
         .spine:hover { transform: translateY(-10px); z-index: 10; }
+        
         .quote-main-view { padding: 0 20px; }
         .quote-list-view { display: none; }
         .big-menu-grid { display: grid; grid-template-columns: 1fr; gap: 15px; margin-bottom: 20px; }
@@ -67,7 +74,6 @@
         .quote-list-container { margin-top: 10px; }
         .quote-item { background: white; padding: 20px; margin-bottom: 15px; border-radius: 12px; border-left: 4px solid var(--primary-color); box-shadow: 0 2px 5px rgba(0,0,0,0.05); text-align: left;}
         
-        /* 랭킹 탭 */
         .rank-box { background:white; padding:20px; border-radius:15px; margin-bottom:20px; box-shadow:0 2px 5px rgba(0,0,0,0.05); }
         .rank-title { margin:0 0 15px; font-size: 1.1rem; color: var(--primary-color); font-weight: bold; }
         .rank-row { margin-bottom: 15px; }
@@ -116,10 +122,10 @@
         .btn-delete-red { background: #ffebee; color: #d32f2f; border: 1px solid #d32f2f; padding: 10px; border-radius: 5px; width: 100%; margin-top: 20px; cursor: pointer; font-weight: bold; }
         #scanner-container { width: 100%; height: 250px; background: black; overflow: hidden; position: relative; }
 
-        /* [NEW] 단어장 탭 전용 스타일 */
+        /* 단어장 탭 전용 스타일 */
         .voca-input-box { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); margin: 0 20px 20px; }
-        .voca-input { width: 100%; padding: 12px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 1rem; }
-        .btn-dict-search { width: 100%; padding: 10px; background: #03c75a; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 0.9rem; margin-bottom: 10px; display: flex; align-items: center; justify-content: center; gap: 5px;}
+        .voca-input { width: 100%; padding: 12px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 1rem; font-family: var(--font-main); }
+        .btn-dict-search { width: 100%; padding: 12px; background: #f0f0f0; color: #333; border: 1px solid #ccc; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 0.9rem; margin-bottom: 10px; display: flex; align-items: center; justify-content: center; gap: 5px;}
         .voca-filter { display: flex; justify-content: flex-end; padding: 0 20px; margin-bottom: 10px; }
         .voca-filter select { padding: 5px 10px; border-radius: 5px; border: 1px solid #ccc; outline: none; }
         .voca-card { background: white; padding: 15px 20px; margin: 0 20px 15px; border-radius: 12px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); position: relative; border-left: 4px solid #8d6e63; }
@@ -151,8 +157,11 @@
 
     <div id="app-container">
         <header>
+            <div class="header-left-btns">
+                <button class="btn-header" onclick="resetToday()">오늘 초기화</button>
+                <button class="btn-header" onclick="resetAll()">전체 초기화</button>
+            </div>
             <h2>My Reading Log</h2>
-            <button class="btn-reset-all" onclick="resetAll()">전체 초기화</button>
             <button class="btn-logout" onclick="handleLogout()">로그아웃</button>
         </header>
 
@@ -188,7 +197,7 @@
                 <span onclick="changeMonth(1)" style="cursor:pointer">▶</span>
             </div>
             <div class="cal-grid" id="calGrid"></div>
-            <div class="section-title" style="margin-top:30px;">🖼 완독한 책들 (수정)</div>
+            <div class="section-title" style="margin-top:30px;">🖼 완독한 책들</div>
             <div class="gallery-grid" id="galleryGrid"></div>
         </div>
 
@@ -223,11 +232,10 @@
             </div>
             <div class="voca-input-box">
                 <input type="text" id="vocaWordInput" class="voca-input" placeholder="모르는 단어를 입력하세요">
-                <button class="btn-dict-search" onclick="searchDict()"><span>📗</span> 네이버 사전에서 뜻 찾기</button>
-                <textarea id="vocaMeaningInput" class="voca-input" rows="2" placeholder="찾은 뜻을 붙여넣거나 직접 적어주세요"></textarea>
+                <button id="btnDictSearch" class="btn-dict-search" onclick="searchDict()"><span>🤖</span> AI 자동 뜻 찾기</button>
+                <textarea id="vocaMeaningInput" class="voca-input" rows="3" placeholder="뜻이 여기에 표시됩니다. 직접 수정할 수도 있어요."></textarea>
                 <button onclick="addVoca()" style="width:100%; padding:12px; background:var(--primary-color); color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer;">단어장에 저장</button>
             </div>
-
             <div class="section-title">
                 <span>📚 내 단어장</span>
             </div>
@@ -285,11 +293,12 @@
                 <input type="number" id="pageInput" placeholder="페이지 수" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:5px;">
             </div>
 
+            <textarea id="bookComment" rows="3" placeholder="책에 대한 자유로운 코멘트를 남겨보세요. (선택 사항)" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:5px; margin-top:10px; display:none; font-family:var(--font-main); font-size:0.9rem; resize:none;"></textarea>
+
             <div id="extraEditWrap" style="display:none; margin-top:10px;">
-                <label style="font-size:0.8rem; color:#666; display:block;">출판사 수정 (랭킹 반영)</label>
+                <label style="font-size:0.8rem; color:#666; display:block;">출판사 (랭킹 반영)</label>
                 <input type="text" id="editPublisher" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:5px; margin-bottom:10px;">
-                
-                <label style="font-size:0.8rem; color:#666; display:block;">카테고리 수정 (랭킹 반영)</label>
+                <label style="font-size:0.8rem; color:#666; display:block;">카테고리 (랭킹 반영)</label>
                 <input type="text" id="editCategory" placeholder="소설, 에세이, 자기계발 등" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:5px;">
             </div>
             
@@ -301,12 +310,28 @@
         </div>
     </div>
 
+    <div id="bookDetailModal" class="modal-overlay" style="z-index: 3100;">
+        <div class="modal-box" style="text-align:center;">
+            <div id="bdCoverContainer"></div>
+            <h3 id="bdTitle" style="margin:0;">책 제목</h3>
+            <div id="bdInfo" style="font-size:0.85rem; color:#666; margin-top:5px;">작가 | 출판사</div>
+            <div style="font-size:0.8rem; color:var(--accent-color); margin-top:5px;" id="bdDate">완독일</div>
+            
+            <div id="bdCommentWrap" style="margin-top:15px; text-align:left; background:#f9f9f9; padding:15px; border-radius:8px; display:none;">
+                <div style="font-size:0.8rem; color:#888; margin-bottom:5px; font-weight:bold;">나의 코멘트</div>
+                <div id="bdComment" style="font-size:0.95rem; line-height:1.5; white-space:pre-wrap; color:#444; font-family:var(--font-book);"></div>
+            </div>
+            
+            <button onclick="document.getElementById('bookDetailModal').style.display='none'" style="padding:10px; background:var(--primary-color); color:white; border:none; border-radius:5px; margin-top:20px; width:100%;">닫기</button>
+        </div>
+    </div>
+
     <div id="quoteModal" class="modal-overlay">
         <div class="modal-box">
             <h3>문장 추가</h3>
-            <select id="qBook" style="padding:8px; border:1px solid #ccc; border-radius:5px;"></select>
+            <select id="qBook" style="padding:8px; border:1px solid #ccc; border-radius:5px; font-family:var(--font-main);"></select>
             <input type="number" id="qPage" placeholder="페이지 (선택)" style="padding:8px; border:1px solid #ccc; border-radius:5px;">
-            <textarea id="qText" rows="4" placeholder="문장을 입력하세요" style="padding:8px; border:1px solid #ccc; border-radius:5px;"></textarea>
+            <textarea id="qText" rows="4" placeholder="문장을 입력하세요" style="padding:8px; border:1px solid #ccc; border-radius:5px; font-family:var(--font-main);"></textarea>
             <div style="display:flex; gap:10px; margin-top:10px;">
                 <button onclick="document.getElementById('quoteModal').style.display='none'" style="flex:1; padding:10px; background:#eee; border:none; border-radius:5px;">취소</button>
                 <button onclick="saveQuote()" style="flex:1; padding:10px; background:var(--primary-color); color:white; border:none; border-radius:5px;">저장</button>
@@ -359,13 +384,11 @@
 
             onAuthStateChanged(auth, (user) => {
                 if (user) {
-                    console.log("Logged in:", user.email);
                     dbRef = doc(firestore, "users", user.uid);
                     document.getElementById('auth-screen').style.display = 'none';
                     document.getElementById('app-container').style.display = 'block';
                     loadData();
                 } else {
-                    console.log("No user");
                     document.getElementById('auth-screen').style.display = 'flex';
                     document.getElementById('app-container').style.display = 'none';
                 }
@@ -396,7 +419,6 @@
             };
 
         } catch(e) {
-            console.error("Firebase Init Error:", e);
             alert("파이어베이스 설정 오류입니다.");
         }
 
@@ -410,31 +432,20 @@
                     const docSnap = await getDoc(dbRef);
                     if (docSnap.exists()) {
                         window.db = docSnap.data();
-                        // 호환성 처리
                         if(!window.db.logs) window.db.logs = [];
                         if(!window.db.voca) window.db.voca = [];
                         if(window.db.library) window.db.library.sort((a,b) => new Date(a.date) - new Date(b.date));
                     } else {
                         await setDoc(dbRef, window.db);
                     }
-                } catch(e) { console.error("Load Error:", e); }
+                } catch(e) { console.error(e); }
             }
             if(window.initUI) window.initUI();
         }
 
         window.save = async function() {
             if(dbRef) {
-                try { await setDoc(dbRef, window.db); } catch(e) { console.error("Save Error:", e); }
-            }
-        }
-
-        window.resetAll = async () => {
-            if(confirm('모든 데이터를 삭제하시겠습니까? (이 계정의 데이터만 지워집니다)')) {
-                if(confirm('정말 삭제합니다. 복구할 수 없습니다!')) {
-                    window.db = { reading: [], library: [], wish: [], toread: [], quotes: [], logs: [], voca: [] };
-                    await window.save(); 
-                    location.reload();   
-                }
+                try { await setDoc(dbRef, window.db); } catch(e) { console.error(e); }
             }
         }
     </script>
@@ -470,7 +481,53 @@
             return `<img src="${url}" style="width:100%; height:100%; object-fit:cover; border-radius:4px;">`;
         }
 
-        // --- 바코드 스캐너 ---
+        // 스트릭 동기화
+        function updateLogs() {
+            let activeDates = new Set();
+            window.db.reading.forEach(b => {
+                if(b.startDate) activeDates.add(b.startDate);
+                if(b.lastDate) activeDates.add(b.lastDate);
+            });
+            window.db.library.forEach(b => {
+                if(b.date) activeDates.add(b.date);
+            });
+            window.db.logs = Array.from(activeDates);
+        }
+
+        window.resetToday = async () => {
+            const today = new Date().toISOString().split('T')[0];
+            if(confirm("오늘 기록한 모든 독서 내역(페이지 갱신, 완독)을 취소할까요?")) {
+                for(let i = db.library.length - 1; i >= 0; i--) {
+                    if(db.library[i].date === today) {
+                        let b = db.library.splice(i, 1)[0];
+                        b.date = null;
+                        db.reading.push(b);
+                    }
+                }
+                db.reading.forEach(b => {
+                    if(b.lastDate === today || b.startDate === today) {
+                        b.lastDate = null;
+                        b.current = 0; 
+                    }
+                });
+                updateLogs();
+                await window.save();
+                renderHome(); renderCalendar();
+                alert("오늘 기록이 초기화되었습니다.");
+            }
+        }
+        
+        window.resetAll = async () => {
+            if(confirm('모든 데이터를 삭제하시겠습니까? (이 계정의 데이터만 지워집니다)')) {
+                if(confirm('정말 삭제합니다. 복구할 수 없습니다!')) {
+                    window.db = { reading: [], library: [], wish: [], toread: [], quotes: [], logs: [], voca: [] };
+                    await window.save(); 
+                    location.reload();   
+                }
+            }
+        }
+
+        // 바코드
         function openScanner() {
             document.getElementById('scannerModal').style.display = 'flex';
             if(!html5QrcodeScanner) { html5QrcodeScanner = new Html5Qrcode("scanner-container"); }
@@ -482,7 +539,7 @@
             else document.getElementById('scannerModal').style.display = 'none';
         }
 
-        // --- 통합 날짜/수정 모달 ---
+        // --- 통합 날짜/수정 모달 (코멘트 입력 포함) ---
         function openDateModal(action, index) {
             currentAction = action; targetIndex = index;
             const today = new Date().toISOString().split('T')[0];
@@ -491,11 +548,13 @@
             
             const pageWrap = document.getElementById('pageInputWrap');
             const extraEditWrap = document.getElementById('extraEditWrap');
+            const commentInput = document.getElementById('bookComment');
             const title = document.getElementById('dateModalTitle');
             const delBtn = document.getElementById('btnDeleteBook');
             
             delBtn.style.display = 'none';
-            extraEditWrap.style.display = 'none'; // 기본 숨김
+            extraEditWrap.style.display = 'none';
+            commentInput.style.display = 'none';
 
             if (action === 'start_reading_search' || action === 'start_reading_toread') {
                 pageWrap.style.display = 'none';
@@ -510,13 +569,18 @@
                 title.innerText = '완독 정보 수정';
                 document.getElementById('dateInput').value = db.library[index].date;
                 delBtn.style.display = 'block';
-                // 출판사/카테고리 수정 활성화
                 extraEditWrap.style.display = 'block';
                 document.getElementById('editPublisher').value = db.library[index].publisher || '미상';
                 document.getElementById('editCategory').value = db.library[index].category || '기타';
+                // 코멘트 활성화 및 불러오기
+                commentInput.style.display = 'block';
+                commentInput.value = db.library[index].comment || '';
             } else if (action === 'finish') {
                 pageWrap.style.display = 'none';
-                title.innerText = '완독 날짜';
+                title.innerText = '완독 기록';
+                // 완독 시 코멘트 작성 활성화
+                commentInput.style.display = 'block';
+                commentInput.value = '';
             }
         }
 
@@ -526,57 +590,73 @@
 
             if(currentAction === 'start_reading_search') {
                 window.tempBookData.startDate = date;
-                if(!db.logs.includes(date)) db.logs.push(date);
                 db.reading.push(window.tempBookData);
                 window.tempBookData = null;
-                window.save().then(() => { renderHome(); alert('읽고 있는 책에 추가되었습니다!'); });
             } 
             else if(currentAction === 'start_reading_toread') {
                 const b = db.toread[targetIndex];
                 b.startDate = date;
-                if(!db.logs.includes(date)) db.logs.push(date);
                 db.reading.push(b);
                 db.toread.splice(targetIndex, 1);
-                window.save().then(() => renderHome());
             }
             else if(currentAction === 'record' || currentAction === 'edit_reading') {
                 const page = document.getElementById('pageInput').value;
                 db.reading[targetIndex].current = Math.min(parseInt(page), db.reading[targetIndex].total);
                 db.reading[targetIndex].lastDate = date; 
-                if(!db.logs.includes(date)) db.logs.push(date);
-                window.save().then(() => renderHome());
             } 
             else if(currentAction === 'edit_library') {
                 db.library[targetIndex].date = date;
-                // 출판사 카테고리 업데이트
                 db.library[targetIndex].publisher = document.getElementById('editPublisher').value;
                 db.library[targetIndex].category = document.getElementById('editCategory').value;
-                
-                if(!db.logs.includes(date)) db.logs.push(date);
-                db.library.sort((a,b) => new Date(a.date) - new Date(b.date));
-                window.save().then(() => { renderHome(); renderCalendar(); renderStats(); }); // 랭킹 갱신
+                db.library[targetIndex].comment = document.getElementById('bookComment').value.trim();
             } 
             else if(currentAction === 'finish') {
                 const b = db.reading[targetIndex]; 
                 b.date = date;
+                b.comment = document.getElementById('bookComment').value.trim();
                 db.library.push(b); 
                 db.reading.splice(targetIndex, 1);
-                if(!db.logs.includes(date)) db.logs.push(date);
-                db.library.sort((a,b) => new Date(a.date) - new Date(b.date));
-                window.save().then(() => { renderHome(); renderCalendar(); });
             }
+            
+            updateLogs();
+            db.library.sort((a,b) => new Date(a.date) - new Date(b.date));
+            window.save().then(() => { renderHome(); renderCalendar(); renderStats(); });
             document.getElementById('dateModal').style.display = 'none';
         }
 
         function deleteCurrentBook() {
             if(confirm("정말 이 책을 서재에서 삭제하시겠습니까?")) {
                 db.library.splice(targetIndex, 1);
-                window.save().then(() => { renderHome(); renderCalendar(); });
+                updateLogs();
+                window.save().then(() => { renderHome(); renderCalendar(); renderStats(); });
                 document.getElementById('dateModal').style.display = 'none';
             }
         }
 
-        // --- 렌더링 ---
+        // [NEW] 책 상세 정보 모달 (코멘트 보기)
+        window.showBookDetail = function(index) {
+            const b = db.library[index];
+            const container = document.getElementById('bdCoverContainer');
+            container.innerHTML = `<div style="width:120px; height:180px; margin:0 auto 15px; box-shadow:2px 2px 8px rgba(0,0,0,0.15);">${getCoverHtml(b.cover, b.title)}</div>`;
+            
+            document.getElementById('bdTitle').innerText = b.title;
+            document.getElementById('bdInfo').innerText = `${b.author} | ${b.publisher}`;
+            document.getElementById('bdDate').innerText = `완독일: ${b.date}`;
+            
+            const commentWrap = document.getElementById('bdCommentWrap');
+            const commentBox = document.getElementById('bdComment');
+            
+            if(b.comment && b.comment.length > 0) {
+                commentWrap.style.display = 'block';
+                commentBox.innerText = b.comment;
+            } else {
+                commentWrap.style.display = 'none';
+            }
+            
+            document.getElementById('bookDetailModal').style.display = 'flex';
+        }
+
+        // 렌더링
         function renderHome() {
             const weekDiv = document.getElementById('weekCircles'); weekDiv.innerHTML = '';
             const today = new Date(); const startOfWeek = new Date(today); startOfWeek.setDate(today.getDate() - today.getDay());
@@ -597,12 +677,14 @@
             });
             renderMiniList(db.wish, 'wishList', 'wish'); renderMiniList(db.toread, 'toreadList', 'toread');
             document.getElementById('wishCount').innerText=db.wish.length+'권'; document.getElementById('toreadCount').innerText=db.toread.length+'권';
+            
             const shelf = document.getElementById('bookShelf'); shelf.innerHTML = '';
             if(db.library.length===0) shelf.innerHTML = '<div style="width:100%; text-align:center; padding:30px; color:rgba(255,255,255,0.5);">서재가 비었습니다.</div>';
             else db.library.forEach((b, i) => {
                 const w=Math.min(65, Math.max(30, b.total/10)); const h=Math.min(160, Math.max(120, 120+(b.total%40)));
                 const hue=Math.floor(Math.random()*30)+10;
-                shelf.innerHTML += `<div class="spine" style="background:hsl(${hue},40%,40%); width:${w}px; height:${h}px;" title="${b.title}">${b.title}</div>`;
+                // 책등 클릭 시 상세 팝업 오픈
+                shelf.innerHTML += `<div class="spine" style="background:hsl(${hue},40%,40%); width:${w}px; height:${h}px;" title="${b.title}" onclick="showBookDetail(${i})">${b.title}</div>`;
             });
         }
         
@@ -614,9 +696,8 @@
             });
         }
         
-        // 검색/추가 (스마트 바코드)
+        // 검색/추가
         function openSearch() { document.getElementById('searchModal').style.display='block'; document.getElementById('searchInput').focus(); }
-        
         async function searchBooks() {
             let q = document.getElementById('searchInput').value.trim(); 
             if(!q) return;
@@ -624,22 +705,18 @@
             try {
                 let isBarcode = /^\d{10,13}$/.test(q);
                 let apiQuery = isBarcode ? `isbn:${q}` : encodeURIComponent(q);
-
                 let res = await fetch(`https://www.googleapis.com/books/v1/volumes?q=${apiQuery}&langRestrict=ko&maxResults=15&key=${window.API_KEY}`);
                 let data = await res.json();
-
                 if (isBarcode && (!data.items || data.items.length === 0)) {
                     res = await fetch(`https://www.googleapis.com/books/v1/volumes?q=${q}&langRestrict=ko&maxResults=15&key=${window.API_KEY}`);
                     data = await res.json();
                 }
-
                 list.innerHTML = '';
                 if(!data.items || data.items.length === 0) { 
-                    if (isBarcode) list.innerHTML = '<div style="padding:20px; text-align:center; color:#d84315; line-height:1.5;">구글 도서 데이터베이스에 등록되지 않은 바코드입니다.<br><strong>위 검색창에 책 제목을 직접 입력하여 검색해주세요!</strong></div>';
+                    if (isBarcode) list.innerHTML = '<div style="padding:20px; text-align:center; color:#d84315; line-height:1.5;">구글 도서에 등록되지 않은 바코드입니다.<br><strong>위 검색창에 책 제목을 직접 입력하여 검색해주세요!</strong></div>';
                     else list.innerHTML = '<div style="padding:20px; text-align:center; color:#666;">검색 결과가 없습니다.</div>'; 
                     return; 
                 }
-
                 data.items.forEach(item => {
                     const i = item.volumeInfo; if((i.categories||[]).some(c=>/Comic|Manga|만화/i.test(c))) return;
                     const b = { title: i.title, author: i.authors?i.authors[0]:'미상', publisher: i.publisher||'미상', cover: i.imageLinks?i.imageLinks.thumbnail:'', total: i.pageCount||300, category: translateCat((i.categories||[])[0]||'기타'), current: 0 };
@@ -662,10 +739,9 @@
             }
         }
         
-        // 관리
-        function delReading(i) { if(confirm('삭제하시겠습니까?')) { db.reading.splice(i,1); window.save().then(()=>renderHome()); } }
-        function dropReading(i) { if(confirm('하차하시겠습니까?')) { db.reading.splice(i,1); window.save().then(()=>renderHome()); } }
-        function delMini(t, i) { if(confirm('삭제하시겠습니까?')) { db[t].splice(i,1); window.save().then(()=>renderHome()); } }
+        function delReading(i) { if(confirm('삭제하시겠습니까?')) { db.reading.splice(i,1); updateLogs(); window.save().then(()=>renderHome()); } }
+        function dropReading(i) { if(confirm('하차하시겠습니까?')) { db.reading.splice(i,1); updateLogs(); window.save().then(()=>renderHome()); } }
+        function delMini(t, i) { if(confirm('삭제하시겠습니까?')) { db[t].splice(i,1); updateLogs(); window.save().then(()=>renderHome()); } }
         function moveWishToToread(i) { db.toread.push(db.wish[i]); db.wish.splice(i,1); window.save().then(()=>renderHome()); }
 
         // 달력
@@ -692,7 +768,15 @@
             const gal = document.getElementById('galleryGrid'); gal.innerHTML = '';
             for(let i=db.library.length-1; i>=0; i--) {
                 const b = db.library[i]; let img = getCoverHtml(b.cover, b.title);
-                gal.innerHTML += `<div class="gallery-item"><button class="btn-gal-edit" onclick="openDateModal('edit_library', ${i})">✏️</button><div style="width:100%; height:140px; margin-bottom:5px; box-shadow:2px 2px 5px rgba(0,0,0,0.1);">${img}</div><div class="gallery-title">${b.title}</div><div class="gallery-author">${b.author}</div><div class="gallery-date">${b.date}</div></div>`;
+                // 갤러리 표지 클릭 시 상세 팝업 오픈
+                gal.innerHTML += `
+                    <div class="gallery-item">
+                        <button class="btn-gal-edit" onclick="openDateModal('edit_library', ${i})">✏️</button>
+                        <div style="width:100%; height:140px; margin-bottom:5px; box-shadow:2px 2px 5px rgba(0,0,0,0.1); cursor:pointer;" onclick="showBookDetail(${i})">${img}</div>
+                        <div class="gallery-title">${b.title}</div>
+                        <div class="gallery-author">${b.author}</div>
+                        <div class="gallery-date">${b.date}</div>
+                    </div>`;
             }
         }
         function changeMonth(n) { curDate.setMonth(curDate.getMonth()+n); renderCalendar(); }
@@ -705,9 +789,22 @@
         }
         function openQuoteModal() {
             const sel = document.getElementById('qBook'); sel.innerHTML = '<option value="">책 선택</option>';
-            [...db.reading, ...db.library].forEach(b => {
-                const op=document.createElement('option'); op.value=b.title; op.innerText=b.title; op.dataset.cover=b.cover; op.dataset.author=b.author; sel.appendChild(op);
-            });
+            
+            if (db.reading.length > 0) {
+                const g1 = document.createElement('optgroup'); g1.label = "📖 읽고 있는 책";
+                db.reading.forEach(b => {
+                    const op=document.createElement('option'); op.value=b.title; op.innerText=b.title; op.dataset.cover=b.cover; op.dataset.author=b.author; g1.appendChild(op);
+                });
+                sel.appendChild(g1);
+            }
+            if (db.library.length > 0) {
+                const g2 = document.createElement('optgroup'); g2.label = "📚 완독한 책";
+                db.library.forEach(b => {
+                    const op=document.createElement('option'); op.value=b.title; op.innerText=b.title; op.dataset.cover=b.cover; op.dataset.author=b.author; g2.appendChild(op);
+                });
+                sel.appendChild(g2);
+            }
+
             document.getElementById('quoteModal').style.display = 'flex';
         }
         function saveQuote() {
@@ -728,11 +825,13 @@
             const g=document.getElementById('mysteryGrid'); g.innerHTML='';
             [...db.quotes].sort(()=>Math.random()-0.5).forEach(q=>{
                 const c=document.createElement('div'); c.className='mystery-card'; c.innerHTML=`<div class="mystery-card-text">"${q.text}"</div>`;
-                c.onclick=()=>showQuoteDetail(q); g.appendChild(c);
+                c.onclick=()=>showQuoteDetailQuoteMode(q); g.appendChild(c);
             });
             document.getElementById('mysteryModal').style.display='flex';
         }
-        function showQuoteDetail(q) {
+        
+        // 문장 탭에서 쓰는 상세 팝업
+        function showQuoteDetailQuoteMode(q) {
             let c = q.cover, a = q.author;
             if(!c || c.includes('placeholder') || c === 'undefined') {
                 const f = [...db.library, ...db.reading].find(b => b.title === q.book);
@@ -747,14 +846,32 @@
             document.getElementById('quoteDetailModal').style.display = 'flex';
         }
 
-        // [NEW] 단어장 로직
-        function searchDict() {
+        // 단어장
+        window.searchDict = async function() {
             const word = document.getElementById('vocaWordInput').value.trim();
             if(!word) return alert("단어를 먼저 입력해주세요!");
-            window.open('https://ko.dict.naver.com/#/search?query=' + encodeURIComponent(word), '_blank');
+            
+            const btn = document.getElementById('btnDictSearch');
+            btn.innerHTML = "⏳ 뜻 찾는 중...";
+            
+            try {
+                const res = await fetch(`https://ko.wiktionary.org/w/api.php?action=query&prop=extracts&format=json&exsentences=3&explaintext=1&titles=${encodeURIComponent(word)}&origin=*`);
+                const data = await res.json();
+                const pages = data.query.pages;
+                const page = Object.values(pages)[0];
+                
+                if (page.pageid && page.extract) {
+                    document.getElementById('vocaMeaningInput').value = page.extract.trim();
+                } else {
+                    alert("사전에서 뜻을 찾지 못했습니다. 직접 적어주세요!");
+                }
+            } catch(e) {
+                alert("검색 중 오류가 발생했습니다.");
+            }
+            btn.innerHTML = "<span>🤖</span> AI 자동 뜻 찾기";
         }
 
-        function addVoca() {
+        window.addVoca = function() {
             const word = document.getElementById('vocaWordInput').value.trim();
             const meaning = document.getElementById('vocaMeaningInput').value.trim();
             if(!word || !meaning) return alert("단어와 뜻을 모두 입력해주세요!");
@@ -770,7 +887,7 @@
             });
         }
 
-        function deleteVoca(index) {
+        window.deleteVoca = function(index) {
             if(confirm("이 단어를 삭제하시겠습니까?")) {
                 db.voca.splice(index, 1);
                 window.save().then(() => renderVoca());
@@ -787,15 +904,9 @@
                 return;
             }
 
-            // 정렬 로직 복사 (원본 훼손 방지)
             let vocaList = [...db.voca].map((v, i) => ({...v, originalIndex: i}));
-            
-            if(sortType === 'abc') {
-                vocaList.sort((a,b) => a.word.localeCompare(b.word, 'ko-KR'));
-            } else {
-                // 최신순 (기본적으로 배열 뒤쪽이 최신)
-                vocaList.reverse();
-            }
+            if(sortType === 'abc') vocaList.sort((a,b) => a.word.localeCompare(b.word, 'ko-KR'));
+            else vocaList.reverse();
 
             vocaList.forEach(v => {
                 container.innerHTML += `
@@ -807,11 +918,10 @@
             });
         }
 
-        // 랭킹 (출판사/카테고리 수정 반영)
+        // 랭킹
         function renderStats() {
             const c={}, a={}, p={}; 
             db.library.forEach(b=>{ 
-                // 수정된 카테고리를 우선 사용, 없으면 번역 시도
                 const sc = b.category || translateCat(b.category); 
                 c[sc]=(c[sc]||0)+1; 
                 a[b.author]=(a[b.author]||0)+1; 
