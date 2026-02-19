@@ -129,7 +129,7 @@
         .voca-filter { display: flex; justify-content: space-between; align-items: center; padding: 0 20px; margin-bottom: 10px; }
         .voca-filter select { padding: 5px 10px; border-radius: 5px; border: 1px solid #ccc; outline: none; }
         
-        /* [NEW] 자음 필터 바 */
+        /* 자음 필터 바 */
         .voca-cons-bar { display: none; overflow-x: auto; white-space: nowrap; padding: 0 20px 15px; gap: 8px; scroll-behavior: smooth; }
         .voca-cons-bar::-webkit-scrollbar { display: none; }
         .btn-cons { background: #eee; border: none; padding: 6px 14px; border-radius: 15px; cursor: pointer; font-weight: bold; color: #555; }
@@ -515,7 +515,6 @@
             return `<img src="${url}" style="width:100%; height:100%; object-fit:cover; border-radius:4px;">`;
         }
 
-        // 스트릭 동기화 도우미 (삭제 시 달력 지워짐 완벽 처리)
         function updateLogs() {
             let activeDates = new Set();
             window.db.reading.forEach(b => {
@@ -528,7 +527,6 @@
             window.db.logs = Array.from(activeDates);
         }
 
-        // 오늘 초기화 (버그 수정됨)
         window.resetToday = async () => {
             const today = new Date().toISOString().split('T')[0];
             if(confirm("오늘 기록한 모든 독서 내역(페이지 갱신, 완독)을 취소할까요?")) {
@@ -566,7 +564,6 @@
             }
         }
 
-        // 바코드
         function openScanner() {
             document.getElementById('scannerModal').style.display = 'flex';
             if(!html5QrcodeScanner) { html5QrcodeScanner = new Html5Qrcode("scanner-container"); }
@@ -578,7 +575,6 @@
             else document.getElementById('scannerModal').style.display = 'none';
         }
 
-        // --- 통합 날짜/수정 모달 ---
         window.openDateModal = function(action, index) {
             currentAction = action; targetIndex = index;
             const today = new Date().toISOString().split('T')[0];
@@ -598,7 +594,6 @@
             if (action === 'start_reading_search') {
                 pageWrap.style.display = 'none';
                 title.innerText = '새 책 읽기 시작';
-                // 책 추가할 때 출판사/장르 미리 고칠 수 있게 함!
                 extraEditWrap.style.display = 'block';
                 document.getElementById('editPublisher').value = window.tempBookData.publisher || '미상';
                 document.getElementById('editCategory').value = window.tempBookData.category || '기타';
@@ -634,7 +629,6 @@
 
             if(currentAction === 'start_reading_search') {
                 window.tempBookData.startDate = date;
-                // 수정한 출판사/카테고리 적용
                 window.tempBookData.publisher = document.getElementById('editPublisher').value;
                 window.tempBookData.category = document.getElementById('editCategory').value;
                 db.reading.push(window.tempBookData);
@@ -680,7 +674,6 @@
             }
         }
 
-        // 책 상세 정보 (코멘트 팝업)
         window.showBookDetail = function(index) {
             const b = db.library[index];
             const container = document.getElementById('bdCoverContainer');
@@ -703,7 +696,6 @@
             document.getElementById('bookDetailModal').style.display = 'flex';
         }
 
-        // 렌더링
         function renderHome() {
             const weekDiv = document.getElementById('weekCircles'); weekDiv.innerHTML = '';
             const today = new Date(); const startOfWeek = new Date(today); startOfWeek.setDate(today.getDate() - today.getDay());
@@ -742,7 +734,6 @@
             });
         }
         
-        // 검색/추가
         window.openSearch = function() { document.getElementById('searchModal').style.display='block'; document.getElementById('searchInput').focus(); }
         window.searchBooks = async function() {
             let q = document.getElementById('searchInput').value.trim(); 
@@ -790,7 +781,6 @@
         window.delMini = function(t, i) { if(confirm('삭제하시겠습니까?')) { db[t].splice(i,1); updateLogs(); window.save().then(()=>renderHome()); } }
         window.moveWishToToread = function(i) { db.toread.push(db.wish[i]); db.wish.splice(i,1); window.save().then(()=>renderHome()); }
 
-        // 달력
         function renderCalendar() {
             const grid = document.getElementById('calGrid'); grid.innerHTML = '';
             ['일','월','화','수','목','금','토'].forEach(d=>grid.innerHTML+=`<div style="text-align:center; padding:5px; font-weight:bold; font-size:0.8rem;">${d}</div>`);
@@ -826,7 +816,6 @@
         }
         window.changeMonth = function(n) { curDate.setMonth(curDate.getMonth()+n); renderCalendar(); }
 
-        // 문장
         window.toggleQuoteView = function(mode) {
             document.getElementById('quoteMainView').style.display = mode==='list'?'none':'block';
             document.getElementById('quoteListView').style.display = mode==='list'?'block':'none';
@@ -835,7 +824,6 @@
         
         window.openQuoteModal = function() {
             const sel = document.getElementById('qBook'); sel.innerHTML = '<option value="">책 선택</option>';
-            
             if (db.reading.length > 0) {
                 const g1 = document.createElement('optgroup'); g1.label = "📖 읽고 있는 책";
                 db.reading.forEach(b => {
@@ -850,7 +838,6 @@
                 });
                 sel.appendChild(g2);
             }
-
             document.getElementById('quoteModal').style.display = 'flex';
         }
 
@@ -892,7 +879,7 @@
             document.getElementById('quoteDetailModal').style.display = 'flex';
         }
 
-        // [업그레이드] 단어장 로직 (위키 파싱 스마트 필터링 적용)
+        // [업그레이드] 단어장 - 강력한 필터링 및 이중 검색(백과사전) 도입
         window.searchDict = async function() {
             const word = document.getElementById('vocaWordInput').value.trim();
             if(!word) return alert("단어를 먼저 입력해주세요!");
@@ -900,30 +887,50 @@
             const btn = document.getElementById('btnDictSearch');
             btn.innerHTML = "⏳ 뜻 찾는 중...";
             
+            let text = "";
+
             try {
+                // 1차 시도: 위키낱말사전 검색
                 const res = await fetch(`https://ko.wiktionary.org/w/api.php?action=query&prop=extracts&format=json&explaintext=1&titles=${encodeURIComponent(word)}&origin=*`);
                 const data = await res.json();
-                const pages = data.query.pages;
-                const page = Object.values(pages)[0];
+                const page = Object.values(data.query.pages)[0];
                 
                 if (page.pageid && page.extract) {
-                    let text = page.extract;
-                    
-                    // 1. == 한국어 == 같은 제목 기호 줄 지우기
+                    text = page.extract;
+                } else {
+                    // 2차 시도: 위키백과 검색 (사자성어, 속담 등 사전 표제어에 없는 경우 대비)
+                    const wikiRes = await fetch(`https://ko.wikipedia.org/w/api.php?action=query&prop=extracts&format=json&exsentences=3&explaintext=1&titles=${encodeURIComponent(word)}&origin=*`);
+                    const wikiData = await wikiRes.json();
+                    const wikiPage = Object.values(wikiData.query.pages)[0];
+                    if(wikiPage.pageid && wikiPage.extract) {
+                        text = wikiPage.extract;
+                    }
+                }
+                
+                if (text) {
+                    // 기호 (== 한국어 == 등) 제거
                     text = text.replace(/=+.*?=+/g, '');
                     
-                    // 2. 불필요한 문법 정보 줄(어원, 발음, 파생어 등) 완벽 제거
+                    // 불필요한 문법/어원/발음 줄 완벽 제거
                     let lines = text.split('\n');
                     let cleanLines = lines.filter(line => {
                         let l = line.trim();
                         if(!l) return false;
-                        // 이런 단어로 시작하는 줄은 아예 날려버림
-                        if(l.match(/^(표준어|IPA|발음|어원|동사|형용사|부사|명사|대명사|수사|관형사|감탄사|조사|유의어|반의어|파생어|참고|번역|속담|관용구|문법)/)) return false;
+                        
+                        // 발음/어원 등 불필요한 괄호나 표기가 들어간 줄 제거
+                        if (l.includes('표준어') || l.includes('IPA') || l.startsWith('어원:') || l.startsWith('발음:')) return false;
+                        
+                        // 품사 형태(동사: ~) 및 위키 특수 기호로 시작하는 줄 제거
+                        if (l.match(/^(동사|형용사|부사|명사|대명사|수사|관형사|감탄사|조사|유의어|반의어|파생어|참고|번역|속담|관용구|문법|어원|발음|유래|활용|한자|로마자)\s*:/)) return false;
+                        
+                        // 단어 자체가 다시 한 번 나오는 제목 줄 방지
                         if(l === word) return false; 
+                        
                         return true;
                     });
                     
-                    let finalText = cleanLines.join('\n').trim();
+                    // 너무 길어지지 않게 상위 핵심 뜻 3줄까지만 가져오기
+                    let finalText = cleanLines.slice(0, 3).join('\n').trim();
                     
                     if(finalText) {
                         document.getElementById('vocaMeaningInput').value = finalText;
@@ -931,7 +938,7 @@
                         alert("사전에 뜻이 명확하게 등록되어 있지 않습니다. 직접 적어주세요!");
                     }
                 } else {
-                    alert("사전에서 단어를 찾지 못했습니다. 직접 적어주세요!");
+                    alert("사전이나 백과사전에서 단어를 찾지 못했습니다. 직접 적어주세요!");
                 }
             } catch(e) {
                 alert("검색 중 오류가 발생했습니다.");
@@ -962,12 +969,12 @@
             }
         }
 
-        // 초성 추출 함수 (단어장 필터용)
+        // 단어장 자음 필터 로직
         function getChosung(str) {
             const cho = ["ㄱ","ㄲ","ㄴ","ㄷ","ㄸ","ㄹ","ㅁ","ㅂ","ㅃ","ㅅ","ㅆ","ㅇ","ㅈ","ㅉ","ㅊ","ㅋ","ㅌ","ㅍ","ㅎ"];
             let code = str.charCodeAt(0) - 44032;
             if (code > -1 && code < 11172) return cho[Math.floor(code / 588)];
-            return '기타'; // 영어, 숫자 등
+            return '기타';
         }
 
         window.toggleVocaFilter = function() {
@@ -975,25 +982,22 @@
             const filterBar = document.getElementById('vocaConsonantFilter');
             
             if(sortType === 'abc') {
-                filterBar.style.display = 'flex'; // 가나다순일때만 자음 버튼 보임
+                filterBar.style.display = 'flex';
             } else {
                 filterBar.style.display = 'none';
-                window.currentVocaFilter = 'ALL';
+                window.currentVocaFilter = 'ALL'; // 최신순일때는 필터 무시
             }
             renderVoca();
         }
 
         window.filterVoca = function(cons) {
             window.currentVocaFilter = cons;
-            
-            // 버튼 활성화 스타일 변경
             document.querySelectorAll('.btn-cons').forEach(btn => {
                 btn.classList.remove('active');
                 if(btn.innerText === cons || (cons === 'ALL' && btn.innerText === '전체') || (cons === '기타' && btn.innerText === 'A-Z')) {
                     btn.classList.add('active');
                 }
             });
-            
             renderVoca();
         }
 
@@ -1007,21 +1011,28 @@
                 return;
             }
 
-            // 원본 인덱스 유지 복사
             let vocaList = [...db.voca].map((v, i) => ({...v, originalIndex: i}));
             
             if(sortType === 'abc') {
                 vocaList.sort((a,b) => a.word.localeCompare(b.word, 'ko-KR'));
-                // 자음 필터 적용
                 if(window.currentVocaFilter !== 'ALL') {
-                    vocaList = vocaList.filter(v => getChosung(v.word) === window.currentVocaFilter);
+                    // 쌍자음(ㄲ, ㄸ)을 단일자음(ㄱ, ㄷ)으로 취급해서 검색할 수 있게 개선
+                    vocaList = vocaList.filter(v => {
+                        let c = getChosung(v.word);
+                        if(window.currentVocaFilter === 'ㄱ' && c === 'ㄲ') return true;
+                        if(window.currentVocaFilter === 'ㄷ' && c === 'ㄸ') return true;
+                        if(window.currentVocaFilter === 'ㅂ' && c === 'ㅃ') return true;
+                        if(window.currentVocaFilter === 'ㅅ' && c === 'ㅆ') return true;
+                        if(window.currentVocaFilter === 'ㅈ' && c === 'ㅉ') return true;
+                        return c === window.currentVocaFilter;
+                    });
                 }
             } else {
-                vocaList.reverse(); // 최신순
+                vocaList.reverse();
             }
 
             if(vocaList.length === 0) {
-                container.innerHTML = `<div style="text-align:center; color:#999; padding:20px;">'${window.currentVocaFilter}'(으)로 시작하는 단어가 없습니다.</div>`;
+                container.innerHTML = `<div style="text-align:center; color:#999; padding:20px;">선택한 자음으로 시작하는 단어가 없습니다.</div>`;
                 return;
             }
 
