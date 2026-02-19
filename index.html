@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>나만의 독서 기록장 (Cloud)</title>
+    <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/ridibatang/1.0.0/ridibatang.min.css">
+    
+    <style>
+        :root { --bg-color: #fdfbf7; --primary-color: #5d4037; --accent-color: #d84315; --font-main: 'Pretendard', sans-serif; --font-book: 'RIDIBatang', serif; }
+        * { box-sizing: border-box; }
+        body { font-family: var(--font-main); background-color: var(--bg-color); color: #333; margin: 0; padding: 0; max-width: 600px; margin: 0 auto; min-height: 100vh; padding-bottom: 90px; border-left: 1px solid #eee; border-right: 1px solid #eee; position: relative;}
+
+        /* 로그인 화면 */
+        #auth-screen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--bg-color); z-index: 5000;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            padding: 20px;
+        }
+        .auth-box {
+            background: white; padding: 30px; border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(93, 64, 55, 0.15); width: 100%; max-width: 400px;
+            text-align: center;
+        }
+        .auth-input { width: 100%; padding: 12px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 1rem; }
+        .btn-auth-submit { width: 100%; padding: 12px; background: var(--primary-color); color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 1rem; margin-top: 10px; }
+        .auth-switch { margin-top: 20px; font-size: 0.9rem; color: #666; cursor: pointer; text-decoration: underline; }
+
+        /* 메인 앱 (초기 숨김) */
+        #app-container { display: none; }
+
+        header { padding: 20px; text-align: center; position: relative; }
+        h2 { font-family: var(--font-book); color: var(--primary-color); margin: 0; font-size: 1.5rem; }
+        
+        .btn-logout { position: absolute; top: 20px; right: 20px; font-size: 0.8rem; color: #999; background: none; border: none; cursor: pointer; text-decoration: underline; }
+        .btn-reset-all { position: absolute; top: 20px; left: 20px; font-size: 0.8rem; color: #999; background: none; border: none; cursor: pointer; text-decoration: underline; }
+
+        /* 스타일 (기존 유지) */
+        .home-search-box { margin: 0 20px 20px; background: white; border: 2px solid var(--primary-color); border-radius: 12px; padding: 10px; display: flex; align-items: center; box-shadow: 0 4px 10px rgba(93, 64, 55, 0.1); }
+        .search-input { flex: 1; border: none; outline: none; font-size: 1rem; padding: 5px; }
+        .btn-camera { font-size: 1.5rem; background: none; border: none; cursor: pointer; padding: 5px; }
+        .tracker-box { background: white; padding: 20px; margin: 0 20px 25px; border-radius: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); text-align: center; }
+        .streak-info { font-size: 1.1rem; font-weight: bold; color: var(--accent-color); margin-bottom: 15px; }
+        .week-circles { display: flex; justify-content: space-between; }
+        .day-circle { width: 38px; height: 38px; border-radius: 50%; background: #f0f0f0; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; color: #aaa; transition: 0.3s; }
+        .day-circle.active { background: var(--accent-color); color: white; font-weight: bold; transform: scale(1.1); }
+        .day-label { font-size: 0.7rem; color: #999; margin-top: 5px; }
+        .section-title { padding: 0 20px; margin-bottom: 10px; font-weight: bold; color: var(--primary-color); font-size: 1.1rem; display: flex; justify-content: space-between; align-items: flex-end; }
+        .h-scroll-container { display: flex; gap: 15px; overflow-x: auto; padding: 0 20px 20px; scroll-behavior: smooth; flex-wrap: nowrap; }
+        .h-scroll-container::-webkit-scrollbar { display: none; }
+        .reading-card { min-width: 280px; flex: 0 0 auto; background: white; padding: 15px; border-radius: 12px; display: flex; gap: 15px; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05); border: 1px solid #eee; position: relative; }
+        .reading-cover { width: 60px; height: 90px; object-fit: cover; border-radius: 4px; background: #eee; flex-shrink: 0; }
+        .progress-bar { background: #eee; height: 6px; border-radius: 3px; margin-top: 8px; overflow: hidden; }
+        .progress-fill { background: var(--accent-color); height: 100%; width: 0%; transition: width 0.5s; }
+        .btn-round { padding: 6px 12px; font-size: 0.8rem; border-radius: 20px; border: none; cursor: pointer; font-weight: bold; transition: 0.2s; }
+        .btn-record { background: #f0f0f0; color: #333; }
+        .btn-finish { background: var(--accent-color); color: white; }
+        .btn-edit { background: none; border: 1px solid #ddd; color: #888; margin-left: 5px; }
+        .btn-card-close { position: absolute; top: 10px; right: 10px; background: none; border: none; color: #999; font-size: 1.2rem; cursor: pointer; line-height: 1; }
+        .mini-card { min-width: 90px; flex: 0 0 auto; text-align: center; position: relative; }
+        .mini-cover { width: 90px; height: 130px; object-fit: cover; border-radius: 5px; box-shadow: 2px 2px 5px rgba(0,0,0,0.1); }
+        .mini-title { font-size: 0.8rem; margin-top: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .btn-mini-del { position: absolute; top: -5px; right: -5px; background: red; color: white; width: 20px; height: 20px; border-radius: 50%; border: none; cursor: pointer; font-size: 0.8rem; }
+        .shelf-wrapper { margin: 0 20px; background: #d7ccc8; padding: 40px 20px 20px; border-radius: 5px; box-shadow: inset 2px 2px 10px rgba(0,0,0,0.1); }
+        .shelf-flex-container { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 2px; width: 100%; border-bottom: 20px solid #5d4037; padding-bottom: 0; min-height: 180px; }
+        .spine { writing-mode: vertical-rl; text-orientation: mixed; color: rgba(255,255,255,0.95); border: 1px solid rgba(0,0,0,0.1); border-radius: 3px 3px 0 0; padding: 10px 4px; font-size: 0.8rem; box-shadow: 2px 0 4px rgba(0,0,0,0.2); text-align: left; font-family: var(--font-book); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.5; margin-bottom: 0; transition: transform 0.2s; }
+        .spine:hover { transform: translateY(-10px); z-index: 10; }
+        .quote-main-view { padding: 0 20px; }
+        .quote-list-view { display: none; }
+        .big-menu-grid { display: grid; grid-template-columns: 1fr; gap: 15px; margin-bottom: 20px; }
+        .big-card-btn { padding: 30px 20px; border-radius: 15px; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(0,0,0,0.08); transition: transform 0.2s; text-align: center; color: white; }
+        .big-card-btn:hover { transform: translateY(-3px); }
+        .btn-treasure { background: linear-gradient(135deg, #5d4037, #4e342e); }
+        .btn-list { background: linear-gradient(135deg, #8d6e63, #6d4c41); }
+        .big-icon { font-size: 2.5rem; margin-bottom: 10px; }
+        .big-title { font-weight: bold; font-size: 1.1rem; margin-bottom: 5px; }
+        .big-desc { font-size: 0.85rem; opacity: 0.9; }
+        .btn-back-list { background: white; border: 1px solid #ddd; padding: 8px 15px; border-radius: 20px; cursor: pointer; font-weight: bold; color: #555; margin-bottom: 15px;}
+        .quote-list-container { margin-top: 10px; }
+        .quote-item { background: white; padding: 20px; margin-bottom: 15px; border-radius: 12px; border-left: 4px solid var(--primary-color); box-shadow: 0 2px 5px rgba(0,0,0,0.05); text-align: left;}
+        .rank-box { background:white; padding:20px; border-radius:15px; margin-bottom:20px; box-shadow:0 2px 5px rgba(0,0,0,0.05); }
+        .rank-title { margin:0 0 15px; font-size: 1.1rem; color: var(--primary-color); font-weight: bold; }
+        .rank-row { margin-bottom: 15px; }
+        .rank-info { display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 0.95rem; }
+        .rank-bar-bg { background: #eee; height: 10px; border-radius: 5px; overflow: hidden; }
+        .rank-bar-fill { background: var(--accent-color); height: 100%; border-radius: 5px; width: 0; transition: width 1s; }
+        .full-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg-color); z-index: 2000; overflow-y: auto; }
+        .search-header { position: sticky; top: 0; background: var(--bg-color); padding: 15px; display: flex; gap: 10px; border-bottom: 1px solid #ddd; z-index: 10; }
+        .search-header input { flex: 1; padding: 12px; border: 1px solid #ccc; border-radius: 8px; font-size: 1rem; }
+        .result-item { display: flex; gap: 15px; background: white; padding: 15px; margin: 15px; border-radius: 12px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .result-actions button { margin-right: 5px; padding: 6px 12px; font-size: 0.8rem; border-radius: 5px; border: none; cursor: pointer; font-weight: bold; }
+        .bottom-nav { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 600px; background: white; border-top: 1px solid #ddd; display: flex; justify-content: space-around; padding: 12px 0; z-index: 1000; }
+        .nav-item { text-align: center; cursor: pointer; color: #aaa; flex: 1; }
+        .nav-item.active { color: var(--primary-color); font-weight: bold; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; animation: fadeIn 0.3s; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); background: #eee; gap: 1px; border: 1px solid #eee; margin: 0 20px; }
+        .cal-day { background: white; min-height: 100px; position: relative; display: flex; }
+        .cal-split { flex: 1; height: 100%; overflow: hidden; position: relative; border-right: 1px solid white; }
+        .cal-split:last-child { border-right: none; }
+        .cal-img { width: 100%; height: 100%; object-fit: cover; }
+        .cal-num { position: absolute; top: 3px; left: 3px; font-size: 0.75rem; font-weight: bold; background: rgba(255,255,255,0.8); padding: 0 4px; border-radius: 3px; z-index: 5;}
+        .gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 15px; padding: 0 20px 20px; }
+        .gallery-item { text-align: center; position: relative; }
+        .gallery-item img { width: 100%; height: 140px; object-fit: cover; border-radius: 5px; box-shadow: 2px 2px 5px rgba(0,0,0,0.1); margin-bottom: 5px; }
+        .gallery-title { font-weight: bold; font-size: 0.85rem; color: #333; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+        .gallery-author { font-size: 0.75rem; color: #888; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+        .gallery-date { font-size: 0.7rem; color: var(--accent-color); margin-top: 2px; }
+        .btn-gal-edit { position: absolute; top: 5px; right: 5px; background: rgba(255,255,255,0.9); color: #333; width: 25px; height: 25px; border-radius: 50%; border: none; cursor: pointer; font-size: 0.8rem; line-height: 25px; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 3000; justify-content: center; align-items: center; }
+        .modal-box { background: white; width: 90%; max-width: 350px; padding: 25px; border-radius: 15px; display: flex; flex-direction: column; gap: 10px; max-height: 80vh; overflow-y: auto;}
+        .mystery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 15px; width: 100%; padding: 10px;}
+        .mystery-card { background: #fffaf0; padding: 20px; border-radius: 12px; cursor: pointer; font-family: 'RIDIBatang'; font-size: 0.9rem; line-height: 1.5; color: #444; height: 140px; overflow: hidden; position: relative; box-shadow: 0 3px 8px rgba(0,0,0,0.08); border: 1px solid #eee; transition: 0.3s; display: flex; align-items: center; justify-content: center; text-align: center; }
+        .mystery-card:hover { transform: translateY(-5px); box-shadow: 0 5px 12px rgba(0,0,0,0.12); background: #fff; }
+        .mystery-card-text { display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; text-overflow: ellipsis; }
+        .quote-detail-cover { width: 100px; height: 150px; object-fit: cover; border-radius: 5px; box-shadow: 2px 2px 8px rgba(0,0,0,0.15); margin: 0 auto 15px; display: block;}
+        .quote-detail-text { font-family: 'RIDIBatang'; font-size: 1.1rem; line-height: 1.6; margin: 20px 0; padding: 15px; background: #f9f9f9; border-radius: 8px; }
+        .placeholder-cover { width: 100%; height: 100%; background: #eee; display: flex; align-items: center; justify-content: center; text-align: center; font-size: 0.8rem; color: #555; padding: 5px; font-weight: bold; border-radius: 4px; }
+        .btn-delete-red { background: #ffebee; color: #d32f2f; border: 1px solid #d32f2f; padding: 10px; border-radius: 5px; width: 100%; margin-top: 20px; cursor: pointer; font-weight: bold; }
+        #scanner-container { width: 100%; height: 250px; background: black; overflow: hidden; position: relative; }
+        #scanner-video { width: 100%; height: 100%; object-fit: cover; }
+    </style>
+</head>
+<body>
+
+    <div id="auth-screen">
+        <div class="auth-box">
+            <h2 style="margin-bottom:20px;">📚 독서 기록장</h2>
+            <div id="login-form">
+                <input type="email" id="login-email" class="auth-input" placeholder="이메일">
+                <input type="password" id="login-pw" class="auth-input" placeholder="비밀번호">
+                <button class="btn-auth-submit" onclick="handleLogin()">로그인</button>
+                <div class="auth-switch" onclick="switchAuthMode('signup')">계정이 없으신가요? 회원가입</div>
+            </div>
+            <div id="signup-form" style="display:none;">
+                <input type="email" id="signup-email" class="auth-input" placeholder="이메일 입력">
+                <input type="password" id="signup-pw" class="auth-input" placeholder="비밀번호 설정 (6자리 이상)">
+                <button class="btn-auth-submit" onclick="handleSignup()">회원가입</button>
+                <div class="auth-switch" onclick="switchAuthMode('login')">이미 계정이 있으신가요? 로그인</div>
+            </div>
+        </div>
+    </div>
+
+    <div id="app-container">
+        <header>
+            <h2>My Reading Log</h2>
+            <button class="btn-reset-all" onclick="resetAll()">전체 초기화</button>
+            <button class="btn-logout" onclick="handleLogout()">로그아웃</button>
+        </header>
+
+        <div id="tab-home" class="tab-content active">
+            <div class="home-search-box">
+                <span style="font-size:1.2rem;">🔍</span>
+                <input type="text" class="search-input" placeholder="책 검색 또는 바코드" onclick="openSearch()" readonly>
+                <button class="btn-camera" onclick="openScanner()">📷</button>
+            </div>
+            <div class="tracker-box">
+                <div class="streak-info" id="streakDisplay">🔥 0일 연속 독서 중</div>
+                <div class="week-circles" id="weekCircles"></div>
+            </div>
+            <div class="section-title"><span>📖 읽고 있는 책</span></div>
+            <div id="readingList" class="h-scroll-container"></div>
+            <div style="height: 20px;"></div>
+            <div class="section-title"><span>⭐️ 위시리스트</span><span style="font-size:0.8rem; color:#999;" id="wishCount">0권</span></div>
+            <div id="wishList" class="h-scroll-container"></div>
+            <div style="height: 20px;"></div>
+            <div class="section-title"><span>🗓 읽을 예정</span><span style="font-size:0.8rem; color:#999;" id="toreadCount">0권</span></div>
+            <div id="toreadList" class="h-scroll-container"></div>
+            <div style="height: 30px;"></div>
+            <div class="section-title">📚 내 서재 (완독)</div>
+            <div class="shelf-wrapper">
+                <div class="shelf-flex-container" id="bookShelf"></div>
+            </div>
+        </div>
+
+        <div id="tab-calendar" class="tab-content">
+            <div style="display:flex; justify-content:space-between; padding:0 20px 10px; font-weight:bold; font-size:1.2rem;">
+                <span onclick="changeMonth(-1)" style="cursor:pointer">◀</span>
+                <span id="calTitle"></span>
+                <span onclick="changeMonth(1)" style="cursor:pointer">▶</span>
+            </div>
+            <div class="cal-grid" id="calGrid"></div>
+            <div class="section-title" style="margin-top:30px;">🖼 완독한 책들 (수정)</div>
+            <div class="gallery-grid" id="galleryGrid"></div>
+        </div>
+
+        <div id="tab-quotes" class="tab-content">
+            <div id="quoteMainView" class="quote-main-view">
+                <div style="height:20px;"></div>
+                <div class="big-menu-grid">
+                    <div class="big-card-btn btn-treasure" onclick="openMysteryModal()">
+                        <div class="big-icon">🎁</div>
+                        <div class="big-title">문장 보물상자 열기</div>
+                        <div class="big-desc">랜덤으로 문장을 뽑아보세요!</div>
+                    </div>
+                    <div class="big-card-btn btn-list" onclick="toggleQuoteView('list')">
+                        <div class="big-icon">📜</div>
+                        <div class="big-title">전체 문장 보기</div>
+                        <div class="big-desc">저장된 모든 문장을 확인하세요</div>
+                    </div>
+                </div>
+                <button onclick="openQuoteModal()" style="width:100%; font-size:0.9rem; background:white; color:#5d4037; border:1px solid #5d4037; padding:15px; border-radius:12px; cursor:pointer; font-weight:bold;">+ 문장 직접 추가하기</button>
+            </div>
+            <div id="quoteListView" class="quote-list-view">
+                <div style="padding:20px 20px 0;">
+                    <button class="btn-back-list" onclick="toggleQuoteView('main')">↩ 뒤로가기</button>
+                </div>
+                <div class="quote-list-container" id="quoteList"></div>
+            </div>
+        </div>
+
+        <div id="tab-stats" class="tab-content">
+            <div style="padding:20px;">
+                <div class="rank-box"><div class="rank-title">🏆 선호 분야 TOP 5</div><div id="rankCategory"></div></div>
+                <div class="rank-box"><div class="rank-title">✍️ 최애 작가 TOP 5</div><div id="rankAuthor"></div></div>
+                <div class="rank-box"><div class="rank-title">🏢 선호 출판사 TOP 5</div><div id="rankPublisher"></div></div>
+            </div>
+        </div>
+
+        <div class="bottom-nav">
+            <div class="nav-item active" onclick="switchTab('home', this)"><span>🏠</span><div style="font-size:0.7rem">홈</div></div>
+            <div class="nav-item" onclick="switchTab('calendar', this)"><span>📅</span><div style="font-size:0.7rem">달력</div></div>
+            <div class="nav-item" onclick="switchTab('quotes', this)"><span>✏️</span><div style="font-size:0.7rem">문장</div></div>
+            <div class="nav-item" onclick="switchTab('stats', this)"><span>📊</span><div style="font-size:0.7rem">랭킹</div></div>
+        </div>
+    </div>
+
+    <div id="searchModal" class="full-modal">
+        <div class="search-header">
+            <button onclick="document.getElementById('searchModal').style.display='none'" style="font-size:1.5rem; background:none; border:none;">&larr;</button>
+            <input type="text" id="searchInput" placeholder="책 제목, 작가 입력" onkeypress="if(event.key==='Enter') searchBooks()">
+            <button onclick="searchBooks()" style="background:var(--accent-color); color:white; border:none; padding:0 15px; border-radius:5px;">검색</button>
+        </div>
+        <div id="searchResultList"></div>
+    </div>
+
+    <div id="scannerModal" class="modal-overlay">
+        <div class="modal-box" style="max-width:500px;">
+            <h3>📷 바코드 스캔</h3>
+            <div id="scanner-container"></div>
+            <button onclick="closeScanner()" style="padding:10px; background:#eee; border:none; border-radius:5px; width:100%; margin-top:10px;">닫기</button>
+        </div>
+    </div>
+
+    <div id="dateModal" class="modal-overlay">
+        <div class="modal-box">
+            <h3 id="dateModalTitle">기록 수정</h3>
+            <label style="font-size:0.8rem; color:#666;">날짜</label>
+            <input type="date" id="dateInput" style="padding:10px; border:1px solid #ddd; border-radius:5px; font-size:1rem;">
+            <div id="pageInputWrap" style="display:none;">
+                <label style="font-size:0.8rem; color:#666; margin-top:10px; display:block;">읽은 페이지</label>
+                <input type="number" id="pageInput" placeholder="페이지 수" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:5px;">
+            </div>
+            <div style="display:flex; gap:10px; margin-top:15px;">
+                <button onclick="document.getElementById('dateModal').style.display='none'" style="flex:1; padding:10px; background:#eee; border:none; border-radius:5px;">취소</button>
+                <button onclick="confirmDateAction()" style="flex:1; padding:10px; background:var(--primary-color); color:white; border:none; border-radius:5px;">저장</button>
+            </div>
+            <button id="btnDeleteBook" class="btn-delete-red" style="display:none;" onclick="deleteCurrentBook()">🗑️ 이 책 삭제하기</button>
+        </div>
+    </div>
+
+    <div id="quoteModal" class="modal-overlay">
+        <div class="modal-box">
+            <h3>문장 추가</h3>
+            <select id="qBook" style="padding:8px; border:1px solid #ccc; border-radius:5px;"></select>
+            <input type="number" id="qPage" placeholder="페이지 (선택)" style="padding:8px; border:1px solid #ccc; border-radius:5px;">
+            <textarea id="qText" rows="4" placeholder="문장을 입력하세요" style="padding:8px; border:1px solid #ccc; border-radius:5px;"></textarea>
+            <div style="display:flex; gap:10px; margin-top:10px;">
+                <button onclick="document.getElementById('quoteModal').style.display='none'" style="flex:1; padding:10px; background:#eee; border:none; border-radius:5px;">취소</button>
+                <button onclick="saveQuote()" style="flex:1; padding:10px; background:var(--primary-color); color:white; border:none; border-radius:5px;">저장</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="mysteryModal" class="modal-overlay">
+        <div class="modal-box" style="max-width:600px; background: #fdfbf7;">
+            <h3 style="margin-top:0; text-align:center;">📜 문장 보물상자</h3>
+            <p style="font-size:0.8rem; color:#666; margin-bottom:15px; text-align:center;">구절을 클릭해 출처를 확인하세요!</p>
+            <div class="mystery-grid" id="mysteryGrid" style="max-height: 60vh; overflow-y: auto;"></div>
+            <button onclick="document.getElementById('mysteryModal').style.display='none'" style="padding:10px; background:#eee; border:none; border-radius:5px; margin-top:15px; width:100%;">닫기</button>
+        </div>
+    </div>
+
+    <div id="quoteDetailModal" class="modal-overlay" style="z-index: 3100;">
+        <div class="modal-box" style="text-align:center;">
+            <div id="qdCoverContainer"></div>
+            <h3 id="qdTitle" style="margin:0;">책 제목</h3>
+            <div id="qdAuthor" style="font-size:0.9rem; color:#666; margin-top:5px;">작가</div>
+            <div class="quote-detail-text">"<span id="qdText">문장 내용</span>"</div>
+            <div style="font-size:0.9rem; color:#666;">- p.<span id="qdPage"></span> -</div>
+            <button onclick="document.getElementById('quoteDetailModal').style.display='none'" style="padding:10px; background:var(--primary-color); color:white; border:none; border-radius:5px; margin-top:20px; width:100%;">확인</button>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+    <script type="module">
+        // ================= FIREBASE 설정 =================
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
+        import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
+        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
+
+        // ★ 여기를 본인의 Firebase 설정으로 바꿔주세요! ★
+        const firebaseConfig = {
+            apiKey: "AIzaSyCfalVdpUZ0YaFjt6_gaOBvq1TeIzb40eg",
+            authDomain: "book-yum-5babd.firebaseapp.com",
+            projectId: "book-yum-5babd",
+            storageBucket: "book-yum-5babd.firebasestorage.app",
+            messagingSenderId: "131924542195",
+            appId: "1:131924542195:web:a6f959517f002c0ca86d86"
+        };
+        // ==============================================
+
+        let dbRef = null;
+        let auth = null;
+
+        try {
+            const app = initializeApp(firebaseConfig);
+            const firestore = getFirestore(app);
+            auth = getAuth(app);
+
+            // Auth 상태 감지 (자동 로그인)
+            onAuthStateChanged(auth, (user) => {
+                if (user) {
+                    console.log("Logged in:", user.email);
+                    dbRef = doc(firestore, "users", user.uid); // 유저별 DB 경로
+                    document.getElementById('auth-screen').style.display = 'none';
+                    document.getElementById('app-container').style.display = 'block';
+                    loadData();
+                } else {
+                    console.log("No user");
+                    document.getElementById('auth-screen').style.display = 'flex';
+                    document.getElementById('app-container').style.display = 'none';
+                }
+            });
+
+            // 전역 함수로 등록 (HTML onclick에서 쓰기 위해)
+            window.handleLogin = async () => {
+                const email = document.getElementById('login-email').value;
+                const pw = document.getElementById('login-pw').value;
+                try {
+                    await signInWithEmailAndPassword(auth, email, pw);
+                } catch(e) { alert("로그인 실패: " + e.message); }
+            };
+
+            window.handleSignup = async () => {
+                const email = document.getElementById('signup-email').value;
+                const pw = document.getElementById('signup-pw').value;
+                try {
+                    await createUserWithEmailAndPassword(auth, email, pw);
+                    alert("회원가입 성공! 자동 로그인됩니다.");
+                } catch(e) { alert("가입 실패: " + e.message); }
+            };
+
+            window.handleLogout = async () => {
+                if(confirm("로그아웃 하시겠습니까?")) {
+                    await signOut(auth);
+                    window.db = { reading: [], library: [], wish: [], toread: [], quotes: [], logs: [] }; // 초기화
+                }
+            };
+
+        } catch(e) {
+            console.error("Firebase Init Error:", e);
+            alert("파이어베이스 설정이 필요합니다. 코드를 확인해주세요.");
+        }
+
+        // 전역 변수
+        window.API_KEY = 'AIzaSyB9SjdXwflGS-oUZfmaVGE1vWhBEahY4L0';
+        window.db = { reading: [], library: [], wish: [], toread: [], quotes: [], logs: [] };
+        
+        async function loadData() {
+            if(dbRef) {
+                try {
+                    const docSnap = await getDoc(dbRef);
+                    if (docSnap.exists()) {
+                        window.db = docSnap.data();
+                        if(window.db.library) window.db.library.sort((a,b) => new Date(a.date) - new Date(b.date));
+                    }
+                } catch(e) { console.error("Load Error:", e); }
+            }
+            if(window.initUI) window.initUI();
+        }
+
+        window.save = async function() {
+            if(dbRef) {
+                try { await setDoc(dbRef, window.db); } catch(e) { console.error("Save Error:", e); }
+            }
+        }
+    </script>
+
+    <script>
+        // ================= UI 로직 =================
+        let curDate = new Date();
+        let currentAction = null;
+        let targetIndex = null;
+        let html5QrcodeScanner = null;
+
+        function initUI() { renderHome(); renderCalendar(); renderQuotesList(); renderStats(); }
+        
+        // 로그인/가입 화면 전환
+        function switchAuthMode(mode) {
+            if(mode === 'signup') {
+                document.getElementById('login-form').style.display = 'none';
+                document.getElementById('signup-form').style.display = 'block';
+            } else {
+                document.getElementById('login-form').style.display = 'block';
+                document.getElementById('signup-form').style.display = 'none';
+            }
+        }
+
+        function switchTab(id, el) {
+            document.querySelectorAll('.tab-content').forEach(e => e.classList.remove('active'));
+            document.getElementById('tab-' + id).classList.add('active');
+            document.querySelectorAll('.nav-item').forEach(e => e.classList.remove('active'));
+            el.classList.add('active');
+            if(id === 'calendar') renderCalendar();
+            if(id === 'stats') renderStats();
+        }
+
+        function getCoverHtml(url, title) {
+            if (!url || url.includes('placeholder') || url === 'undefined') {
+                return `<div class="placeholder-cover" style="width:100%; height:100%; background:#eee; display:flex; align-items:center; justify-content:center; text-align:center; padding:5px; font-size:0.8rem; color:#555; border-radius:4px; font-weight:bold;">${title}</div>`;
+            }
+            return `<img src="${url}" style="width:100%; height:100%; object-fit:cover; border-radius:4px;">`;
+        }
+
+        // --- 바코드 스캐너 ---
+        function openScanner() {
+            document.getElementById('scannerModal').style.display = 'flex';
+            if(!html5QrcodeScanner) { html5QrcodeScanner = new Html5Qrcode("scanner-container"); }
+            html5QrcodeScanner.start({ facingMode: "environment" }, { fps: 10, qrbox: { width: 250, height: 150 } }, onScanSuccess);
+        }
+        function onScanSuccess(decodedText) { closeScanner(); document.getElementById('searchInput').value = decodedText; openSearch(); searchBooks(); }
+        function closeScanner() {
+            if(html5QrcodeScanner) html5QrcodeScanner.stop().then(() => document.getElementById('scannerModal').style.display = 'none').catch(console.log);
+            else document.getElementById('scannerModal').style.display = 'none';
+        }
+
+        // --- 날짜/수정 모달 ---
+        function openDateModal(action, index) {
+            currentAction = action; targetIndex = index;
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('dateInput').value = today;
+            document.getElementById('dateModal').style.display = 'flex';
+            const pageWrap = document.getElementById('pageInputWrap');
+            const title = document.getElementById('dateModalTitle');
+            const delBtn = document.getElementById('btnDeleteBook');
+            delBtn.style.display = 'none';
+
+            if (action === 'record' || action === 'edit_reading') {
+                pageWrap.style.display = 'block';
+                title.innerText = action === 'record' ? '독서 기록' : '기록 수정';
+                document.getElementById('pageInput').value = db.reading[index].current;
+                if(db.reading[index].lastDate) document.getElementById('dateInput').value = db.reading[index].lastDate;
+            } else if (action === 'edit_library') {
+                pageWrap.style.display = 'none';
+                title.innerText = '완독 정보 수정';
+                document.getElementById('dateInput').value = db.library[index].date;
+                delBtn.style.display = 'block';
+            }
+        }
+
+        function confirmDateAction() {
+            const date = document.getElementById('dateInput').value;
+            if(!date) return alert('날짜 선택!');
+            if(currentAction === 'record' || currentAction === 'edit_reading') {
+                const page = document.getElementById('pageInput').value;
+                db.reading[targetIndex].current = Math.min(parseInt(page), db.reading[targetIndex].total);
+                db.reading[targetIndex].lastDate = date; 
+                if(!db.logs.includes(date)) db.logs.push(date);
+                window.save(); renderHome();
+            } else if(currentAction === 'edit_library') {
+                db.library[targetIndex].date = date;
+                if(!db.logs.includes(date)) db.logs.push(date);
+                db.library.sort((a,b) => new Date(a.date) - new Date(b.date));
+                window.save(); renderHome(); renderCalendar();
+            } else if(currentAction === 'finish') {
+                const b = db.reading[targetIndex]; b.date = date;
+                db.library.push(b); db.reading.splice(targetIndex, 1);
+                if(!db.logs.includes(date)) db.logs.push(date);
+                db.library.sort((a,b) => new Date(a.date) - new Date(b.date));
+                window.save(); renderHome(); renderCalendar();
+            }
+            document.getElementById('dateModal').style.display = 'none';
+        }
+
+        function deleteCurrentBook() {
+            if(confirm("삭제하시겠습니까?")) {
+                db.library.splice(targetIndex, 1);
+                window.save(); renderHome(); renderCalendar();
+                document.getElementById('dateModal').style.display = 'none';
+            }
+        }
+
+        // --- 렌더링 ---
+        function renderHome() {
+            const weekDiv = document.getElementById('weekCircles'); weekDiv.innerHTML = '';
+            const today = new Date(); const startOfWeek = new Date(today); startOfWeek.setDate(today.getDate() - today.getDay());
+            let streak = db.logs.includes(today.toISOString().split('T')[0]) ? 1 : 0;
+            document.getElementById('streakDisplay').innerText = streak ? "🔥 오늘 독서 완료!" : "📚 오늘 책을 읽어보세요";
+            for(let i=0; i<7; i++) {
+                const d = new Date(startOfWeek); d.setDate(startOfWeek.getDate() + i);
+                const dStr = d.toISOString().split('T')[0];
+                const isDone = db.logs.includes(dStr);
+                weekDiv.innerHTML += `<div><div class="day-circle ${isDone?'active':''}">${['일','월','화','수','목','금','토'][i]}</div><div class="day-label">${d.getDate()}</div></div>`;
+            }
+            const rDiv = document.getElementById('readingList'); rDiv.innerHTML = '';
+            if(db.reading.length===0) rDiv.innerHTML='<div style="padding:10px; color:#999; font-size:0.9rem;">읽고 있는 책이 없습니다.</div>';
+            db.reading.forEach((b, i) => {
+                const pct = Math.round((b.current / b.total) * 100);
+                const coverHtml = getCoverHtml(b.cover, b.title);
+                rDiv.innerHTML += `<div class="reading-card"><button class="btn-card-close" onclick="delReading(${i})">×</button><div style="width:60px; height:90px; flex-shrink:0;">${coverHtml}</div><div style="flex:1; margin-left:15px;"><div style="font-weight:bold; font-size:0.95rem; margin-bottom:5px;">${b.title}</div><div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div><div style="font-size:0.8rem; color:#888; margin-top:8px; display:flex; align-items:center; justify-content:space-between;"><span>${pct}% (${b.current}p)</span><div><button class="btn-round btn-record" onclick="openDateModal('record', ${i})">기록</button><button class="btn-round btn-edit" onclick="openDateModal('edit_reading', ${i})">수정</button><button class="btn-round btn-finish" onclick="openDateModal('finish', ${i})">완독</button></div></div></div></div>`;
+            });
+            renderMiniList(db.wish, 'wishList', 'wish'); renderMiniList(db.toread, 'toreadList', 'toread');
+            document.getElementById('wishCount').innerText=db.wish.length+'권'; document.getElementById('toreadCount').innerText=db.toread.length+'권';
+            const shelf = document.getElementById('bookShelf'); shelf.innerHTML = '';
+            if(db.library.length===0) shelf.innerHTML = '<div style="width:100%; text-align:center; padding:30px; color:rgba(255,255,255,0.5);">서재가 비었습니다.</div>';
+            else db.library.forEach((b, i) => {
+                const w=Math.min(65, Math.max(30, b.total/10)); const h=Math.min(160, Math.max(120, 120+(b.total%40)));
+                const hue=Math.floor(Math.random()*30)+10;
+                shelf.innerHTML += `<div class="spine" style="background:hsl(${hue},40%,40%); width:${w}px; height:${h}px;" title="${b.title}">${b.title}</div>`;
+            });
+        }
+        function renderMiniList(l,id,t) {
+            const el=document.getElementById(id); el.innerHTML=''; if(l.length===0) {el.innerHTML='<div style="padding:10px; color:#999; font-size:0.8rem;">비어있음</div>'; return;}
+            l.forEach((b,i)=>{
+                const cv=getCoverHtml(b.cover,b.title).replace('style="','style="border-radius:5px;');
+                el.innerHTML+=`<div class="mini-card"><button class="btn-mini-del" onclick="delMini('${t}',${i})">×</button><div style="width:90px; height:130px; margin:0 auto; box-shadow:2px 2px 5px rgba(0,0,0,0.1);">${cv}</div><div class="mini-title">${b.title}</div>${t==='wish'?`<button onclick="moveWishToToread(${i})" style="font-size:0.7rem; margin-top:2px;">▼ 예정 이동</button>`:`<button onclick="moveToreadToReading(${i})" style="font-size:0.7rem; margin-top:2px;">▶ 읽기 시작</button>`}</div>`;
+            });
+        }
+        
+        // 검색/추가
+        function openSearch() { document.getElementById('searchModal').style.display='block'; document.getElementById('searchInput').focus(); }
+        async function searchBooks() {
+            const q = document.getElementById('searchInput').value; if(!q) return;
+            const list = document.getElementById('searchResultList'); list.innerHTML = '검색중...';
+            try {
+                const res = await fetch(`https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(q)}&langRestrict=ko&maxResults=15&key=${window.API_KEY}`);
+                const data = await res.json(); list.innerHTML = '';
+                if(!data.items) { list.innerHTML = '결과 없음'; return; }
+                data.items.forEach(item => {
+                    const i = item.volumeInfo; if((i.categories||[]).some(c=>/Comic|Manga|만화/i.test(c))) return;
+                    const b = { title: i.title, author: i.authors?i.authors[0]:'미상', publisher: i.publisher||'미상', cover: i.imageLinks?i.imageLinks.thumbnail:'', total: i.pageCount||300, category: translateCat((i.categories||[])[0]||'기타'), current: 0 };
+                    const bStr = JSON.stringify(b).replace(/"/g, '&quot;');
+                    let img = getCoverHtml(b.cover, b.title);
+                    list.innerHTML += `<div class="result-item"><div style="width:60px; height:90px; flex-shrink:0;">${img}</div><div style="flex:1;"><div style="font-weight:bold;">${b.title}</div><div style="font-size:0.8rem; color:#666;">${b.author} | ${b.category}</div><div class="result-actions" style="margin-top:10px;"><button onclick='addBook("reading",${bStr})' style="background:var(--accent-color); color:white;">읽기</button><button onclick='addBook("wish",${bStr})' style="background:#ffcc80;">위시</button><button onclick='addBook("toread",${bStr})' style="background:#bbdefb;">예정</button></div></div></div>`;
+                });
+            } catch(e) { list.innerHTML = '오류'; }
+        }
+        function translateCat(eng) { if(/[가-힣]/.test(eng)) return eng; const map={'Fiction':'소설','Novel':'소설','Poetry':'시','History':'역사','Science':'과학','Business':'경제경영','Self-Help':'자기계발','Essay':'에세이'}; for(let k in map) if(new RegExp(k,'i').test(eng)) return map[k]; return '기타'; }
+        function addBook(type, book) {
+            if(type === 'reading') {
+                const date = prompt("읽기 시작한 날짜?", new Date().toISOString().split('T')[0]);
+                if(date) { book.startDate = date; if(!db.logs.includes(date)) db.logs.push(date); db[type].push(book); window.save(); renderHome(); document.getElementById('searchModal').style.display='none'; alert('추가됨!'); }
+            } else { db[type].push(book); window.save(); renderHome(); document.getElementById('searchModal').style.display='none'; alert('추가됨!'); }
+        }
+        
+        // 관리
+        function delReading(i) { if(confirm('삭제?')) { db.reading.splice(i,1); window.save(); renderHome(); } }
+        function dropReading(i) { if(confirm('하차?')) { db.reading.splice(i,1); window.save(); renderHome(); } }
+        function delMini(t, i) { if(confirm('삭제?')) { db[t].splice(i,1); window.save(); renderHome(); } }
+        function moveWishToToread(i) { db.toread.push(db.wish[i]); db.wish.splice(i,1); window.save(); renderHome(); }
+        function moveToreadToReading(i) { const d=prompt("시작일?", new Date().toISOString().split('T')[0]); if(d) { const b=db.toread[i]; if(!db.logs.includes(d)) db.logs.push(d); db.reading.push(b); db.toread.splice(i,1); window.save(); renderHome(); } }
+        function resetAll() { if(confirm('전체 삭제?')) if(confirm('복구 불가!')) { localStorage.clear(); window.db = {reading:[],library:[],wish:[],toread:[],quotes:[],logs:[]}; window.save(); location.reload(); } }
+
+        // 달력
+        function renderCalendar() {
+            const grid = document.getElementById('calGrid'); grid.innerHTML = '';
+            ['일','월','화','수','목','금','토'].forEach(d=>grid.innerHTML+=`<div style="text-align:center; padding:5px; font-weight:bold; font-size:0.8rem;">${d}</div>`);
+            const y=curDate.getFullYear(), m=curDate.getMonth();
+            document.getElementById('calTitle').innerText = `${y}. ${m+1}`;
+            const first=new Date(y,m,1).getDay(), last=new Date(y,m+1,0).getDate();
+            for(let i=0; i<first; i++) grid.innerHTML+='<div></div>';
+            for(let d=1; d<=last; d++) {
+                const dStr = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+                const books = [...db.library.filter(x=>x.date===dStr), ...db.reading.filter(x=>x.startDate===dStr||x.lastDate===dStr)];
+                let html=`<div class="cal-day"><div class="cal-num" style="color:${new Date(y,m,d).getDay()===0?'red':'inherit'}">${d}</div>`;
+                if(books.length>0) {
+                    const uniq = [...new Map(books.map(i => [i['title'], i])).values()];
+                    uniq.slice(0,3).forEach(b => {
+                        let img = getCoverHtml(b.cover, b.title).replace('style="', 'style="border-radius:0;'); 
+                        html += `<div class="cal-split">${img}</div>`;
+                    });
+                }
+                html+='</div>'; grid.innerHTML+=html;
+            }
+            const gal = document.getElementById('galleryGrid'); gal.innerHTML = '';
+            for(let i=db.library.length-1; i>=0; i--) {
+                const b = db.library[i]; let img = getCoverHtml(b.cover, b.title);
+                gal.innerHTML += `<div class="gallery-item"><button class="btn-gal-edit" onclick="openDateModal('edit_library', ${i})">✏️</button><div style="width:100%; height:140px; margin-bottom:5px; box-shadow:2px 2px 5px rgba(0,0,0,0.1);">${img}</div><div class="gallery-title">${b.title}</div><div class="gallery-author">${b.author}</div><div class="gallery-date">${b.date}</div></div>`;
+            }
+        }
+        function changeMonth(n) { curDate.setMonth(curDate.getMonth()+n); renderCalendar(); }
+
+        // 문장 & 랭킹
+        function toggleQuoteView(mode) {
+            document.getElementById('quoteMainView').style.display = mode==='list'?'none':'block';
+            document.getElementById('quoteListView').style.display = mode==='list'?'block':'none';
+            if(mode==='list') renderQuotesList();
+        }
+        function openQuoteModal() {
+            const sel = document.getElementById('qBook'); sel.innerHTML = '<option value="">책 선택</option>';
+            [...db.reading, ...db.library].forEach(b => {
+                const op=document.createElement('option'); op.value=b.title; op.innerText=b.title; op.dataset.cover=b.cover; op.dataset.author=b.author; sel.appendChild(op);
+            });
+            document.getElementById('quoteModal').style.display = 'flex';
+        }
+        function saveQuote() {
+            const s=document.getElementById('qBook'), t=document.getElementById('qText').value, p=document.getElementById('qPage').value;
+            if(!s.value || !t) return alert('입력!');
+            const opt = s.options[s.selectedIndex];
+            db.quotes.push({ book:s.value, page:p, text:t, cover:opt.dataset.cover, author:opt.dataset.author });
+            window.save(); toggleQuoteView('list'); document.getElementById('quoteModal').style.display='none';
+        }
+        function renderQuotesList() {
+            const l=document.getElementById('quoteList'); l.innerHTML='';
+            db.quotes.slice().reverse().forEach(q => {
+                l.innerHTML += `<div class="quote-item"><div style="font-family:'RIDIBatang'; font-size:1.05rem; line-height:1.5;">"${q.text}"</div><div style="text-align:right; font-size:0.8rem; color:#888; margin-top:10px;"><span style="font-weight:bold;">${q.book}</span> - ${q.author||'미상'} (p.${q.page})</div></div>`;
+            });
+        }
+        function openMysteryModal() {
+            if(db.quotes.length===0) return alert('문장 없음');
+            const g=document.getElementById('mysteryGrid'); g.innerHTML='';
+            [...db.quotes].sort(()=>Math.random()-0.5).forEach(q=>{
+                const c=document.createElement('div'); c.className='mystery-card'; c.innerHTML=`<div class="mystery-card-text">"${q.text}"</div>`;
+                c.onclick=()=>showQuoteDetail(q); g.appendChild(c);
+            });
+            document.getElementById('mysteryModal').style.display='flex';
+        }
+        function showQuoteDetail(q) {
+            let c = q.cover, a = q.author;
+            // 표지/작가 없으면 찾기 (Fallback)
+            if(!c || c.includes('placeholder') || c === 'undefined') {
+                const f = [...db.library, ...db.reading].find(b => b.title === q.book);
+                if(f) { c = f.cover; a = f.author; }
+            }
+            const ct = document.getElementById('qdCoverContainer');
+            ct.innerHTML = `<div style="width:100px; height:150px; margin:0 auto 15px; box-shadow:2px 2px 8px rgba(0,0,0,0.15);">${getCoverHtml(c, q.book)}</div>`;
+            document.getElementById('qdTitle').innerText = q.book;
+            document.getElementById('qdAuthor').innerText = a||'미상';
+            document.getElementById('qdText').innerText = q.text;
+            document.getElementById('qdPage').innerText = q.page||'?';
+            document.getElementById('quoteDetailModal').style.display = 'flex';
+        }
+        function renderStats() {
+            const c={}, a={}, p={}; db.library.forEach(b=>{ const sc=translateCat(b.category); c[sc]=(c[sc]||0)+1; a[b.author]=(a[b.author]||0)+1; p[b.publisher]=(p[b.publisher]||0)+1; });
+            drawBarChart('rankCategory',c); drawBarChart('rankAuthor',a); drawBarChart('rankPublisher',p);
+        }
+        function drawBarChart(id,d) {
+            const el=document.getElementById(id); el.innerHTML=''; const s=Object.entries(d).sort((a,b)=>b[1]-a[1]).slice(0,5);
+            if(s.length===0) {el.innerHTML='<div style="color:#ccc; text-align:center;">데이터 없음</div>'; return;}
+            const max=s[0][1]; const m=['🥇','🥈','🥉','4.','5.'];
+            s.forEach((v,i)=> el.innerHTML+=`<div class="rank-row"><div class="rank-info"><span>${m[i]} ${v[0]}</span><span style="font-weight:bold; color:var(--primary-color)">${v[1]}권</span></div><div class="rank-bar-bg"><div class="rank-bar-fill" style="width:${(v[1]/max)*100}%"></div></div></div>`);
+        }
+    </script>
+</body>
+</html>
