@@ -12,8 +12,13 @@
         * { box-sizing: border-box; }
         body { font-family: var(--font-main); background-color: var(--bg-color); color: #333; margin: 0; padding: 0; max-width: 600px; margin: 0 auto; min-height: 100vh; padding-bottom: 90px; border-left: 1px solid #eee; border-right: 1px solid #eee; position: relative;}
 
-        /* 로그인 화면 */
-        #auth-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg-color); z-index: 5000; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 20px; }
+        /* [NEW] 로딩 화면 스타일 */
+        #loading-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg-color); z-index: 9999; display: flex; justify-content: center; align-items: center; font-size: 1.2rem; color: var(--primary-color); font-weight: bold; font-family: var(--font-book); flex-direction: column; gap: 10px; }
+        .spinner { width: 40px; height: 40px; border: 4px solid rgba(93, 64, 55, 0.2); border-top-color: var(--primary-color); border-radius: 50%; animation: spin 1s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* 로그인 화면 (처음엔 숨김 처리) */
+        #auth-screen { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg-color); z-index: 5000; flex-direction: column; justify-content: center; align-items: center; padding: 20px; }
         .auth-box { background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 25px rgba(93, 64, 55, 0.15); width: 100%; max-width: 400px; text-align: center; }
         .auth-input { width: 100%; padding: 12px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 1rem; }
         .btn-auth-submit { width: 100%; padding: 12px; background: var(--primary-color); color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 1rem; margin-top: 10px; }
@@ -40,7 +45,6 @@
         .day-label { font-size: 0.7rem; color: #999; margin-top: 5px; }
         .section-title { padding: 0 20px; margin-bottom: 10px; font-weight: bold; color: var(--primary-color); font-size: 1.1rem; display: flex; justify-content: space-between; align-items: flex-end; }
         
-        /* 마우스 드래그 스크롤 */
         .h-scroll-container { display: flex; gap: 15px; overflow-x: auto; padding: 0 20px 20px; scroll-behavior: smooth; flex-wrap: nowrap; cursor: grab; user-select: none; }
         .h-scroll-container.active { cursor: grabbing; scroll-behavior: auto; }
         .h-scroll-container::-webkit-scrollbar { display: none; }
@@ -87,6 +91,7 @@
         .cal-day { background: white; min-height: 100px; position: relative; display: flex; }
         .cal-split { flex: 1; height: 100%; overflow: hidden; position: relative; border-right: 1px solid white; }
         .cal-split:last-child { border-right: none; }
+        .cal-img { width: 100%; height: 100%; object-fit: cover; }
         .cal-num { position: absolute; top: 3px; left: 3px; font-size: 0.75rem; font-weight: bold; background: rgba(255,255,255,0.8); padding: 0 4px; border-radius: 3px; z-index: 5;}
         
         .gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 15px; padding: 0 20px 20px; }
@@ -130,8 +135,6 @@
         /* 단어장 */
         .voca-input-box { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); margin: 0 20px 20px; }
         .voca-input { width: 100%; padding: 12px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 1rem; font-family: var(--font-main); }
-        
-        /* [수정됨] 하이브리드 버튼 레이아웃 */
         .voca-btn-group { display: flex; gap: 8px; margin-bottom: 10px; }
         .btn-dict-search { flex: 1; padding: 12px; background: #f0f0f0; color: #333; border: 1px solid #ccc; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 0.85rem; display: flex; align-items: center; justify-content: center; gap: 5px;}
         .btn-naver-dict { flex: 1; padding: 12px; background: #03c75a; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 0.85rem; display: flex; align-items: center; justify-content: center; gap: 5px;}
@@ -155,6 +158,11 @@
     </style>
 </head>
 <body>
+
+    <div id="loading-screen">
+        <div class="spinner"></div>
+        <div>📚 서재 문을 여는 중...</div>
+    </div>
 
     <div id="auth-screen">
         <div class="auth-box">
@@ -250,14 +258,12 @@
                 <span>🔖 새 단어 추가</span>
             </div>
             <div class="voca-input-box">
-                <input type="text" id="vocaWordInput" class="voca-input" placeholder="모르는 단어/사자성어를 입력하세요">
-                
+                <input type="text" id="vocaWordInput" class="voca-input" placeholder="단어, 사자성어, 속담을 입력하세요">
                 <div class="voca-btn-group">
                     <button id="btnDictSearch" class="btn-dict-search" onclick="searchDict()"><span>🤖</span> AI 자동 검색</button>
                     <button class="btn-naver-dict" onclick="openNaverDict()"><span>📗</span> 네이버 사전</button>
                 </div>
-
-                <textarea id="vocaMeaningInput" class="voca-input" rows="3" placeholder="뜻이 여기에 표시됩니다. 직접 수정할 수도 있어요!"></textarea>
+                <textarea id="vocaMeaningInput" class="voca-input" rows="3" placeholder="뜻이 여기에 깔끔하게 표시됩니다. 직접 수정할 수도 있어요!"></textarea>
                 <button onclick="addVoca()" style="width:100%; padding:12px; background:var(--primary-color); color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer;">단어장에 저장</button>
             </div>
 
@@ -440,6 +446,9 @@
             auth = getAuth(app);
 
             onAuthStateChanged(auth, (user) => {
+                // [NEW] 로그인 확인 완료 시 로딩 화면 제거
+                document.getElementById('loading-screen').style.display = 'none';
+                
                 if (user) {
                     dbRef = doc(firestore, "users", user.uid);
                     document.getElementById('auth-screen').style.display = 'none';
@@ -508,7 +517,6 @@
 
     <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
     <script>
-        // PC 마우스 드래그 스크롤
         function makeScrollable(id) {
             const slider = document.getElementById(id);
             if(!slider) return;
@@ -561,31 +569,6 @@
             window.db.logs = Array.from(activeDates);
         }
 
-        window.resetToday = async function() {
-            const today = new Date().toISOString().split('T')[0];
-            if(confirm("오늘 기록한 모든 독서 내역(페이지 갱신, 완독)을 취소할까요?")) {
-                for(let i = db.library.length - 1; i >= 0; i--) {
-                    if(db.library[i].date === today) {
-                        let b = db.library.splice(i, 1)[0]; b.date = null; b.comment = null; db.reading.push(b);
-                    }
-                }
-                db.reading.forEach(b => {
-                    if(b.lastDate === today) { b.lastDate = null; b.current = 0; }
-                    if(b.startDate === today) { b.startDate = null; }
-                });
-                updateLogs(); await window.save(); renderHome(); renderCalendar(); alert("오늘 기록이 초기화되었습니다.");
-            }
-        }
-        
-        window.resetAll = async function() {
-            if(confirm('모든 데이터를 삭제하시겠습니까? (이 계정의 데이터만 지워집니다)')) {
-                if(confirm('정말 삭제합니다. 복구할 수 없습니다!')) {
-                    window.db = { reading: [], library: [], wish: [], toread: [], quotes: [], logs: [], voca: [] };
-                    await window.save(); location.reload();   
-                }
-            }
-        }
-
         window.openScanner = function() {
             document.getElementById('scannerModal').style.display = 'flex';
             if(!html5QrcodeScanner) { html5QrcodeScanner = new Html5Qrcode("scanner-container"); }
@@ -617,7 +600,6 @@
             });
         }
 
-        // --- 통합 모달 렌더링 ---
         window.openDateModal = function(action, index) {
             currentAction = action; targetIndex = index;
             const today = new Date().toISOString().split('T')[0];
@@ -813,98 +795,95 @@
             });
         }
 
-        // [핵심 업데이트] 검색 엔진 로딩시간 0초 만들기! (비동기 렌더링)
         window.openSearch = function() { document.getElementById('searchModal').style.display='block'; document.getElementById('searchInput').focus(); }
         
-        window.searchBooks = function() {
+        window.searchBooks = async function() {
             let q = document.getElementById('searchInput').value.trim(); 
             if(!q) return;
+            if(!window.ALADIN_KEY || window.ALADIN_KEY === 'YOUR_ALADIN_TTB_KEY') return alert("알라딘 TTBKey를 코드에 입력해주세요!");
 
             const list = document.getElementById('searchResultList'); 
-            list.innerHTML = '<div style="padding:20px; text-align:center; color:var(--primary-color);">알라딘 서점에서 검색중... ⏳</div>';
+            list.innerHTML = '<div style="padding:20px; text-align:center; color:var(--primary-color);">알라딘 서점에서 검색중... 📚</div>';
 
             let isBarcode = /^\d{10,13}$/.test(q);
             let queryType = isBarcode ? 'ISBN' : 'Keyword';
 
-            let oldScript = document.getElementById('aladin-jsonp');
-            if(oldScript) oldScript.remove();
+            let aladinUrl = `https://www.aladin.co.kr/ttb/api/ItemSearch.aspx?ttbkey=${window.ALADIN_KEY}&Query=${encodeURIComponent(q)}&QueryType=${queryType}&MaxResults=15&start=1&SearchTarget=Book&output=js&Version=20131101`;
+            let proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(aladinUrl)}`;
 
-            let script = document.createElement('script');
-            script.id = 'aladin-jsonp';
-            script.src = `https://www.aladin.co.kr/ttb/api/ItemSearch.aspx?ttbkey=${window.ALADIN_KEY}&Query=${encodeURIComponent(q)}&QueryType=${queryType}&MaxResults=15&start=1&SearchTarget=Book&output=js&Version=20131101&CallBack=aladinCallback`;
-            document.body.appendChild(script);
-        }
+            try {
+                let res = await fetch(proxyUrl);
+                let data = await res.json();
 
-        window.aladinCallback = function(data) {
-            const list = document.getElementById('searchResultList');
-            if(!data || !data.item || data.item.length === 0) {
-                 list.innerHTML = '<div style="padding:20px; text-align:center; color:#666;">검색 결과가 없습니다.</div>';
-                 return;
-            }
-
-            // 결과를 글로벌에 잠시 저장 (장바구니 기능용)
-            window.currentSearchResults = data.item.map((item, i) => {
-                let cat = '기타';
-                if(item.categoryName) {
-                    let parts = item.categoryName.split('>');
-                    cat = parts.length > 1 ? parts[1].split('/')[0] : parts[0];
+                if(!data || !data.item || data.item.length === 0) {
+                     list.innerHTML = '<div style="padding:20px; text-align:center; color:#666;">검색 결과가 없습니다.</div>';
+                     return;
                 }
-                return {
-                    id: i, title: item.title, author: item.author, publisher: item.publisher, 
-                    cover: item.cover, category: cat, total: 300, current: 0, isbn: item.isbn13
-                };
-            });
 
-            // 화면 즉시 렌더링 (대기 시간 0초)
-            list.innerHTML = '';
-            window.currentSearchResults.forEach(b => {
-                let img = getCoverHtml(b.cover, b.title);
-                list.innerHTML += `
-                    <div class="result-item">
-                        <div style="width:60px; height:90px; flex-shrink:0;">${img}</div>
-                        <div style="flex:1;">
-                            <div style="font-weight:bold; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;">${b.title}</div>
-                            <div style="font-size:0.8rem; color:#666; margin-top:3px;">${b.author} | ${b.publisher}</div>
-                            <div style="font-size:0.8rem; margin-top:3px;">
-                                <span style="color:var(--primary-color); font-weight:bold;">${b.category}</span> | 
-                                <span id="page_txt_${b.id}" style="color:#888;">페이지 확인중...</span>
-                            </div>
-                            <div class="result-actions" style="margin-top:10px;">
-                                <button onclick='addBookFast("reading", ${b.id}, this)' style="background:var(--accent-color); color:white;">읽기</button>
-                                <button onclick='addBookFast("wish", ${b.id}, this)' style="background:#ffcc80;">위시</button>
-                                <button onclick='addBookFast("toread", ${b.id}, this)' style="background:#bbdefb;">예정</button>
-                            </div>
-                        </div>
-                    </div>`;
-            });
+                // 글로벌 저장소에 결과 등록
+                window.currentSearchResults = data.item.map((item, i) => {
+                    let cat = '기타';
+                    if(item.categoryName) {
+                        let parts = item.categoryName.split('>');
+                        cat = parts.length > 1 ? parts[1].split('/')[0] : parts[0];
+                    }
+                    return { id: i, title: item.title, author: item.author, publisher: item.publisher, cover: item.cover, category: cat, total: 300, current: 0, isbn: item.isbn13 };
+                });
 
-            // 뒷단에서 몰래 구글 북스에 페이지 수 물어보기
-            window.currentSearchResults.forEach(b => {
-                if(b.isbn) {
-                    fetch(`https://www.googleapis.com/books/v1/volumes?q=isbn:${b.isbn}&key=${window.API_KEY}`)
-                    .then(r => r.json())
-                    .then(gData => {
-                        let pageSpan = document.getElementById(`page_txt_${b.id}`);
-                        if (gData.items && gData.items[0].volumeInfo.pageCount) {
-                            b.total = gData.items[0].volumeInfo.pageCount;
-                            if(pageSpan) pageSpan.innerText = b.total + '쪽';
-                        } else {
+                // 즉시 렌더링 (대기 0초)
+                list.innerHTML = '';
+                window.currentSearchResults.forEach(b => {
+                    let img = getCoverHtml(b.cover, b.title);
+                    list.innerHTML += `
+                        <div class="result-item">
+                            <div style="width:60px; height:90px; flex-shrink:0;">${img}</div>
+                            <div style="flex:1;">
+                                <div style="font-weight:bold; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;">${b.title}</div>
+                                <div style="font-size:0.8rem; color:#666; margin-top:3px;">${b.author} | ${b.publisher}</div>
+                                <div style="font-size:0.8rem; margin-top:3px;">
+                                    <span style="color:var(--primary-color); font-weight:bold;">${b.category}</span> | 
+                                    <span id="page_txt_${b.id}" style="color:#888;">페이지 확인중...</span>
+                                </div>
+                                <div class="result-actions" style="margin-top:10px;">
+                                    <button onclick='addBookFast("reading", ${b.id}, this)' style="background:var(--accent-color); color:white;">읽기</button>
+                                    <button onclick='addBookFast("wish", ${b.id}, this)' style="background:#ffcc80;">위시</button>
+                                    <button onclick='addBookFast("toread", ${b.id}, this)' style="background:#bbdefb;">예정</button>
+                                </div>
+                            </div>
+                        </div>`;
+                });
+
+                // 뒷단에서 몰래 구글 북스에 페이지 수 물어보기
+                window.currentSearchResults.forEach(b => {
+                    if(b.isbn) {
+                        fetch(`https://www.googleapis.com/books/v1/volumes?q=isbn:${b.isbn}&key=${window.API_KEY}`)
+                        .then(r => r.json())
+                        .then(gData => {
+                            let pageSpan = document.getElementById(`page_txt_${b.id}`);
+                            if (gData.items && gData.items[0].volumeInfo.pageCount) {
+                                b.total = gData.items[0].volumeInfo.pageCount;
+                                if(pageSpan) pageSpan.innerText = b.total + '쪽';
+                            } else {
+                                if(pageSpan) pageSpan.innerText = '300쪽 (기본)';
+                            }
+                        }).catch(e => {
+                            let pageSpan = document.getElementById(`page_txt_${b.id}`);
                             if(pageSpan) pageSpan.innerText = '300쪽 (기본)';
-                        }
-                    }).catch(e => {
+                        });
+                    } else {
                         let pageSpan = document.getElementById(`page_txt_${b.id}`);
                         if(pageSpan) pageSpan.innerText = '300쪽 (기본)';
-                    });
-                } else {
-                    let pageSpan = document.getElementById(`page_txt_${b.id}`);
-                    if(pageSpan) pageSpan.innerText = '300쪽 (기본)';
-                }
-            });
+                    }
+                });
+
+            } catch(e) {
+                console.error(e);
+                list.innerHTML = '<div style="padding:20px; text-align:center; color:#d84315;">알라딘 서버와 통신 중 오류가 발생했습니다.<br>잠시 후 다시 시도해주세요.</div>';
+            }
         }
         
         window.addBookFast = function(type, id, btnElem) {
             let bookData = window.currentSearchResults.find(b => b.id === id);
-            // 복사본 만들기
             let bCopy = JSON.parse(JSON.stringify(bookData));
             delete bCopy.id; delete bCopy.isbn;
 
@@ -1024,14 +1003,12 @@
             document.getElementById('quoteDetailModal').style.display = 'flex';
         }
 
-        // [단어장] 네이버 사전 직접 띄우기
         window.openNaverDict = function() {
             const word = document.getElementById('vocaWordInput').value.trim();
             if(!word) return alert("검색할 단어를 먼저 입력해주세요!");
             window.open(`https://ko.dict.naver.com/#/search?query=${encodeURIComponent(word)}`, '_blank');
         }
 
-        // [최종 진화] AI 자동 검색 철벽 필터링
         window.searchDict = async function() {
             const word = document.getElementById('vocaWordInput').value.trim();
             if(!word) return alert("단어를 먼저 입력해주세요!");
@@ -1041,15 +1018,12 @@
             
             let text = "";
             try {
-                // 1차: 위키낱말사전
                 const res = await fetch(`https://ko.wiktionary.org/w/api.php?action=query&prop=extracts&format=json&explaintext=1&titles=${encodeURIComponent(word)}&origin=*`);
                 const data = await res.json();
                 const page = Object.values(data.query.pages)[0];
                 
-                if (page.pageid && page.extract) {
-                    text = page.extract;
-                } else {
-                    // 2차: 위키백과
+                if (page.pageid && page.extract) { text = page.extract; } 
+                else {
                     const wikiRes = await fetch(`https://ko.wikipedia.org/w/api.php?action=query&prop=extracts&format=json&exsentences=3&explaintext=1&titles=${encodeURIComponent(word)}&origin=*`);
                     const wikiData = await wikiRes.json();
                     const wikiPage = Object.values(wikiData.query.pages)[0];
@@ -1057,27 +1031,21 @@
                 }
                 
                 if (text) {
-                    // 쓰레기 데이터 완벽 박멸
-                    text = text.replace(/==+.*?==+/g, ''); 
-                    text = text.replace(/\(표준어.*?\)/g, ''); 
-                    text = text.replace(/\[.*?\]/g, ''); 
-                    text = text.replace(/발음:\s*.*?(\n|$)/g, '\n'); 
-                    text = text.replace(/어원:\s*.*?(\n|$)/g, '\n'); 
-                    
+                    text = text.replace(/==+[^=]+==+/g, ''); 
                     let lines = text.split('\n');
-                    let cleanLines = lines.map(l => l.trim()).filter(line => {
-                        if(!line) return false;
-                        if (line.match(/^(동사|형용사|부사|명사|대명사|수사|관형사|감탄사|조사|유의어|반의어|파생어|참고|번역|속담|관용구|문법|유래|활용|한자|로마자|어구)(\s*:|)$/)) return false;
-                        if(line.replace(/[^가-힣]/g, '') === word.replace(/[^가-힣]/g, '')) return false; 
+                    let cleanLines = lines.filter(line => {
+                        let l = line.trim();
+                        if(!l) return false;
+                        if (l.includes('표준어') || l.includes('IPA') || l.match(/\[.*?\]/) || l.match(/\(.*?\)/)) return false; 
+                        if (l.match(/^(발음|어원|동사|형용사|부사|명사|대명사|수사|관형사|감탄사|조사|유의어|반의어|파생어|참고|번역|속담|관용구|문법|유래|활용|한자|로마자|어구)(\s*:|\s*$)/)) return false;
+                        if(l.replace(/\s/g,'') === word.replace(/\s/g,'')) return false; 
                         return true;
                     });
                     
                     let finalText = cleanLines.slice(0, 3).join('\n').trim();
                     if(finalText) document.getElementById('vocaMeaningInput').value = finalText;
                     else alert("사전에 뜻이 명확하게 등록되어 있지 않습니다. 우측 네이버 사전 버튼을 이용해주세요!");
-                } else {
-                    alert("사전이나 백과사전에서 단어를 찾지 못했습니다. 우측 네이버 사전 버튼을 이용해주세요!");
-                }
+                } else { alert("사전이나 백과사전에서 단어를 찾지 못했습니다. 우측 네이버 사전 버튼을 이용해주세요!"); }
             } catch(e) { alert("검색 중 오류가 발생했습니다."); }
             btn.innerHTML = "<span>🤖</span> AI 자동 검색";
         }
