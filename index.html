@@ -21,14 +21,14 @@
 
         #app-container { display: none; }
 
-        /* 헤더 */
+        /* 헤더 & 초기화 버튼 묶음 */
         header { padding: 20px; text-align: center; position: relative; }
         h2 { font-family: var(--font-book); color: var(--primary-color); margin: 0; font-size: 1.5rem; }
         .header-left-btns { position: absolute; top: 20px; left: 20px; display: flex; flex-direction: column; gap: 5px; align-items: flex-start;}
         .btn-header { font-size: 0.8rem; color: #999; background: none; border: none; cursor: pointer; text-decoration: underline; padding: 0; }
         .btn-logout { position: absolute; top: 20px; right: 20px; font-size: 0.8rem; color: #999; background: none; border: none; cursor: pointer; text-decoration: underline; padding: 0; }
 
-        /* UI 컴포넌트 */
+        /* 스타일 */
         .home-search-box { margin: 0 20px 20px; background: white; border: 2px solid var(--primary-color); border-radius: 12px; padding: 10px; display: flex; align-items: center; box-shadow: 0 4px 10px rgba(93, 64, 55, 0.1); }
         .search-input { flex: 1; border: none; outline: none; font-size: 1rem; padding: 5px; }
         .btn-camera { font-size: 1.5rem; background: none; border: none; cursor: pointer; padding: 5px; }
@@ -39,11 +39,14 @@
         .day-circle.active { background: var(--accent-color); color: white; font-weight: bold; transform: scale(1.1); }
         .day-label { font-size: 0.7rem; color: #999; margin-top: 5px; }
         .section-title { padding: 0 20px; margin-bottom: 10px; font-weight: bold; color: var(--primary-color); font-size: 1.1rem; display: flex; justify-content: space-between; align-items: flex-end; }
-        .h-scroll-container { display: flex; gap: 15px; overflow-x: auto; padding: 0 20px 20px; scroll-behavior: smooth; flex-wrap: nowrap; }
+        
+        /* 마우스 드래그 스크롤을 위한 커서 설정 */
+        .h-scroll-container { display: flex; gap: 15px; overflow-x: auto; padding: 0 20px 20px; scroll-behavior: smooth; flex-wrap: nowrap; cursor: grab; user-select: none; }
+        .h-scroll-container.active { cursor: grabbing; scroll-behavior: auto; }
         .h-scroll-container::-webkit-scrollbar { display: none; }
         
         .reading-card { min-width: 280px; flex: 0 0 auto; background: white; padding: 15px; border-radius: 12px; display: flex; gap: 15px; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05); border: 1px solid #eee; position: relative; }
-        .reading-cover { width: 60px; height: 90px; object-fit: cover; border-radius: 4px; background: #eee; flex-shrink: 0; }
+        .reading-cover { width: 60px; height: 90px; object-fit: cover; border-radius: 4px; background: #eee; flex-shrink: 0; pointer-events: none;}
         .progress-bar { background: #eee; height: 6px; border-radius: 3px; margin-top: 8px; overflow: hidden; }
         .progress-fill { background: var(--accent-color); height: 100%; width: 0%; transition: width 0.5s; }
         .btn-round { padding: 6px 12px; font-size: 0.8rem; border-radius: 20px; border: none; cursor: pointer; font-weight: bold; transition: 0.3s; }
@@ -52,18 +55,18 @@
         .btn-edit { background: none; border: 1px solid #ddd; color: #888; margin-left: 5px; }
         .btn-card-close { position: absolute; top: 10px; right: 10px; background: none; border: none; color: #999; font-size: 1.2rem; cursor: pointer; line-height: 1; }
         
-        .mini-card { min-width: 90px; flex: 0 0 auto; text-align: center; position: relative; margin-top:10px; }
-        .mini-cover { width: 90px; height: 130px; object-fit: cover; border-radius: 5px; box-shadow: 2px 2px 5px rgba(0,0,0,0.1); }
-        .mini-title { font-size: 0.8rem; margin-top: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .btn-mini-del { position: absolute; top: -5px; right: -5px; background: red; color: white; width: 20px; height: 20px; border-radius: 50%; border: none; cursor: pointer; font-size: 0.8rem; z-index: 5;}
-        .btn-mini-edit { position: absolute; top: 20px; right: -5px; background: rgba(255,255,255,0.9); color: #333; width: 20px; height: 20px; border-radius: 50%; border: none; cursor: pointer; font-size: 0.7rem; box-shadow: 0 1px 3px rgba(0,0,0,0.2); z-index: 5;}
+        .mini-card { width: 100px; flex: 0 0 auto; text-align: center; position: relative; margin-top:10px; display: flex; flex-direction: column; align-items: center; }
+        .mini-cover { width: 90px; height: 130px; object-fit: cover; border-radius: 5px; box-shadow: 2px 2px 5px rgba(0,0,0,0.1); pointer-events: none; }
+        .mini-title { font-size: 0.75rem; margin-top: 8px; width: 100%; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; text-overflow: ellipsis; white-space: normal; line-height: 1.3; height: 2.6em; word-break: keep-all; color: #444; }
+        .mini-btn-wrap { margin-top: auto; padding-top: 5px; width: 100%; display: flex; flex-direction: column; gap: 4px; }
+        .btn-mini-del { position: absolute; top: -5px; right: 0px; background: red; color: white; width: 20px; height: 20px; border-radius: 50%; border: none; cursor: pointer; font-size: 0.8rem; z-index: 5;}
+        .btn-mini-edit { position: absolute; top: 20px; right: 0px; background: rgba(255,255,255,0.9); color: #333; width: 20px; height: 20px; border-radius: 50%; border: none; cursor: pointer; font-size: 0.7rem; box-shadow: 0 1px 3px rgba(0,0,0,0.2); z-index: 5;}
         
         .shelf-wrapper { margin: 0 20px; background: #d7ccc8; padding: 40px 20px 20px; border-radius: 5px; box-shadow: inset 2px 2px 10px rgba(0,0,0,0.1); }
         .shelf-flex-container { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 2px; width: 100%; border-bottom: 20px solid #5d4037; padding-bottom: 0; min-height: 180px; }
         .spine { writing-mode: vertical-rl; text-orientation: mixed; color: rgba(255,255,255,0.95); border: 1px solid rgba(0,0,0,0.1); border-radius: 3px 3px 0 0; padding: 10px 4px; font-size: 0.8rem; box-shadow: 2px 0 4px rgba(0,0,0,0.2); text-align: left; font-family: var(--font-book); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.5; margin-bottom: 0; transition: transform 0.2s; cursor: pointer; }
         .spine:hover { transform: translateY(-10px); z-index: 10; }
         
-        /* 탭 및 모달 공통 */
         .tab-content { display: none; }
         .tab-content.active { display: block; animation: fadeIn 0.3s; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
@@ -131,7 +134,7 @@
         .voca-filter { display: flex; justify-content: space-between; align-items: center; padding: 0 20px; margin-bottom: 10px; }
         .voca-filter select { padding: 5px 10px; border-radius: 5px; border: 1px solid #ccc; outline: none; }
         
-        .voca-cons-bar { display: none; overflow-x: auto; white-space: nowrap; padding: 0 20px 15px; gap: 8px; scroll-behavior: smooth; }
+        .voca-cons-bar { display: none; overflow-x: auto; white-space: nowrap; padding: 0 20px 15px; gap: 8px; scroll-behavior: smooth; cursor: grab; user-select: none; }
         .voca-cons-bar::-webkit-scrollbar { display: none; }
         .btn-cons { background: #eee; border: none; padding: 6px 14px; border-radius: 15px; cursor: pointer; font-weight: bold; color: #555; }
         .btn-cons.active { background: var(--primary-color); color: white; }
@@ -142,7 +145,7 @@
         .btn-voca-del { position: absolute; top: 15px; right: 15px; background: none; border: none; color: #ccc; cursor: pointer; font-size: 1.2rem; }
         .btn-voca-del:hover { color: red; }
         
-        .placeholder-cover { width: 100%; height: 100%; background: #eee; display: flex; align-items: center; justify-content: center; text-align: center; font-size: 0.8rem; color: #555; padding: 5px; font-weight: bold; border-radius: 4px; }
+        .placeholder-cover { width: 100%; height: 100%; background: #eee; display: flex; align-items: center; justify-content: center; text-align: center; font-size: 0.8rem; color: #555; padding: 5px; font-weight: bold; border-radius: 4px; overflow: hidden; }
         .btn-delete-red { background: #ffebee; color: #d32f2f; border: 1px solid #d32f2f; padding: 10px; border-radius: 5px; width: 100%; margin-top: 20px; cursor: pointer; font-weight: bold; }
         #scanner-container { width: 100%; height: 250px; background: black; overflow: hidden; position: relative; }
     </style>
@@ -180,7 +183,7 @@
         <div id="tab-home" class="tab-content active">
             <div class="home-search-box">
                 <span style="font-size:1.2rem;">🔍</span>
-                <input type="text" class="search-input" placeholder="책 검색 또는 바코드" onclick="openSearch()" readonly>
+                <input type="text" class="search-input" placeholder="알라딘 도서 검색 (제목, 작가, 바코드)" onclick="openSearch()" readonly>
                 <button class="btn-camera" onclick="openScanner()">📷</button>
             </div>
             <div class="tracker-box">
@@ -209,7 +212,7 @@
                 <span onclick="changeMonth(1)" style="cursor:pointer">▶</span>
             </div>
             <div class="cal-grid" id="calGrid"></div>
-            <div class="section-title" style="margin-top:30px;">🖼 완독한 책들 (수정)</div>
+            <div class="section-title" style="margin-top:30px;">🖼 완독한 책들</div>
             <div class="gallery-grid" id="galleryGrid"></div>
         </div>
 
@@ -245,7 +248,7 @@
             <div class="voca-input-box">
                 <input type="text" id="vocaWordInput" class="voca-input" placeholder="모르는 단어/사자성어를 입력하세요">
                 <button id="btnDictSearch" class="btn-dict-search" onclick="searchDict()"><span>🤖</span> AI 자동 뜻 찾기</button>
-                <textarea id="vocaMeaningInput" class="voca-input" rows="3" placeholder="뜻이 여기에 깔끔하게 표시됩니다. 직접 적을 수도 있어요!"></textarea>
+                <textarea id="vocaMeaningInput" class="voca-input" rows="3" placeholder="뜻이 여기에 깔끔하게 표시됩니다. 직접 수정할 수도 있어요!"></textarea>
                 <button onclick="addVoca()" style="width:100%; padding:12px; background:var(--primary-color); color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer;">단어장에 저장</button>
             </div>
 
@@ -302,7 +305,7 @@
     <div id="searchModal" class="full-modal">
         <div class="search-header">
             <button onclick="document.getElementById('searchModal').style.display='none'" style="font-size:1.5rem; background:none; border:none;">&larr;</button>
-            <input type="text" id="searchInput" placeholder="책 제목, 작가, 바코드 번호 입력" onkeypress="if(event.key==='Enter') searchBooks()">
+            <input type="text" id="searchInput" placeholder="알라딘 도서 검색 (제목, 작가, 바코드)" onkeypress="if(event.key==='Enter') searchBooks()">
             <button onclick="searchBooks()" style="background:var(--accent-color); color:white; border:none; padding:0 15px; border-radius:5px;">검색</button>
         </div>
         <div id="searchResultList"></div>
@@ -330,6 +333,11 @@
                 <input type="number" id="pageInput" placeholder="페이지 수" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:5px;">
             </div>
 
+            <div id="totalPageInputWrap" style="display:none; margin-top:10px;">
+                <label style="font-size:0.8rem; color:#666; display:block;">총 페이지 수 (필수)</label>
+                <input type="number" id="editTotalPage" value="300" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:5px;">
+            </div>
+
             <textarea id="bookComment" rows="3" placeholder="책에 대한 자유로운 코멘트를 남겨보세요. (선택 사항)" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:5px; margin-top:10px; display:none; font-family:var(--font-main); font-size:0.9rem; resize:none;"></textarea>
 
             <div id="extraEditWrap" style="display:none; margin-top:10px;">
@@ -355,7 +363,7 @@
         <div class="modal-box" style="text-align:center;">
             <div id="bdCoverContainer"></div>
             <h3 id="bdTitle" style="margin:0;">책 제목</h3>
-            <div id="bdInfo" style="font-size:0.85rem; color:#666; margin-top:5px;">작가 | 출판사</div>
+            <div id="bdInfo" style="font-size:0.85rem; color:#666; margin-top:5px;">작가 | 출판사 | 장르</div>
             <div style="font-size:0.8rem; color:var(--accent-color); margin-top:5px;" id="bdDate">완독일</div>
             
             <div id="bdCommentWrap" style="margin-top:15px; text-align:left; background:#f9f9f9; padding:15px; border-radius:8px; display:none;">
@@ -461,6 +469,8 @@
         } catch(e) { alert("파이어베이스 설정 오류입니다."); }
 
         window.API_KEY = 'AIzaSyB9SjdXwflGS-oUZfmaVGE1vWhBEahY4L0';
+        window.ALADIN_KEY = 'ttbyulim12041101001'; 
+        
         window.db = { reading: [], library: [], wish: [], toread: [], quotes: [], logs: [], voca: [] };
         window.tempBookData = null;
         window.currentVocaFilter = 'ALL';
@@ -488,13 +498,29 @@
 
     <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
     <script>
-        // UI 로직
-        let curDate = new Date();
-        let currentAction = null;
-        let targetIndex = null;
-        let html5QrcodeScanner = null;
+        // PC 환경을 위한 마우스 드래그 스크롤 기능
+        function makeScrollable(id) {
+            const slider = document.getElementById(id);
+            if(!slider) return;
+            slider.onmousedown = (e) => {
+                slider.isDown = true; 
+                slider.classList.add('active');
+                slider.startX = e.pageX - slider.offsetLeft; 
+                slider.scrollLeftPos = slider.scrollLeft;
+            };
+            slider.onmouseleave = () => { slider.isDown = false; slider.classList.remove('active'); };
+            slider.onmouseup = () => { slider.isDown = false; slider.classList.remove('active'); };
+            slider.onmousemove = (e) => {
+                if(!slider.isDown) return;
+                e.preventDefault();
+                const x = e.pageX - slider.offsetLeft;
+                slider.scrollLeft = slider.scrollLeftPos - (x - slider.startX) * 1.5;
+            };
+        }
 
-        window.initUI = function() { renderHome(); renderCalendar(); renderQuotesList(); renderVoca(); renderStats(); }
+        window.initUI = function() { 
+            renderHome(); renderCalendar(); renderQuotesList(); renderVoca(); renderStats(); 
+        }
         
         window.switchAuthMode = function(mode) {
             document.getElementById('login-form').style.display = mode === 'signup' ? 'none' : 'block';
@@ -512,10 +538,10 @@
         }
 
         function getCoverHtml(url, title) {
-            if (!url || url.includes('placeholder') || url === 'undefined') {
-                return `<div class="placeholder-cover" style="width:100%; height:100%; background:#eee; display:flex; align-items:center; justify-content:center; text-align:center; padding:5px; font-size:0.8rem; color:#555; border-radius:4px; font-weight:bold;">${title}</div>`;
+            if (!url || url.includes('placeholder') || url.includes('noimage') || url.includes('no_cover') || url === 'undefined') {
+                return `<div class="placeholder-cover" style="width:100%; height:100%; background:#eee; display:flex; align-items:center; justify-content:center; text-align:center; padding:5px; font-size:0.8rem; color:#555; border-radius:4px; font-weight:bold; overflow:hidden;">${title}</div>`;
             }
-            return `<img src="${url}" style="width:100%; height:100%; object-fit:cover; border-radius:4px;">`;
+            return `<img src="${url}" draggable="false" style="width:100%; height:100%; object-fit:cover; border-radius:4px; pointer-events:none;">`;
         }
 
         function updateLogs() {
@@ -581,6 +607,7 @@
             });
         }
 
+        // 투박한 prompt를 완벽히 멸종시킨 통합 모달 로직
         window.openDateModal = function(action, index) {
             currentAction = action; targetIndex = index;
             const today = new Date().toISOString().split('T')[0];
@@ -589,23 +616,27 @@
             
             const dateWrap = document.getElementById('dateInputWrap');
             const pageWrap = document.getElementById('pageInputWrap');
+            const totalPageWrap = document.getElementById('totalPageInputWrap');
             const extraEditWrap = document.getElementById('extraEditWrap');
             const commentInput = document.getElementById('bookComment');
             const title = document.getElementById('dateModalTitle');
             const delBtn = document.getElementById('btnDeleteBook');
             
-            delBtn.style.display = 'none'; extraEditWrap.style.display = 'none'; commentInput.style.display = 'none';
+            delBtn.style.display = 'none'; extraEditWrap.style.display = 'none'; 
+            commentInput.style.display = 'none'; totalPageWrap.style.display = 'none';
             document.getElementById('coverUploadInput').value = ''; 
 
             if (action === 'start_reading_search') {
-                dateWrap.style.display = 'block'; pageWrap.style.display = 'none';
+                dateWrap.style.display = 'block'; pageWrap.style.display = 'none'; totalPageWrap.style.display = 'block';
                 title.innerText = '새 책 읽기 시작';
                 extraEditWrap.style.display = 'block';
+                document.getElementById('editTotalPage').value = window.tempBookData.total || 300;
                 document.getElementById('editPublisher').value = window.tempBookData.publisher || '미상';
                 document.getElementById('editCategory').value = window.tempBookData.category || '기타';
             } else if (action === 'start_reading_toread') {
-                dateWrap.style.display = 'block'; pageWrap.style.display = 'none';
+                dateWrap.style.display = 'block'; pageWrap.style.display = 'none'; totalPageWrap.style.display = 'block';
                 title.innerText = '읽기 시작';
+                document.getElementById('editTotalPage').value = db.toread[index].total || 300;
             } else if (action === 'record' || action === 'edit_reading') {
                 dateWrap.style.display = 'block'; pageWrap.style.display = 'block';
                 title.innerText = action === 'record' ? '독서 기록' : '기록 수정';
@@ -613,7 +644,8 @@
                 if(db.reading[index].lastDate) document.getElementById('dateInput').value = db.reading[index].lastDate;
                 
                 if(action === 'edit_reading') {
-                    extraEditWrap.style.display = 'block';
+                    extraEditWrap.style.display = 'block'; totalPageWrap.style.display = 'block';
+                    document.getElementById('editTotalPage').value = db.reading[index].total || 300;
                     document.getElementById('editPublisher').value = db.reading[index].publisher || '미상';
                     document.getElementById('editCategory').value = db.reading[index].category || '기타';
                 }
@@ -651,9 +683,11 @@
             const pub = document.getElementById('editPublisher').value;
             const cat = document.getElementById('editCategory').value;
             const cmt = document.getElementById('bookComment').value.trim();
+            const totalP = parseInt(document.getElementById('editTotalPage').value) || 300;
 
             if(currentAction === 'start_reading_search') {
-                window.tempBookData.startDate = date; window.tempBookData.publisher = pub; window.tempBookData.category = cat;
+                window.tempBookData.startDate = date; window.tempBookData.total = totalP;
+                window.tempBookData.publisher = pub; window.tempBookData.category = cat;
                 if(newCoverData) window.tempBookData.cover = newCoverData;
                 db.reading.push(window.tempBookData); window.tempBookData = null;
                 if(window.lastClickedSearchBtn) {
@@ -662,10 +696,11 @@
                 }
             } 
             else if(currentAction === 'start_reading_toread') {
-                const b = db.toread[targetIndex]; b.startDate = date; db.reading.push(b); db.toread.splice(targetIndex, 1);
+                const b = db.toread[targetIndex]; b.startDate = date; b.total = totalP; db.reading.push(b); db.toread.splice(targetIndex, 1);
             }
             else if(currentAction === 'record' || currentAction === 'edit_reading') {
                 const page = document.getElementById('pageInput').value;
+                if(currentAction === 'edit_reading') db.reading[targetIndex].total = totalP;
                 db.reading[targetIndex].current = Math.min(parseInt(page), db.reading[targetIndex].total);
                 db.reading[targetIndex].lastDate = date; 
                 if(currentAction === 'edit_reading') {
@@ -706,7 +741,7 @@
             const container = document.getElementById('bdCoverContainer');
             container.innerHTML = `<div style="width:120px; height:180px; margin:0 auto 15px; box-shadow:2px 2px 8px rgba(0,0,0,0.15);">${getCoverHtml(b.cover, b.title)}</div>`;
             document.getElementById('bdTitle').innerText = b.title;
-            document.getElementById('bdInfo').innerText = `${b.author} | ${b.publisher}`;
+            document.getElementById('bdInfo').innerText = `${b.author} | ${b.publisher} | ${b.category}`;
             document.getElementById('bdDate').innerText = `완독일: ${b.date}`;
             
             const commentWrap = document.getElementById('bdCommentWrap');
@@ -733,7 +768,7 @@
             db.reading.forEach((b, i) => {
                 const pct = Math.round((b.current / b.total) * 100);
                 const coverHtml = getCoverHtml(b.cover, b.title);
-                rDiv.innerHTML += `<div class="reading-card"><button class="btn-card-close" onclick="delReading(${i})">×</button><div style="width:60px; height:90px; flex-shrink:0;">${coverHtml}</div><div style="flex:1; margin-left:15px;"><div style="font-weight:bold; font-size:0.95rem; margin-bottom:5px;">${b.title}</div><div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div><div style="font-size:0.8rem; color:#888; margin-top:8px; display:flex; align-items:center; justify-content:space-between;"><span>${pct}% (${b.current}p)</span><div><button class="btn-round btn-record" onclick="openDateModal('record', ${i})">기록</button><button class="btn-round btn-edit" onclick="openDateModal('edit_reading', ${i})">수정</button><button class="btn-round btn-finish" onclick="openDateModal('finish', ${i})">완독</button></div></div></div></div>`;
+                rDiv.innerHTML += `<div class="reading-card"><button class="btn-card-close" onclick="delReading(${i})">×</button><div style="width:60px; height:90px; flex-shrink:0;">${coverHtml}</div><div style="flex:1; margin-left:15px;"><div style="font-weight:bold; font-size:0.95rem; margin-bottom:5px;">${b.title}</div><div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div><div style="font-size:0.8rem; color:#888; margin-top:8px; display:flex; align-items:center; justify-content:space-between;"><span>${pct}% (${b.current}p / ${b.total}p)</span><div><button class="btn-round btn-record" onclick="openDateModal('record', ${i})">기록</button><button class="btn-round btn-edit" onclick="openDateModal('edit_reading', ${i})">수정</button><button class="btn-round btn-finish" onclick="openDateModal('finish', ${i})">완독</button></div></div></div></div>`;
             });
             renderMiniList(db.wish, 'wishList', 'wish'); renderMiniList(db.toread, 'toreadList', 'toread');
             document.getElementById('wishCount').innerText=db.wish.length+'권'; document.getElementById('toreadCount').innerText=db.toread.length+'권';
@@ -745,6 +780,11 @@
                 const hue=Math.floor(Math.random()*30)+10;
                 shelf.innerHTML += `<div class="spine" style="background:hsl(${hue},40%,40%); width:${w}px; height:${h}px;" title="${b.title}" onclick="showBookDetail(${i})">${b.title}</div>`;
             });
+
+            // 마우스 스크롤 이벤트 장착
+            makeScrollable('readingList');
+            makeScrollable('wishList');
+            makeScrollable('toreadList');
         }
         
         function renderMiniList(l,id,t) {
@@ -757,60 +797,87 @@
                     <button class="btn-mini-edit" onclick="openDateModal('edit_mini_${t}', ${i})">✏️</button>
                     <div style="width:90px; height:130px; margin:0 auto; box-shadow:2px 2px 5px rgba(0,0,0,0.1);">${cv}</div>
                     <div class="mini-title">${b.title}</div>
-                    ${t==='wish'?`<button onclick="moveWishToToread(${i})" style="font-size:0.7rem; margin-top:2px; background:#f5f5f5; border:1px solid #ddd; border-radius:3px; cursor:pointer;">▼ 예정 이동</button>`:`<button onclick="openDateModal('start_reading_toread', ${i})" style="font-size:0.7rem; margin-top:2px; background:#e3f2fd; border:none; border-radius:3px; cursor:pointer;">▶ 읽기 시작</button>`}
+                    <div class="mini-btn-wrap">
+                        ${t==='wish'?`<button onclick="moveWishToToread(${i})" style="font-size:0.7rem; background:#f5f5f5; border:1px solid #ddd; border-radius:3px; cursor:pointer;">▼ 예정 이동</button>`:`<button onclick="openDateModal('start_reading_toread', ${i})" style="font-size:0.7rem; background:#e3f2fd; border:none; border-radius:3px; cursor:pointer;">▶ 읽기 시작</button>`}
+                    </div>
                 </div>`;
             });
         }
 
-        // [NEW] 구글북스 장르 번역 함수
-        function translateCat(categories) { 
-            if(!categories || categories.length === 0) return '기타';
-            let cat = categories[0];
-            if(/[가-힣]/.test(cat)) return cat; // 이미 한국어면 통과
-
-            const map = {
-                'science fiction': 'SF/과학소설', 'epistolary novel': '서간체 소설', 'metaphysical fiction': '형이상학 소설',
-                'fiction': '소설', 'novel': '소설', 'poetry': '시', 'history': '역사', 'science': '과학', 
-                'business': '경제/경영', 'economics': '경제', 'self-help': '자기계발', 'essay': '에세이', 
-                'biography': '전기/위인전', 'computers': 'IT/컴퓨터', 'philosophy': '철학', 'psychology': '심리학', 
-                'religion': '종교', 'art': '예술', 'fantasy': '판타지', 'romance': '로맨스', 'thriller': '스릴러', 
-                'mystery': '미스터리', 'juvenile': '아동/청소년', 'young adult': '청소년', 'health': '건강', 'comics': '만화'
-            };
-            let lowerCat = cat.toLowerCase();
-            for(let key in map) { if(lowerCat.includes(key)) return map[key]; }
-            return cat; // 사전에 없으면 차라리 원래 영어를 보여줌 ('기타' 방지)
-        }
-        
+        // [핵심] 듀얼 검색 엔진 (알라딘 + 구글 북스 페이지수)
         window.openSearch = function() { document.getElementById('searchModal').style.display='block'; document.getElementById('searchInput').focus(); }
-        window.searchBooks = async function() {
+        
+        window.searchBooks = function() {
             let q = document.getElementById('searchInput').value.trim(); 
             if(!q) return;
-            const list = document.getElementById('searchResultList'); list.innerHTML = '검색중...';
-            try {
-                let isBarcode = /^\d{10,13}$/.test(q);
-                let apiQuery = isBarcode ? `isbn:${q}` : encodeURIComponent(q);
-                let res = await fetch(`https://www.googleapis.com/books/v1/volumes?q=${apiQuery}&langRestrict=ko&maxResults=15&key=${window.API_KEY}`);
-                let data = await res.json();
-                if (isBarcode && (!data.items || data.items.length === 0)) {
-                    res = await fetch(`https://www.googleapis.com/books/v1/volumes?q=${q}&langRestrict=ko&maxResults=15&key=${window.API_KEY}`);
-                    data = await res.json();
-                }
-                list.innerHTML = '';
-                if(!data.items || data.items.length === 0) { 
-                    if (isBarcode) list.innerHTML = '<div style="padding:20px; text-align:center; color:#d84315; line-height:1.5;">구글 도서에 등록되지 않은 바코드입니다.<br><strong>위 검색창에 책 제목을 직접 입력하여 검색해주세요!</strong></div>';
-                    else list.innerHTML = '<div style="padding:20px; text-align:center; color:#666;">검색 결과가 없습니다.</div>'; 
-                    return; 
-                }
-                data.items.forEach(item => {
-                    const i = item.volumeInfo; if((i.categories||[]).some(c=>/Comic|Manga|만화/i.test(c))) return;
-                    const b = { title: i.title, author: i.authors?i.authors[0]:'미상', publisher: i.publisher||'미상', cover: i.imageLinks?i.imageLinks.thumbnail:'', total: i.pageCount||300, category: translateCat(i.categories), current: 0 };
-                    const bStr = JSON.stringify(b).replace(/"/g, '&quot;');
-                    let img = getCoverHtml(b.cover, b.title);
-                    list.innerHTML += `<div class="result-item"><div style="width:60px; height:90px; flex-shrink:0;">${img}</div><div style="flex:1;"><div style="font-weight:bold;">${b.title}</div><div style="font-size:0.8rem; color:#666;">${b.author} | ${b.publisher} | <span style="color:var(--primary-color); font-weight:bold;">${b.category}</span></div><div class="result-actions" style="margin-top:10px;"><button onclick='addBook("reading",${bStr}, this)' style="background:var(--accent-color); color:white;">읽기</button><button onclick='addBook("wish",${bStr}, this)' style="background:#ffcc80;">위시</button><button onclick='addBook("toread",${bStr}, this)' style="background:#bbdefb;">예정</button></div></div></div>`;
-                });
-            } catch(e) { list.innerHTML = '오류가 발생했습니다.'; }
+
+            if(window.ALADIN_KEY === 'YOUR_ALADIN_TTB_KEY') {
+                alert("알라딘 TTBKey를 코드에 입력해주세요!");
+                return;
+            }
+
+            const list = document.getElementById('searchResultList'); 
+            list.innerHTML = '<div style="padding:20px; text-align:center; color:var(--primary-color);">알라딘 서점 데이터 가져오는 중... 📚</div>';
+
+            let isBarcode = /^\d{10,13}$/.test(q);
+            let queryType = isBarcode ? 'ISBN' : 'Keyword';
+
+            let oldScript = document.getElementById('aladin-jsonp');
+            if(oldScript) oldScript.remove();
+
+            let script = document.createElement('script');
+            script.id = 'aladin-jsonp';
+            script.src = `https://www.aladin.co.kr/ttb/api/ItemSearch.aspx?ttbkey=${window.ALADIN_KEY}&Query=${encodeURIComponent(q)}&QueryType=${queryType}&MaxResults=15&start=1&SearchTarget=Book&output=js&Version=20131101&CallBack=aladinCallback`;
+            document.body.appendChild(script);
         }
 
+        // 알라딘 결과를 받은 후 구글에서 페이지 수 훔쳐오기
+        window.aladinCallback = async function(data) {
+            const list = document.getElementById('searchResultList');
+            if(!data || !data.item || data.item.length === 0) {
+                 list.innerHTML = '<div style="padding:20px; text-align:center; color:#666;">검색 결과가 없습니다.</div>';
+                 return;
+            }
+
+            list.innerHTML = '<div style="padding:20px; text-align:center; color:var(--primary-color);">책 정보 확인 완료! 페이지 정보를 추가로 가져옵니다... ⏳</div>';
+
+            const itemsWithPages = await Promise.all(data.item.map(async (item) => {
+                let cat = '기타';
+                if(item.categoryName) {
+                    let parts = item.categoryName.split('>');
+                    if(parts.length > 1) { cat = parts[1].split('/')[0]; } 
+                    else { cat = parts[0]; }
+                }
+
+                let pageCount = 300; // 구글에서 못찾을 경우 기본값
+                
+                // 구글 북스 몰래 찔러서 페이지 수만 빼오기
+                if (item.isbn13) {
+                    try {
+                        let gRes = await fetch(`https://www.googleapis.com/books/v1/volumes?q=isbn:${item.isbn13}&key=${window.API_KEY}`);
+                        let gData = await gRes.json();
+                        if (gData.items && gData.items.length > 0) {
+                            if (gData.items[0].volumeInfo.pageCount) {
+                                pageCount = gData.items[0].volumeInfo.pageCount;
+                            }
+                        }
+                    } catch(e) { console.log("페이지 수 로드 실패(무시됨)"); }
+                }
+
+                return { 
+                    title: item.title, author: item.author, publisher: item.publisher, 
+                    cover: item.cover, category: cat, total: pageCount, current: 0 
+                };
+            }));
+
+            list.innerHTML = '';
+            itemsWithPages.forEach(b => {
+                const bStr = JSON.stringify(b).replace(/"/g, '&quot;');
+                let img = getCoverHtml(b.cover, b.title);
+                list.innerHTML += `<div class="result-item"><div style="width:60px; height:90px; flex-shrink:0;">${img}</div><div style="flex:1;"><div style="font-weight:bold; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;">${b.title}</div><div style="font-size:0.8rem; color:#666; margin-top:3px;">${b.author} | ${b.publisher}</div><div style="font-size:0.8rem; margin-top:3px;"><span style="color:var(--primary-color); font-weight:bold;">${b.category}</span> | <span style="color:#888;">${b.total}쪽</span></div><div class="result-actions" style="margin-top:10px;"><button onclick='addBook("reading",${bStr}, this)' style="background:var(--accent-color); color:white;">읽기</button><button onclick='addBook("wish",${bStr}, this)' style="background:#ffcc80;">위시</button><button onclick='addBook("toread",${bStr}, this)' style="background:#bbdefb;">예정</button></div></div></div>`;
+            });
+        }
+        
         window.addBook = function(type, book, btnElem) {
             if(type === 'reading') {
                 window.tempBookData = book;
@@ -928,7 +995,7 @@
             document.getElementById('quoteDetailModal').style.display = 'flex';
         }
 
-        // [NEW] 극강의 단어장 뜻 필터링 로직
+        // 단어장 극강 필터링 + 백과사전 이중 검색
         window.searchDict = async function() {
             const word = document.getElementById('vocaWordInput').value.trim();
             if(!word) return alert("단어를 먼저 입력해주세요!");
@@ -937,9 +1004,8 @@
             btn.innerHTML = "⏳ 뜻 찾는 중...";
             
             let text = "";
-
             try {
-                // 1차: 위키낱말사전 검색
+                // 1차: 위키낱말사전
                 const res = await fetch(`https://ko.wiktionary.org/w/api.php?action=query&prop=extracts&format=json&explaintext=1&titles=${encodeURIComponent(word)}&origin=*`);
                 const data = await res.json();
                 const page = Object.values(data.query.pages)[0];
@@ -947,51 +1013,36 @@
                 if (page.pageid && page.extract) {
                     text = page.extract;
                 } else {
-                    // 2차: 위키백과 검색 (고사성어, 속담 등 백과사전 표제어)
+                    // 2차: 위키백과 (사자성어, 속담 등)
                     const wikiRes = await fetch(`https://ko.wikipedia.org/w/api.php?action=query&prop=extracts&format=json&exsentences=3&explaintext=1&titles=${encodeURIComponent(word)}&origin=*`);
                     const wikiData = await wikiRes.json();
                     const wikiPage = Object.values(wikiData.query.pages)[0];
-                    if(wikiPage.pageid && wikiPage.extract) {
-                        text = wikiPage.extract;
-                    }
+                    if(wikiPage.pageid && wikiPage.extract) text = wikiPage.extract;
                 }
                 
                 if (text) {
-                    // 1. == 한국어 == 같은 기호 제목 싹 제거
+                    // 기호 제목 삭제
                     text = text.replace(/==+[^=]+==+/g, '');
                     
-                    // 2. 줄바꿈 단위로 쪼개서 불필요한 줄 완벽 차단
                     let lines = text.split('\n');
                     let cleanLines = lines.filter(line => {
                         let l = line.trim();
                         if(!l) return false;
-                        
-                        // 발음 기호나 코딩 언어가 포함된 줄 삭제
+                        // 발음기호, 괄호 속 기호 삭제
                         if (l.includes('표준어') || l.includes('IPA') || l.match(/\[.*\]/)) return false; 
-                        
-                        // 위키 특유의 문법/분류/어원 표시로 시작하는 줄 철벽 방어
+                        // 위키 특유의 문법 표시 줄 방어
                         if (l.match(/^(발음|어원|동사|형용사|부사|명사|대명사|수사|관형사|감탄사|조사|유의어|반의어|파생어|참고|번역|속담|관용구|문법|유래|활용|한자|로마자|어구)\s*:/)) return false;
-                        
-                        // 단어 자체가 제목처럼 혼자 덩그러니 있는 줄 제거
                         if(l === word) return false; 
-                        
                         return true;
                     });
                     
-                    // 너무 길면 보기 힘드니까 윗부분 3줄만 가져오기
                     let finalText = cleanLines.slice(0, 3).join('\n').trim();
-                    
-                    if(finalText) {
-                        document.getElementById('vocaMeaningInput').value = finalText;
-                    } else {
-                        alert("사전에 뜻이 명확하게 등록되어 있지 않습니다. 직접 적어주세요!");
-                    }
+                    if(finalText) document.getElementById('vocaMeaningInput').value = finalText;
+                    else alert("사전에 뜻이 명확하게 등록되어 있지 않습니다. 직접 적어주세요!");
                 } else {
                     alert("사전이나 백과사전에서 단어를 찾지 못했습니다. 직접 적어주세요!");
                 }
-            } catch(e) {
-                alert("검색 중 오류가 발생했습니다.");
-            }
+            } catch(e) { alert("검색 중 오류가 발생했습니다."); }
             btn.innerHTML = "<span>🤖</span> AI 자동 뜻 찾기";
         }
 
@@ -1006,13 +1057,13 @@
                 window.renderVoca(); alert("단어장에 추가되었습니다!");
             });
         }
+
         window.deleteVoca = function(index) {
             if(confirm("이 단어를 삭제하시겠습니까?")) {
                 db.voca.splice(index, 1); window.save().then(() => window.renderVoca());
             }
         }
 
-        // 자음 추출 함수
         function getChosung(str) {
             const cho = ["ㄱ","ㄲ","ㄴ","ㄷ","ㄸ","ㄹ","ㅁ","ㅂ","ㅃ","ㅅ","ㅆ","ㅇ","ㅈ","ㅉ","ㅊ","ㅋ","ㅌ","ㅍ","ㅎ"];
             let code = str.charCodeAt(0) - 44032;
@@ -1080,11 +1131,10 @@
             });
         }
 
-        // 랭킹
         function renderStats() {
             const c={}, a={}, p={}; 
             db.library.forEach(b=>{ 
-                const sc = b.category || translateCat([b.category]); 
+                const sc = b.category || '기타'; 
                 c[sc]=(c[sc]||0)+1; 
                 a[b.author]=(a[b.author]||0)+1; 
                 p[b.publisher]=(p[b.publisher]||0)+1; 
