@@ -65,7 +65,7 @@
         .btn-edit { background: none; border: 1px solid #ddd; color: #888; margin-left: 5px; }
         .btn-card-close { position: absolute; top: 10px; right: 10px; background: none; border: none; color: #999; font-size: 1.2rem; cursor: pointer; line-height: 1; }
         
-        /* 미니 카드 */
+        /* 미니 카드 (제목 2줄 자동 줄바꿈) */
         .mini-card { width: 100px; flex: 0 0 auto; text-align: center; position: relative; margin-top:10px; display: flex; flex-direction: column; align-items: center; }
         .mini-cover { width: 90px; height: 130px; object-fit: cover; border-radius: 5px; box-shadow: 2px 2px 5px rgba(0,0,0,0.1); pointer-events: none; }
         .mini-title { font-size: 0.75rem; margin-top: 8px; width: 100%; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; text-overflow: ellipsis; white-space: normal; line-height: 1.3; height: 2.6em; word-break: keep-all; color: #444; }
@@ -85,7 +85,7 @@
         .nav-item { text-align: center; cursor: pointer; color: #aaa; flex: 1; }
         .nav-item.active { color: var(--primary-color); font-weight: bold; }
 
-        /* 모달창들 */
+        /* 검색 모달 */
         .full-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg-color); z-index: 2000; overflow-y: auto; }
         .search-header { position: sticky; top: 0; background: var(--bg-color); padding: 15px; display: flex; gap: 10px; border-bottom: 1px solid #ddd; z-index: 10; }
         .search-header input { flex: 1; padding: 12px; border: 1px solid #ccc; border-radius: 8px; font-size: 1rem; }
@@ -432,7 +432,7 @@
     </div>
 
     <script type="module">
-        // [강력한 데이터 백신 함수] 빈 데이터(Null)가 화면을 고장내는 것을 100% 차단합니다.
+        // [강력한 데이터 백신 함수]
         window.sanitizeArray = function(data) {
             if (!data) return [];
             let arr = Array.isArray(data) ? data : Object.values(data);
@@ -528,7 +528,6 @@
                     const docSnap = await getDoc(dbRef);
                     if (docSnap.exists()) {
                         let d = docSnap.data();
-                        // 빈 데이터(Null)를 완벽하게 걸러내서 달력 백지화 방지!
                         window.db = {
                             reading: window.sanitizeArray(d.reading),
                             library: window.sanitizeArray(d.library),
@@ -558,6 +557,12 @@
     </script>
 
     <script>
+        // [증발했던 핵심 변수 완벽 복구!!]
+        window.curDate = new Date();
+        window.currentAction = null;
+        window.targetIndex = null;
+        window.html5QrcodeScanner = null;
+
         // PC 마우스 드래그 스크롤
         function makeScrollable(id) {
             const slider = document.getElementById(id);
@@ -577,7 +582,6 @@
         }
 
         window.initUI = function() { 
-            // 탭 중 하나가 에러나도 전체가 멈추지 않도록 강력하게 보호
             try { window.renderHome(); } catch(e){ console.error("Home render err", e); }
             try { window.renderCalendar(); } catch(e){ console.error("Cal render err", e); }
             try { window.renderQuotesList(); } catch(e){ console.error("Quote render err", e); }
@@ -601,7 +605,8 @@
         }
 
         function getCoverHtml(url, title) {
-            let safeTitle = title ? title.replace(/"/g, '&quot;').replace(/'/g, '&#39;') : '제목없음';
+            // [오류 방지] 제목이 숫자로만 되어있어도 에러 안나게 무조건 문자로 변환
+            let safeTitle = title ? String(title).replace(/"/g, '&quot;').replace(/'/g, '&#39;') : '제목없음';
             if (!url || typeof url !== 'string' || url.includes('placeholder') || url.includes('noimage') || url.includes('no_cover') || url === 'undefined') {
                 return `<div class="placeholder-cover" style="width:100%; height:100%; background:#eee; display:flex; align-items:center; justify-content:center; text-align:center; padding:5px; font-size:0.8rem; color:#555; border-radius:4px; font-weight:bold; overflow:hidden;">${safeTitle}</div>`;
             }
@@ -618,12 +623,12 @@
         window.resetToday = async function() {
             const today = new Date().toISOString().split('T')[0];
             if(confirm("오늘 기록한 모든 독서 내역(페이지 갱신, 완독)을 취소할까요?")) {
-                for(let i = db.library.length - 1; i >= 0; i--) {
-                    if(db.library[i] && db.library[i].date === today) {
-                        let b = db.library.splice(i, 1)[0]; b.date = null; b.comment = null; db.reading.push(b);
+                for(let i = window.db.library.length - 1; i >= 0; i--) {
+                    if(window.db.library[i] && window.db.library[i].date === today) {
+                        let b = window.db.library.splice(i, 1)[0]; b.date = null; b.comment = null; window.db.reading.push(b);
                     }
                 }
-                db.reading.forEach(b => {
+                window.db.reading.forEach(b => {
                     if(b && b.lastDate === today) { b.lastDate = null; b.current = 0; }
                     if(b && b.startDate === today) { b.startDate = null; }
                 });
@@ -640,11 +645,10 @@
             }
         }
 
-        // [복구 완료] 바코드 스캐너 실행 함수
         window.openScanner = function() {
             document.getElementById('scannerModal').style.display = 'flex';
-            if(!html5QrcodeScanner) { html5QrcodeScanner = new Html5Qrcode("scanner-container"); }
-            html5QrcodeScanner.start(
+            if(!window.html5QrcodeScanner) { window.html5QrcodeScanner = new Html5Qrcode("scanner-container"); }
+            window.html5QrcodeScanner.start(
                 { facingMode: "environment" }, 
                 { fps: 10, qrbox: { width: 250, height: 150 } }, 
                 (decodedText) => {
@@ -660,7 +664,7 @@
             });
         }
         window.closeScanner = function() {
-            if(html5QrcodeScanner) html5QrcodeScanner.stop().then(() => document.getElementById('scannerModal').style.display = 'none').catch(console.log);
+            if(window.html5QrcodeScanner) window.html5QrcodeScanner.stop().then(() => document.getElementById('scannerModal').style.display = 'none').catch(console.log);
             else document.getElementById('scannerModal').style.display = 'none';
         }
 
@@ -683,7 +687,7 @@
         }
 
         window.openDateModal = function(action, index) {
-            currentAction = action; targetIndex = index;
+            window.currentAction = action; window.targetIndex = index;
             const today = new Date().toISOString().split('T')[0];
             document.getElementById('dateInput').value = today;
             document.getElementById('dateModal').style.display = 'flex';
@@ -708,26 +712,26 @@
                 document.getElementById('editCategory').value = window.tempBookData.category || '기타';
             } else if (action === 'start_reading_toread') {
                 dateWrap.style.display = 'block'; pageWrap.style.display = 'none'; totalPageWrap.style.display = 'block';
-                title.innerText = '읽기 시작'; document.getElementById('editTotalPage').value = db.toread[index].total || 300;
+                title.innerText = '읽기 시작'; document.getElementById('editTotalPage').value = window.db.toread[index].total || 300;
             } else if (action === 'record' || action === 'edit_reading') {
                 dateWrap.style.display = 'block'; pageWrap.style.display = 'block';
                 title.innerText = action === 'record' ? '독서 기록' : '기록 수정';
-                document.getElementById('pageInput').value = db.reading[index].current;
-                if(db.reading[index].lastDate) document.getElementById('dateInput').value = db.reading[index].lastDate;
+                document.getElementById('pageInput').value = window.db.reading[index].current;
+                if(window.db.reading[index].lastDate) document.getElementById('dateInput').value = window.db.reading[index].lastDate;
                 
                 if(action === 'edit_reading') {
                     extraEditWrap.style.display = 'block'; totalPageWrap.style.display = 'block';
-                    document.getElementById('editTotalPage').value = db.reading[index].total || 300;
-                    document.getElementById('editPublisher').value = db.reading[index].publisher || '미상';
-                    document.getElementById('editCategory').value = db.reading[index].category || '기타';
+                    document.getElementById('editTotalPage').value = window.db.reading[index].total || 300;
+                    document.getElementById('editPublisher').value = window.db.reading[index].publisher || '미상';
+                    document.getElementById('editCategory').value = window.db.reading[index].category || '기타';
                 }
             } else if (action === 'edit_library') {
                 dateWrap.style.display = 'block'; pageWrap.style.display = 'none';
-                title.innerText = '완독 정보 수정'; document.getElementById('dateInput').value = db.library[index].date;
+                title.innerText = '완독 정보 수정'; document.getElementById('dateInput').value = window.db.library[index].date;
                 delBtn.style.display = 'block'; extraEditWrap.style.display = 'block';
-                document.getElementById('editPublisher').value = db.library[index].publisher || '미상';
-                document.getElementById('editCategory').value = db.library[index].category || '기타';
-                commentInput.style.display = 'block'; commentInput.value = db.library[index].comment || '';
+                document.getElementById('editPublisher').value = window.db.library[index].publisher || '미상';
+                document.getElementById('editCategory').value = window.db.library[index].category || '기타';
+                commentInput.style.display = 'block'; commentInput.value = window.db.library[index].comment || '';
             } else if (action === 'finish') {
                 dateWrap.style.display = 'block'; pageWrap.style.display = 'none';
                 title.innerText = '완독 기록'; commentInput.style.display = 'block'; commentInput.value = '';
@@ -735,8 +739,8 @@
                 dateWrap.style.display = 'none'; pageWrap.style.display = 'none';
                 title.innerText = '책 정보 수정'; extraEditWrap.style.display = 'block';
                 const listType = action.replace('edit_mini_', '');
-                document.getElementById('editPublisher').value = db[listType][index].publisher || '미상';
-                document.getElementById('editCategory').value = db[listType][index].category || '기타';
+                document.getElementById('editPublisher').value = window.db[listType][index].publisher || '미상';
+                document.getElementById('editCategory').value = window.db[listType][index].category || '기타';
             }
         }
 
@@ -754,59 +758,59 @@
             const cmt = document.getElementById('bookComment').value.trim();
             const totalP = parseInt(document.getElementById('editTotalPage').value) || 300;
 
-            if(currentAction === 'start_reading_search') {
+            if(window.currentAction === 'start_reading_search') {
                 window.tempBookData.startDate = date; window.tempBookData.total = totalP;
                 window.tempBookData.publisher = pub; window.tempBookData.category = cat;
                 if(newCoverData) window.tempBookData.cover = newCoverData;
-                db.reading.push(window.tempBookData); window.tempBookData = null;
+                window.db.reading.push(window.tempBookData); window.tempBookData = null;
                 if(window.lastClickedSearchBtn) {
                     let btn = window.lastClickedSearchBtn; btn.innerText = '✔ 읽는 중'; btn.style.background = '#4CAF50';
                     setTimeout(() => { btn.innerText = '읽기'; btn.style.background = 'var(--accent-color)'; }, 1500);
                 }
             } 
-            else if(currentAction === 'start_reading_toread') {
-                const b = db.toread[targetIndex]; b.startDate = date; b.total = totalP; db.reading.push(b); db.toread.splice(targetIndex, 1);
+            else if(window.currentAction === 'start_reading_toread') {
+                const b = window.db.toread[window.targetIndex]; b.startDate = date; b.total = totalP; window.db.reading.push(b); window.db.toread.splice(window.targetIndex, 1);
             }
-            else if(currentAction === 'record' || currentAction === 'edit_reading') {
+            else if(window.currentAction === 'record' || window.currentAction === 'edit_reading') {
                 const page = document.getElementById('pageInput').value;
-                if(currentAction === 'edit_reading') db.reading[targetIndex].total = totalP;
-                db.reading[targetIndex].current = Math.min(parseInt(page), db.reading[targetIndex].total);
-                db.reading[targetIndex].lastDate = date; 
-                if(currentAction === 'edit_reading') {
-                    db.reading[targetIndex].publisher = pub; db.reading[targetIndex].category = cat;
-                    if(newCoverData) db.reading[targetIndex].cover = newCoverData;
+                if(window.currentAction === 'edit_reading') window.db.reading[window.targetIndex].total = totalP;
+                window.db.reading[window.targetIndex].current = Math.min(parseInt(page), window.db.reading[window.targetIndex].total);
+                window.db.reading[window.targetIndex].lastDate = date; 
+                if(window.currentAction === 'edit_reading') {
+                    window.db.reading[window.targetIndex].publisher = pub; window.db.reading[window.targetIndex].category = cat;
+                    if(newCoverData) window.db.reading[window.targetIndex].cover = newCoverData;
                 }
             } 
-            else if(currentAction === 'edit_library') {
-                db.library[targetIndex].date = date; db.library[targetIndex].publisher = pub;
-                db.library[targetIndex].category = cat; db.library[targetIndex].comment = cmt;
-                if(newCoverData) db.library[targetIndex].cover = newCoverData;
+            else if(window.currentAction === 'edit_library') {
+                window.db.library[window.targetIndex].date = date; window.db.library[window.targetIndex].publisher = pub;
+                window.db.library[window.targetIndex].category = cat; window.db.library[window.targetIndex].comment = cmt;
+                if(newCoverData) window.db.library[window.targetIndex].cover = newCoverData;
             } 
-            else if(currentAction === 'finish') {
-                const b = db.reading[targetIndex]; b.date = date; b.comment = cmt;
-                db.library.push(b); db.reading.splice(targetIndex, 1);
+            else if(window.currentAction === 'finish') {
+                const b = window.db.reading[window.targetIndex]; b.date = date; b.comment = cmt;
+                window.db.library.push(b); window.db.reading.splice(window.targetIndex, 1);
             }
-            else if(currentAction.startsWith('edit_mini_')) {
-                const listType = currentAction.replace('edit_mini_', '');
-                db[listType][targetIndex].publisher = pub; db[listType][targetIndex].category = cat;
-                if(newCoverData) db[listType][targetIndex].cover = newCoverData;
+            else if(window.currentAction.startsWith('edit_mini_')) {
+                const listType = window.currentAction.replace('edit_mini_', '');
+                window.db[listType][window.targetIndex].publisher = pub; window.db[listType][window.targetIndex].category = cat;
+                if(newCoverData) window.db[listType][window.targetIndex].cover = newCoverData;
             }
             
-            updateLogs(); db.library.sort((a,b) => new Date(a.date) - new Date(b.date));
+            updateLogs(); window.db.library.sort((a,b) => new Date(a.date) - new Date(b.date));
             await window.save(); window.renderHome(); window.renderCalendar(); window.renderStats();
             document.getElementById('dateModal').style.display = 'none';
         }
 
         window.deleteCurrentBook = function() {
             if(confirm("정말 이 책을 삭제하시겠습니까?")) {
-                db.library.splice(targetIndex, 1); updateLogs();
+                window.db.library.splice(window.targetIndex, 1); updateLogs();
                 window.save().then(() => { window.renderHome(); window.renderCalendar(); window.renderStats(); });
                 document.getElementById('dateModal').style.display = 'none';
             }
         }
 
         window.showBookDetail = function(index) {
-            const b = db.library[index];
+            const b = window.db.library[index];
             const container = document.getElementById('bdCoverContainer');
             container.innerHTML = `<div style="width:120px; height:180px; margin:0 auto 15px; box-shadow:2px 2px 8px rgba(0,0,0,0.15);">${getCoverHtml(b.cover, b.title)}</div>`;
             document.getElementById('bdTitle').innerText = b.title;
@@ -824,32 +828,33 @@
         window.renderHome = function() {
             const weekDiv = document.getElementById('weekCircles'); weekDiv.innerHTML = '';
             const today = new Date(); const startOfWeek = new Date(today); startOfWeek.setDate(today.getDate() - today.getDay());
-            let streak = db.logs.includes(today.toISOString().split('T')[0]) ? 1 : 0;
+            let streak = window.db.logs.includes(today.toISOString().split('T')[0]) ? 1 : 0;
             document.getElementById('streakDisplay').innerText = streak ? "🔥 오늘 독서 완료!" : "📚 오늘 책을 읽어보세요";
             for(let i=0; i<7; i++) {
                 const d = new Date(startOfWeek); d.setDate(startOfWeek.getDate() + i);
                 const dStr = d.toISOString().split('T')[0];
-                const isDone = db.logs.includes(dStr);
+                const isDone = window.db.logs.includes(dStr);
                 weekDiv.innerHTML += `<div><div class="day-circle ${isDone?'active':''}">${['일','월','화','수','목','금','토'][i]}</div><div class="day-label">${d.getDate()}</div></div>`;
             }
             const rDiv = document.getElementById('readingList'); rDiv.innerHTML = '';
-            if(db.reading.length===0) rDiv.innerHTML='<div style="padding:10px; color:#999; font-size:0.9rem;">읽고 있는 책이 없습니다.</div>';
-            db.reading.forEach((b, i) => {
+            if(window.db.reading.length===0) rDiv.innerHTML='<div style="padding:10px; color:#999; font-size:0.9rem;">읽고 있는 책이 없습니다.</div>';
+            window.db.reading.forEach((b, i) => {
                 if(!b) return;
                 const pct = Math.round((b.current / b.total) * 100) || 0;
                 const coverHtml = getCoverHtml(b.cover, b.title);
-                rDiv.innerHTML += `<div class="reading-card"><button class="btn-card-close" onclick="window.delReading(${i})">×</button><div style="width:60px; height:90px; flex-shrink:0;">${coverHtml}</div><div style="flex:1; margin-left:15px;"><div style="font-weight:bold; font-size:0.95rem; margin-bottom:5px; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;" title="${b.title.replace(/"/g, '&quot;')}">${b.title}</div><div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div><div style="font-size:0.8rem; color:#888; margin-top:8px; display:flex; align-items:center; justify-content:space-between;"><span>${pct}% (${b.current}p / ${b.total}p)</span><div><button class="btn-round btn-record" onclick="window.openDateModal('record', ${i})">기록</button><button class="btn-round btn-edit" onclick="window.openDateModal('edit_reading', ${i})">수정</button><button class="btn-round btn-finish" onclick="window.openDateModal('finish', ${i})">완독</button></div></div></div></div>`;
+                let safeTitle = b.title ? String(b.title).replace(/"/g, '&quot;') : '제목없음';
+                rDiv.innerHTML += `<div class="reading-card"><button class="btn-card-close" onclick="window.delReading(${i})">×</button><div style="width:60px; height:90px; flex-shrink:0;">${coverHtml}</div><div style="flex:1; margin-left:15px;"><div style="font-weight:bold; font-size:0.95rem; margin-bottom:5px; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;" title="${safeTitle}">${b.title}</div><div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div><div style="font-size:0.8rem; color:#888; margin-top:8px; display:flex; align-items:center; justify-content:space-between;"><span>${pct}% (${b.current}p / ${b.total}p)</span><div><button class="btn-round btn-record" onclick="window.openDateModal('record', ${i})">기록</button><button class="btn-round btn-edit" onclick="window.openDateModal('edit_reading', ${i})">수정</button><button class="btn-round btn-finish" onclick="window.openDateModal('finish', ${i})">완독</button></div></div></div></div>`;
             });
-            window.renderMiniList(db.wish, 'wishList', 'wish'); window.renderMiniList(db.toread, 'toreadList', 'toread');
-            document.getElementById('wishCount').innerText=db.wish.length+'권'; document.getElementById('toreadCount').innerText=db.toread.length+'권';
+            window.renderMiniList(window.db.wish, 'wishList', 'wish'); window.renderMiniList(window.db.toread, 'toreadList', 'toread');
+            document.getElementById('wishCount').innerText=window.db.wish.length+'권'; document.getElementById('toreadCount').innerText=window.db.toread.length+'권';
             
             const shelf = document.getElementById('bookShelf'); shelf.innerHTML = '';
-            if(db.library.length===0) shelf.innerHTML = '<div style="width:100%; text-align:center; padding:30px; color:rgba(255,255,255,0.5);">서재가 비었습니다.</div>';
-            else db.library.forEach((b, i) => {
+            if(window.db.library.length===0) shelf.innerHTML = '<div style="width:100%; text-align:center; padding:30px; color:rgba(255,255,255,0.5);">서재가 비었습니다.</div>';
+            else window.db.library.forEach((b, i) => {
                 if(!b) return;
                 const w=Math.min(65, Math.max(30, b.total/10)); const h=Math.min(160, Math.max(120, 120+(b.total%40)));
                 const hue=Math.floor(Math.random()*30)+10;
-                let safeTitle = b.title ? b.title.replace(/"/g, '&quot;') : '';
+                let safeTitle = b.title ? String(b.title).replace(/"/g, '&quot;') : '';
                 shelf.innerHTML += `<div class="spine" style="background:hsl(${hue},40%,40%); width:${w}px; height:${h}px;" title="${safeTitle}" onclick="window.showBookDetail(${i})">${b.title}</div>`;
             });
 
@@ -861,7 +866,7 @@
             l.forEach((b,i)=>{
                 if(!b) return;
                 const cv=getCoverHtml(b.cover,b.title).replace('style="','style="border-radius:5px;');
-                let safeTitle = b.title ? b.title.replace(/"/g, '&quot;') : '';
+                let safeTitle = b.title ? String(b.title).replace(/"/g, '&quot;') : '';
                 el.innerHTML+=`
                 <div class="mini-card">
                     <button class="btn-mini-del" onclick="window.delMini('${t}',${i})">×</button>
@@ -875,7 +880,7 @@
             });
         }
 
-        // [핵심 해결] 알라딘 통신 오류 안 나도록 이중 검색(JSONP + 구글 폴백)
+        // 알라딘 이중 검색 엔진
         window.openSearch = function() { document.getElementById('searchModal').style.display='block'; document.getElementById('searchInput').focus(); }
         
         window.searchBooks = function() {
@@ -886,14 +891,12 @@
             list.innerHTML = '<div style="padding:20px; text-align:center; color:var(--primary-color);">알라딘 서점에서 찾는 중... 📚</div>';
 
             let isBarcode = /^\d{10,13}$/.test(q);
-            let queryType = 'Keyword'; // 바코드도 Keyword로 던져야 알라딘이 에러 안 냄
+            let queryType = 'Keyword'; 
 
             let oldScript = document.getElementById('aladin-jsonp');
             if(oldScript) oldScript.remove();
 
             window.aladinFallbackFired = false;
-            
-            // 알라딘 서버가 3.5초 안에 대답 없으면 즉시 구글 북스로 대체 검색!
             window.aladinTimeout = setTimeout(() => {
                 window.aladinFallbackFired = true;
                 window.searchGoogleFallback(q, isBarcode);
@@ -906,7 +909,7 @@
         }
 
         window.aladinCallback = function(data) {
-            if(window.aladinFallbackFired) return; // 이미 구글로 넘어갔으면 무시
+            if(window.aladinFallbackFired) return; 
             clearTimeout(window.aladinTimeout); 
 
             const list = document.getElementById('searchResultList');
@@ -926,7 +929,6 @@
 
             window.renderSearchResults(list);
 
-            // 뒷단에서 몰래 페이지 수 가져오기
             window.currentSearchResults.forEach(b => {
                 if(b.isbn) {
                     fetch(`https://www.googleapis.com/books/v1/volumes?q=isbn:${b.isbn}&key=${window.API_KEY}`)
@@ -947,7 +949,6 @@
             });
         }
 
-        // 알라딘에 없을 때 구동되는 구글 검색기
         window.searchGoogleFallback = async function(q, isBarcode) {
             const list = document.getElementById('searchResultList');
             list.innerHTML = '<div style="padding:20px; text-align:center; color:var(--primary-color);">구글 도서에서 찾는 중... 📚</div>';
@@ -1004,7 +1005,7 @@
                 return;
             }
             window.currentSearchResults.forEach(b => {
-                let safeTitle = b.title ? b.title.replace(/"/g, '&quot;') : '';
+                let safeTitle = b.title ? String(b.title).replace(/"/g, '&quot;') : '';
                 let img = getCoverHtml(b.cover, b.title);
                 let pageText = b.total > 0 ? `${b.total}쪽` : '페이지 확인중...';
                 listElement.innerHTML += `
@@ -1038,7 +1039,7 @@
                 window.openDateModal('start_reading_search', null);
             } else { 
                 if(bCopy.total === 0) bCopy.total = 300; 
-                db[type].push(bCopy); 
+                window.db[type].push(bCopy); 
                 window.save().then(() => { 
                     window.renderHome(); 
                     let oldText = btnElem.innerText; let oldBg = btnElem.style.background;
@@ -1048,12 +1049,12 @@
             }
         }
         
-        window.delReading = function(i) { if(confirm('삭제하시겠습니까?')) { db.reading.splice(i,1); updateLogs(); window.save().then(()=>window.renderHome()); } }
-        window.dropReading = function(i) { if(confirm('하차하시겠습니까?')) { db.reading.splice(i,1); updateLogs(); window.save().then(()=>window.renderHome()); } }
-        window.delMini = function(t, i) { if(confirm('삭제하시겠습니까?')) { db[t].splice(i,1); updateLogs(); window.save().then(()=>window.renderHome()); } }
-        window.moveWishToToread = function(i) { db.toread.push(db.wish[i]); db.wish.splice(i,1); window.save().then(()=>window.renderHome()); }
+        window.delReading = function(i) { if(confirm('삭제하시겠습니까?')) { window.db.reading.splice(i,1); updateLogs(); window.save().then(()=>window.renderHome()); } }
+        window.dropReading = function(i) { if(confirm('하차하시겠습니까?')) { window.db.reading.splice(i,1); updateLogs(); window.save().then(()=>window.renderHome()); } }
+        window.delMini = function(t, i) { if(confirm('삭제하시겠습니까?')) { window.db[t].splice(i,1); updateLogs(); window.save().then(()=>window.renderHome()); } }
+        window.moveWishToToread = function(i) { window.db.toread.push(window.db.wish[i]); window.db.wish.splice(i,1); window.save().then(()=>window.renderHome()); }
 
-        // [완벽 복구] 달력 및 갤러리 렌더링
+        // [완벽 복구 & 방어막] 달력 렌더링
         window.renderCalendar = function() {
             try {
                 const grid = document.getElementById('calGrid'); 
@@ -1062,8 +1063,8 @@
                 grid.innerHTML = '';
                 ['일','월','화','수','목','금','토'].forEach(d=>grid.innerHTML+=`<div style="text-align:center; padding:5px; font-weight:bold; font-size:0.8rem;">${d}</div>`);
                 
-                const y = curDate.getFullYear();
-                const m = curDate.getMonth();
+                const y = window.curDate.getFullYear();
+                const m = window.curDate.getMonth();
                 document.getElementById('calTitle').innerText = `${y}. ${m+1}`;
                 
                 const first = new Date(y, m, 1).getDay();
@@ -1106,8 +1107,8 @@
                         const b = window.db.library[i]; 
                         if(!b || typeof b !== 'object') continue; 
                         
-                        let safeTitle = b.title ? b.title.replace(/"/g, '&quot;') : '제목없음';
-                        let safeAuthor = b.author ? b.author.replace(/"/g, '&quot;') : '작자미상';
+                        let safeTitle = b.title ? String(b.title).replace(/"/g, '&quot;') : '제목없음';
+                        let safeAuthor = b.author ? String(b.author).replace(/"/g, '&quot;') : '작자미상';
                         let img = getCoverHtml(b.cover, b.title);
                         
                         gal.innerHTML += `
@@ -1122,7 +1123,7 @@
                 }
             } catch(e) { console.error("달력 렌더링 에러:", e); }
         }
-        window.changeMonth = function(n) { curDate.setMonth(curDate.getMonth()+n); window.renderCalendar(); }
+        window.changeMonth = function(n) { window.curDate.setMonth(window.curDate.getMonth()+n); window.renderCalendar(); }
 
         window.toggleQuoteView = function(mode) {
             document.getElementById('quoteMainView').style.display = mode==='list'?'none':'block';
@@ -1131,17 +1132,17 @@
         }
         window.openQuoteModal = function() {
             const sel = document.getElementById('qBook'); sel.innerHTML = '<option value="">책 선택</option>';
-            if (db.reading.length > 0) {
+            if (window.db.reading.length > 0) {
                 const g1 = document.createElement('optgroup'); g1.label = "📖 읽고 있는 책";
-                db.reading.forEach(b => {
+                window.db.reading.forEach(b => {
                     if(!b) return;
                     const op=document.createElement('option'); op.value=b.title; op.innerText=b.title; op.dataset.cover=b.cover; op.dataset.author=b.author; g1.appendChild(op);
                 });
                 sel.appendChild(g1);
             }
-            if (db.library.length > 0) {
+            if (window.db.library.length > 0) {
                 const g2 = document.createElement('optgroup'); g2.label = "📚 완독한 책";
-                db.library.forEach(b => {
+                window.db.library.forEach(b => {
                     if(!b) return;
                     const op=document.createElement('option'); op.value=b.title; op.innerText=b.title; op.dataset.cover=b.cover; op.dataset.author=b.author; g2.appendChild(op);
                 });
@@ -1154,30 +1155,30 @@
             const s=document.getElementById('qBook'), t=document.getElementById('qText').value, p=document.getElementById('qPage').value;
             if(!s.value || !t) return alert('입력해주세요!');
             const opt = s.options[s.selectedIndex];
-            db.quotes.push({ book:s.value, page:p, text:t, cover:opt.dataset.cover, author:opt.dataset.author });
+            window.db.quotes.push({ book:s.value, page:p, text:t, cover:opt.dataset.cover, author:opt.dataset.author });
             window.save().then(() => { window.toggleQuoteView('list'); document.getElementById('quoteModal').style.display='none'; });
         }
         window.renderQuotesList = function() {
             const l=document.getElementById('quoteList'); l.innerHTML='';
-            db.quotes.slice().reverse().forEach(q => {
+            window.db.quotes.slice().reverse().forEach(q => {
                 if(!q) return;
                 l.innerHTML += `<div class="quote-item"><div style="font-family:'RIDIBatang'; font-size:1.05rem; line-height:1.5;">"${q.text}"</div><div style="text-align:right; font-size:0.8rem; color:#888; margin-top:10px;"><span style="font-weight:bold;">${q.book}</span> - ${q.author||'미상'} (p.${q.page})</div></div>`;
             });
         }
         window.openMysteryModal = function() {
-            if(db.quotes.length===0) return alert('저장된 문장이 없습니다!');
+            if(window.db.quotes.length===0) return alert('저장된 문장이 없습니다!');
             const g=document.getElementById('mysteryGrid'); g.innerHTML='';
-            [...db.quotes].sort(()=>Math.random()-0.5).forEach(q=>{
+            [...window.db.quotes].sort(()=>Math.random()-0.5).forEach(q=>{
                 if(!q) return;
                 const c=document.createElement('div'); c.className='mystery-card'; c.innerHTML=`<div class="mystery-card-text">"${q.text}"</div>`;
-                c.onclick=()=>showQuoteDetailQuoteMode(q); g.appendChild(c);
+                c.onclick=()=>window.showQuoteDetailQuoteMode(q); g.appendChild(c);
             });
             document.getElementById('mysteryModal').style.display='flex';
         }
         window.showQuoteDetailQuoteMode = function(q) {
             let c = q.cover, a = q.author;
             if(!c || typeof c !== 'string' || c.includes('placeholder') || c === 'undefined') {
-                const f = [...db.library, ...db.reading].find(b => b && b.title === q.book);
+                const f = [...window.db.library, ...window.db.reading].find(b => b && b.title === q.book);
                 if(f) { c = f.cover; a = f.author; }
             }
             const ct = document.getElementById('qdCoverContainer');
@@ -1218,12 +1219,16 @@
                 
                 if (text) {
                     text = text.replace(/==+.*?==+/g, ''); 
+                    text = text.replace(/\(표준어.*?\)/g, ''); 
+                    text = text.replace(/\[.*?\]/g, ''); 
+                    text = text.replace(/발음:\s*.*?(\n|$)/g, '\n'); 
+                    text = text.replace(/어원:\s*.*?(\n|$)/g, '\n'); 
+                    
                     let lines = text.split('\n');
                     let cleanLines = lines.map(l => l.trim()).filter(line => {
                         if(!line) return false;
-                        if (line.includes('표준어') || line.includes('IPA') || line.match(/\[.*?\]/) || line.match(/\(.*?\)/)) return false; 
-                        if (line.match(/^(발음|어원|동사|형용사|부사|명사|대명사|수사|관형사|감탄사|조사|유의어|반의어|파생어|참고|번역|속담|관용구|문법|유래|활용|한자|로마자|어구)(\s*:|\s*$)/)) return false;
-                        if(line.replace(/\s/g,'') === word.replace(/\s/g,'')) return false; 
+                        if (line.match(/^(동사|형용사|부사|명사|대명사|수사|관형사|감탄사|조사|유의어|반의어|파생어|참고|번역|속담|관용구|문법|유래|활용|한자|로마자|어구)(\s*:|)$/)) return false;
+                        if(line.replace(/[^가-힣]/g, '') === word.replace(/[^가-힣]/g, '')) return false; 
                         return true;
                     });
                     
@@ -1239,8 +1244,8 @@
             const word = document.getElementById('vocaWordInput').value.trim();
             const meaning = document.getElementById('vocaMeaningInput').value.trim();
             if(!word || !meaning) return alert("단어와 뜻을 모두 입력해주세요!");
-            if(!db.voca) db.voca = [];
-            db.voca.push({ word, meaning, date: new Date().toISOString() });
+            if(!window.db.voca) window.db.voca = [];
+            window.db.voca.push({ word, meaning, date: new Date().toISOString() });
             window.save().then(() => {
                 document.getElementById('vocaWordInput').value = ''; document.getElementById('vocaMeaningInput').value = '';
                 window.renderVoca(); alert("단어장에 추가되었습니다!");
@@ -1249,7 +1254,7 @@
 
         window.deleteVoca = function(index) {
             if(confirm("이 단어를 삭제하시겠습니까?")) {
-                db.voca.splice(index, 1); window.save().then(() => window.renderVoca());
+                window.db.voca.splice(index, 1); window.save().then(() => window.renderVoca());
             }
         }
 
@@ -1283,12 +1288,12 @@
             const container = document.getElementById('vocaListContainer');
             const sortType = document.getElementById('vocaSortSelect').value;
             container.innerHTML = '';
-            if(!db.voca || db.voca.length === 0) {
+            if(!window.db.voca || window.db.voca.length === 0) {
                 container.innerHTML = '<div style="text-align:center; color:#999; padding:20px;">단어장이 비어있습니다.</div>';
                 return;
             }
 
-            let vocaList = [...db.voca].map((v, i) => ({...v, originalIndex: i}));
+            let vocaList = [...window.db.voca].map((v, i) => ({...v, originalIndex: i}));
             
             if(sortType === 'abc') {
                 vocaList.sort((a,b) => {
