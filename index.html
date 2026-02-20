@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>나만의 독서 기록장 (Cloud)</title>
+    <title>My Reading Log</title>
     
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📚</text></svg>">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📚</text></svg>">
     
     <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/ridibatang/1.0.0/ridibatang.min.css">
@@ -50,7 +50,7 @@
         .day-label { font-size: 0.7rem; color: #999; margin-top: 5px; }
         .section-title { padding: 0 20px; margin-bottom: 10px; font-weight: bold; color: var(--primary-color); font-size: 1.1rem; display: flex; justify-content: space-between; align-items: flex-end; }
         
-        /* 가로 스크롤 (PC 마우스 드래그 지원) */
+        /* 가로 스크롤 */
         .h-scroll-container { display: flex; gap: 15px; overflow-x: auto; padding: 0 20px 20px; scroll-behavior: smooth; flex-wrap: nowrap; cursor: grab; user-select: none; }
         .h-scroll-container.active { cursor: grabbing; scroll-behavior: auto; }
         .h-scroll-container::-webkit-scrollbar { display: none; }
@@ -65,7 +65,7 @@
         .btn-edit { background: none; border: 1px solid #ddd; color: #888; margin-left: 5px; }
         .btn-card-close { position: absolute; top: 10px; right: 10px; background: none; border: none; color: #999; font-size: 1.2rem; cursor: pointer; line-height: 1; }
         
-        /* 미니 카드 (제목 2줄 자동 줄바꿈) */
+        /* 미니 카드 */
         .mini-card { width: 100px; flex: 0 0 auto; text-align: center; position: relative; margin-top:10px; display: flex; flex-direction: column; align-items: center; }
         .mini-cover { width: 90px; height: 130px; object-fit: cover; border-radius: 5px; box-shadow: 2px 2px 5px rgba(0,0,0,0.1); pointer-events: none; }
         .mini-title { font-size: 0.75rem; margin-top: 8px; width: 100%; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; text-overflow: ellipsis; white-space: normal; line-height: 1.3; height: 2.6em; word-break: keep-all; color: #444; }
@@ -271,7 +271,7 @@
                     <button id="btnDictSearch" class="btn-dict-search" onclick="window.searchDict()"><span>🤖</span> AI 자동 검색</button>
                     <button class="btn-naver-dict" onclick="window.openNaverDict()"><span>📗</span> 네이버 사전</button>
                 </div>
-                <textarea id="vocaMeaningInput" class="voca-input" rows="3" placeholder="뜻이 여기에 표시됩니다. 직접 수정할 수도 있어요!"></textarea>
+                <textarea id="vocaMeaningInput" class="voca-input" rows="3" placeholder="뜻이 여기에 깔끔하게 표시됩니다. 직접 수정할 수도 있어요!"></textarea>
                 <button onclick="window.addVoca()" style="width:100%; padding:12px; background:var(--primary-color); color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer;">단어장에 저장</button>
             </div>
 
@@ -432,7 +432,7 @@
     </div>
 
     <script type="module">
-        // [강력한 데이터 백신 함수] 빈 깡통 데이터가 화면을 터트리는 것을 원천 차단합니다.
+        // [강력한 데이터 백신 함수] 빈 데이터(Null)가 화면을 고장내는 것을 100% 차단합니다.
         window.sanitizeArray = function(data) {
             if (!data) return [];
             let arr = Array.isArray(data) ? data : Object.values(data);
@@ -528,7 +528,7 @@
                     const docSnap = await getDoc(dbRef);
                     if (docSnap.exists()) {
                         let d = docSnap.data();
-                        // 빈 데이터 완벽 차단!
+                        // 빈 데이터(Null)를 완벽하게 걸러내서 달력 백지화 방지!
                         window.db = {
                             reading: window.sanitizeArray(d.reading),
                             library: window.sanitizeArray(d.library),
@@ -536,7 +536,6 @@
                             toread: window.sanitizeArray(d.toread),
                             quotes: window.sanitizeArray(d.quotes),
                             voca: window.sanitizeArray(d.voca),
-                            // 달력 로그(도장)는 글자(String)이므로 따로 처리
                             logs: (Array.isArray(d.logs) ? d.logs : []).filter(item => typeof item === 'string') 
                         };
                         window.db.library.sort((a,b) => {
@@ -578,7 +577,7 @@
         }
 
         window.initUI = function() { 
-            // 하나의 탭이 에러나도 다른 화면은 멀쩡하게 뜨도록 격리 조치
+            // 탭 중 하나가 에러나도 전체가 멈추지 않도록 강력하게 보호
             try { window.renderHome(); } catch(e){ console.error("Home render err", e); }
             try { window.renderCalendar(); } catch(e){ console.error("Cal render err", e); }
             try { window.renderQuotesList(); } catch(e){ console.error("Quote render err", e); }
@@ -602,10 +601,11 @@
         }
 
         function getCoverHtml(url, title) {
+            let safeTitle = title ? title.replace(/"/g, '&quot;').replace(/'/g, '&#39;') : '제목없음';
             if (!url || typeof url !== 'string' || url.includes('placeholder') || url.includes('noimage') || url.includes('no_cover') || url === 'undefined') {
-                return `<div class="placeholder-cover" style="width:100%; height:100%; background:#eee; display:flex; align-items:center; justify-content:center; text-align:center; padding:5px; font-size:0.8rem; color:#555; border-radius:4px; font-weight:bold; overflow:hidden;">${title || '제목없음'}</div>`;
+                return `<div class="placeholder-cover" style="width:100%; height:100%; background:#eee; display:flex; align-items:center; justify-content:center; text-align:center; padding:5px; font-size:0.8rem; color:#555; border-radius:4px; font-weight:bold; overflow:hidden;">${safeTitle}</div>`;
             }
-            return `<img src="${url}" draggable="false" style="width:100%; height:100%; object-fit:cover; border-radius:4px; pointer-events:none;">`;
+            return `<img src="${url}" draggable="false" style="width:100%; height:100%; object-fit:cover; border-radius:4px; pointer-events:none;" title="${safeTitle}">`;
         }
 
         function updateLogs() {
@@ -640,7 +640,7 @@
             }
         }
 
-        // [오류 해결] 바코드 카메라 버튼 복구!
+        // [복구 완료] 바코드 스캐너 실행 함수
         window.openScanner = function() {
             document.getElementById('scannerModal').style.display = 'flex';
             if(!html5QrcodeScanner) { html5QrcodeScanner = new Html5Qrcode("scanner-container"); }
@@ -655,7 +655,7 @@
                 }
             ).catch(err => {
                 console.error("Camera Error:", err);
-                alert("카메라를 사용할 수 없습니다. 권한을 허용해주시거나 다른 기기에서 시도해주세요.");
+                alert("카메라를 사용할 수 없습니다. 브라우저 설정에서 카메라 권한을 허용해주세요!");
                 document.getElementById('scannerModal').style.display = 'none';
             });
         }
@@ -682,7 +682,6 @@
             });
         }
 
-        // 통합 모달창 렌더링
         window.openDateModal = function(action, index) {
             currentAction = action; targetIndex = index;
             const today = new Date().toISOString().split('T')[0];
@@ -839,7 +838,7 @@
                 if(!b) return;
                 const pct = Math.round((b.current / b.total) * 100) || 0;
                 const coverHtml = getCoverHtml(b.cover, b.title);
-                rDiv.innerHTML += `<div class="reading-card"><button class="btn-card-close" onclick="window.delReading(${i})">×</button><div style="width:60px; height:90px; flex-shrink:0;">${coverHtml}</div><div style="flex:1; margin-left:15px;"><div style="font-weight:bold; font-size:0.95rem; margin-bottom:5px; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;">${b.title}</div><div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div><div style="font-size:0.8rem; color:#888; margin-top:8px; display:flex; align-items:center; justify-content:space-between;"><span>${pct}% (${b.current}p / ${b.total}p)</span><div><button class="btn-round btn-record" onclick="window.openDateModal('record', ${i})">기록</button><button class="btn-round btn-edit" onclick="window.openDateModal('edit_reading', ${i})">수정</button><button class="btn-round btn-finish" onclick="window.openDateModal('finish', ${i})">완독</button></div></div></div></div>`;
+                rDiv.innerHTML += `<div class="reading-card"><button class="btn-card-close" onclick="window.delReading(${i})">×</button><div style="width:60px; height:90px; flex-shrink:0;">${coverHtml}</div><div style="flex:1; margin-left:15px;"><div style="font-weight:bold; font-size:0.95rem; margin-bottom:5px; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;" title="${b.title.replace(/"/g, '&quot;')}">${b.title}</div><div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div><div style="font-size:0.8rem; color:#888; margin-top:8px; display:flex; align-items:center; justify-content:space-between;"><span>${pct}% (${b.current}p / ${b.total}p)</span><div><button class="btn-round btn-record" onclick="window.openDateModal('record', ${i})">기록</button><button class="btn-round btn-edit" onclick="window.openDateModal('edit_reading', ${i})">수정</button><button class="btn-round btn-finish" onclick="window.openDateModal('finish', ${i})">완독</button></div></div></div></div>`;
             });
             window.renderMiniList(db.wish, 'wishList', 'wish'); window.renderMiniList(db.toread, 'toreadList', 'toread');
             document.getElementById('wishCount').innerText=db.wish.length+'권'; document.getElementById('toreadCount').innerText=db.toread.length+'권';
@@ -850,7 +849,8 @@
                 if(!b) return;
                 const w=Math.min(65, Math.max(30, b.total/10)); const h=Math.min(160, Math.max(120, 120+(b.total%40)));
                 const hue=Math.floor(Math.random()*30)+10;
-                shelf.innerHTML += `<div class="spine" style="background:hsl(${hue},40%,40%); width:${w}px; height:${h}px;" title="${b.title}" onclick="window.showBookDetail(${i})">${b.title}</div>`;
+                let safeTitle = b.title ? b.title.replace(/"/g, '&quot;') : '';
+                shelf.innerHTML += `<div class="spine" style="background:hsl(${hue},40%,40%); width:${w}px; height:${h}px;" title="${safeTitle}" onclick="window.showBookDetail(${i})">${b.title}</div>`;
             });
 
             makeScrollable('readingList'); makeScrollable('wishList'); makeScrollable('toreadList');
@@ -861,12 +861,13 @@
             l.forEach((b,i)=>{
                 if(!b) return;
                 const cv=getCoverHtml(b.cover,b.title).replace('style="','style="border-radius:5px;');
+                let safeTitle = b.title ? b.title.replace(/"/g, '&quot;') : '';
                 el.innerHTML+=`
                 <div class="mini-card">
                     <button class="btn-mini-del" onclick="window.delMini('${t}',${i})">×</button>
                     <button class="btn-mini-edit" onclick="window.openDateModal('edit_mini_${t}', ${i})">✏️</button>
                     <div style="width:90px; height:130px; margin:0 auto; box-shadow:2px 2px 5px rgba(0,0,0,0.1);">${cv}</div>
-                    <div class="mini-title" title="${b.title}">${b.title}</div>
+                    <div class="mini-title" title="${safeTitle}">${b.title}</div>
                     <div class="mini-btn-wrap">
                         ${t==='wish'?`<button onclick="window.moveWishToToread(${i})" style="font-size:0.7rem; background:#f5f5f5; border:1px solid #ddd; border-radius:3px; cursor:pointer; padding:4px;">▼ 예정 이동</button>`:`<button onclick="window.openDateModal('start_reading_toread', ${i})" style="font-size:0.7rem; background:#e3f2fd; border:none; border-radius:3px; cursor:pointer; padding:4px;">▶ 읽기 시작</button>`}
                     </div>
@@ -874,7 +875,7 @@
             });
         }
 
-        // [핵심] JSONP 무적의 이중 검색 엔진
+        // [핵심 해결] 알라딘 통신 오류 안 나도록 이중 검색(JSONP + 구글 폴백)
         window.openSearch = function() { document.getElementById('searchModal').style.display='block'; document.getElementById('searchInput').focus(); }
         
         window.searchBooks = function() {
@@ -885,16 +886,18 @@
             list.innerHTML = '<div style="padding:20px; text-align:center; color:var(--primary-color);">알라딘 서점에서 찾는 중... 📚</div>';
 
             let isBarcode = /^\d{10,13}$/.test(q);
-            let queryType = isBarcode ? 'ISBN' : 'Keyword';
+            let queryType = 'Keyword'; // 바코드도 Keyword로 던져야 알라딘이 에러 안 냄
 
             let oldScript = document.getElementById('aladin-jsonp');
             if(oldScript) oldScript.remove();
 
             window.aladinFallbackFired = false;
+            
+            // 알라딘 서버가 3.5초 안에 대답 없으면 즉시 구글 북스로 대체 검색!
             window.aladinTimeout = setTimeout(() => {
                 window.aladinFallbackFired = true;
                 window.searchGoogleFallback(q, isBarcode);
-            }, 3000);
+            }, 3500); 
 
             let script = document.createElement('script');
             script.id = 'aladin-jsonp';
@@ -903,7 +906,7 @@
         }
 
         window.aladinCallback = function(data) {
-            if(window.aladinFallbackFired) return;
+            if(window.aladinFallbackFired) return; // 이미 구글로 넘어갔으면 무시
             clearTimeout(window.aladinTimeout); 
 
             const list = document.getElementById('searchResultList');
@@ -923,6 +926,7 @@
 
             window.renderSearchResults(list);
 
+            // 뒷단에서 몰래 페이지 수 가져오기
             window.currentSearchResults.forEach(b => {
                 if(b.isbn) {
                     fetch(`https://www.googleapis.com/books/v1/volumes?q=isbn:${b.isbn}&key=${window.API_KEY}`)
@@ -943,6 +947,7 @@
             });
         }
 
+        // 알라딘에 없을 때 구동되는 구글 검색기
         window.searchGoogleFallback = async function(q, isBarcode) {
             const list = document.getElementById('searchResultList');
             list.innerHTML = '<div style="padding:20px; text-align:center; color:var(--primary-color);">구글 도서에서 찾는 중... 📚</div>';
@@ -999,13 +1004,14 @@
                 return;
             }
             window.currentSearchResults.forEach(b => {
+                let safeTitle = b.title ? b.title.replace(/"/g, '&quot;') : '';
                 let img = getCoverHtml(b.cover, b.title);
                 let pageText = b.total > 0 ? `${b.total}쪽` : '페이지 확인중...';
                 listElement.innerHTML += `
                     <div class="result-item">
                         <div style="width:60px; height:90px; flex-shrink:0;">${img}</div>
                         <div style="flex:1;">
-                            <div style="font-weight:bold; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;">${b.title}</div>
+                            <div style="font-weight:bold; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;" title="${safeTitle}">${b.title}</div>
                             <div style="font-size:0.8rem; color:#666; margin-top:3px;">${b.author} | ${b.publisher}</div>
                             <div style="font-size:0.8rem; margin-top:3px;">
                                 <span style="color:var(--primary-color); font-weight:bold;">${b.category}</span> | 
@@ -1047,7 +1053,7 @@
         window.delMini = function(t, i) { if(confirm('삭제하시겠습니까?')) { db[t].splice(i,1); updateLogs(); window.save().then(()=>window.renderHome()); } }
         window.moveWishToToread = function(i) { db.toread.push(db.wish[i]); db.wish.splice(i,1); window.save().then(()=>window.renderHome()); }
 
-        // [절대 방어막 추가] 달력 렌더링 
+        // [완벽 복구] 달력 및 갤러리 렌더링
         window.renderCalendar = function() {
             try {
                 const grid = document.getElementById('calGrid'); 
@@ -1099,13 +1105,17 @@
                     for(let i=window.db.library.length-1; i>=0; i--) {
                         const b = window.db.library[i]; 
                         if(!b || typeof b !== 'object') continue; 
+                        
+                        let safeTitle = b.title ? b.title.replace(/"/g, '&quot;') : '제목없음';
+                        let safeAuthor = b.author ? b.author.replace(/"/g, '&quot;') : '작자미상';
                         let img = getCoverHtml(b.cover, b.title);
+                        
                         gal.innerHTML += `
                             <div class="gallery-item">
                                 <button class="btn-gal-edit" onclick="window.openDateModal('edit_library', ${i})">✏️</button>
                                 <div style="width:100%; height:140px; margin-bottom:5px; box-shadow:2px 2px 5px rgba(0,0,0,0.1); cursor:pointer;" onclick="window.showBookDetail(${i})">${img}</div>
-                                <div class="gallery-title" title="${b.title}">${b.title || '제목없음'}</div>
-                                <div class="gallery-author">${b.author || '작자미상'}</div>
+                                <div class="gallery-title" title="${safeTitle}">${safeTitle}</div>
+                                <div class="gallery-author">${safeAuthor}</div>
                                 <div class="gallery-date">${b.date || ''}</div>
                             </div>`;
                     }
