@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>나만의 독서 기록장 (Cloud)</title>
+    
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📚</text></svg>">
+    
     <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/ridibatang/1.0.0/ridibatang.min.css">
     
@@ -97,7 +100,6 @@
         .cal-day { background: white; min-height: 100px; position: relative; display: flex; }
         .cal-split { flex: 1; height: 100%; overflow: hidden; position: relative; border-right: 1px solid white; }
         .cal-split:last-child { border-right: none; }
-        .cal-img { width: 100%; height: 100%; object-fit: cover; }
         .cal-num { position: absolute; top: 3px; left: 3px; font-size: 0.75rem; font-weight: bold; background: rgba(255,255,255,0.8); padding: 0 4px; border-radius: 3px; z-index: 5;}
         
         .gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 15px; padding: 0 20px 20px; }
@@ -269,7 +271,7 @@
                     <button id="btnDictSearch" class="btn-dict-search" onclick="window.searchDict()"><span>🤖</span> AI 자동 검색</button>
                     <button class="btn-naver-dict" onclick="window.openNaverDict()"><span>📗</span> 네이버 사전</button>
                 </div>
-                <textarea id="vocaMeaningInput" class="voca-input" rows="3" placeholder="뜻이 여기에 깔끔하게 표시됩니다. 직접 수정할 수도 있어요!"></textarea>
+                <textarea id="vocaMeaningInput" class="voca-input" rows="3" placeholder="뜻이 여기에 표시됩니다. 직접 수정할 수도 있어요!"></textarea>
                 <button onclick="window.addVoca()" style="width:100%; padding:12px; background:var(--primary-color); color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer;">단어장에 저장</button>
             </div>
 
@@ -526,6 +528,7 @@
                     const docSnap = await getDoc(dbRef);
                     if (docSnap.exists()) {
                         let d = docSnap.data();
+                        // 빈 데이터 완벽 차단!
                         window.db = {
                             reading: window.sanitizeArray(d.reading),
                             library: window.sanitizeArray(d.library),
@@ -533,6 +536,7 @@
                             toread: window.sanitizeArray(d.toread),
                             quotes: window.sanitizeArray(d.quotes),
                             voca: window.sanitizeArray(d.voca),
+                            // 달력 로그(도장)는 글자(String)이므로 따로 처리
                             logs: (Array.isArray(d.logs) ? d.logs : []).filter(item => typeof item === 'string') 
                         };
                         window.db.library.sort((a,b) => {
@@ -555,11 +559,7 @@
     </script>
 
     <script>
-        let curDate = new Date();
-        let currentAction = null;
-        let targetIndex = null;
-        let html5QrcodeScanner = null;
-
+        // PC 마우스 드래그 스크롤
         function makeScrollable(id) {
             const slider = document.getElementById(id);
             if(!slider) return;
@@ -578,7 +578,7 @@
         }
 
         window.initUI = function() { 
-            // 탭 중 하나가 에러나도 전체가 멈추지 않도록 강력하게 보호
+            // 하나의 탭이 에러나도 다른 화면은 멀쩡하게 뜨도록 격리 조치
             try { window.renderHome(); } catch(e){ console.error("Home render err", e); }
             try { window.renderCalendar(); } catch(e){ console.error("Cal render err", e); }
             try { window.renderQuotesList(); } catch(e){ console.error("Quote render err", e); }
@@ -682,6 +682,7 @@
             });
         }
 
+        // 통합 모달창 렌더링
         window.openDateModal = function(action, index) {
             currentAction = action; targetIndex = index;
             const today = new Date().toISOString().split('T')[0];
@@ -838,7 +839,7 @@
                 if(!b) return;
                 const pct = Math.round((b.current / b.total) * 100) || 0;
                 const coverHtml = getCoverHtml(b.cover, b.title);
-                rDiv.innerHTML += `<div class="reading-card"><button class="btn-card-close" onclick="window.delReading(${i})">×</button><div style="width:60px; height:90px; flex-shrink:0;">${coverHtml}</div><div style="flex:1; margin-left:15px;"><div style="font-weight:bold; font-size:0.95rem; margin-bottom:5px; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;">${b.title}</div><div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div><div style="font-size:0.8rem; color:#888; margin-top:8px; display:flex; align-items:center; justify-content:space-between;"><span>${pct}% (${b.current}p / ${b.total}p)</span><div><button class="btn-round btn-record" onclick="openDateModal('record', ${i})">기록</button><button class="btn-round btn-edit" onclick="openDateModal('edit_reading', ${i})">수정</button><button class="btn-round btn-finish" onclick="openDateModal('finish', ${i})">완독</button></div></div></div></div>`;
+                rDiv.innerHTML += `<div class="reading-card"><button class="btn-card-close" onclick="window.delReading(${i})">×</button><div style="width:60px; height:90px; flex-shrink:0;">${coverHtml}</div><div style="flex:1; margin-left:15px;"><div style="font-weight:bold; font-size:0.95rem; margin-bottom:5px; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;">${b.title}</div><div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div><div style="font-size:0.8rem; color:#888; margin-top:8px; display:flex; align-items:center; justify-content:space-between;"><span>${pct}% (${b.current}p / ${b.total}p)</span><div><button class="btn-round btn-record" onclick="window.openDateModal('record', ${i})">기록</button><button class="btn-round btn-edit" onclick="window.openDateModal('edit_reading', ${i})">수정</button><button class="btn-round btn-finish" onclick="window.openDateModal('finish', ${i})">완독</button></div></div></div></div>`;
             });
             window.renderMiniList(db.wish, 'wishList', 'wish'); window.renderMiniList(db.toread, 'toreadList', 'toread');
             document.getElementById('wishCount').innerText=db.wish.length+'권'; document.getElementById('toreadCount').innerText=db.toread.length+'권';
@@ -849,7 +850,7 @@
                 if(!b) return;
                 const w=Math.min(65, Math.max(30, b.total/10)); const h=Math.min(160, Math.max(120, 120+(b.total%40)));
                 const hue=Math.floor(Math.random()*30)+10;
-                shelf.innerHTML += `<div class="spine" style="background:hsl(${hue},40%,40%); width:${w}px; height:${h}px;" title="${b.title}" onclick="showBookDetail(${i})">${b.title}</div>`;
+                shelf.innerHTML += `<div class="spine" style="background:hsl(${hue},40%,40%); width:${w}px; height:${h}px;" title="${b.title}" onclick="window.showBookDetail(${i})">${b.title}</div>`;
             });
 
             makeScrollable('readingList'); makeScrollable('wishList'); makeScrollable('toreadList');
@@ -863,17 +864,17 @@
                 el.innerHTML+=`
                 <div class="mini-card">
                     <button class="btn-mini-del" onclick="window.delMini('${t}',${i})">×</button>
-                    <button class="btn-mini-edit" onclick="openDateModal('edit_mini_${t}', ${i})">✏️</button>
+                    <button class="btn-mini-edit" onclick="window.openDateModal('edit_mini_${t}', ${i})">✏️</button>
                     <div style="width:90px; height:130px; margin:0 auto; box-shadow:2px 2px 5px rgba(0,0,0,0.1);">${cv}</div>
                     <div class="mini-title" title="${b.title}">${b.title}</div>
                     <div class="mini-btn-wrap">
-                        ${t==='wish'?`<button onclick="window.moveWishToToread(${i})" style="font-size:0.7rem; background:#f5f5f5; border:1px solid #ddd; border-radius:3px; cursor:pointer; padding:4px;">▼ 예정 이동</button>`:`<button onclick="openDateModal('start_reading_toread', ${i})" style="font-size:0.7rem; background:#e3f2fd; border:none; border-radius:3px; cursor:pointer; padding:4px;">▶ 읽기 시작</button>`}
+                        ${t==='wish'?`<button onclick="window.moveWishToToread(${i})" style="font-size:0.7rem; background:#f5f5f5; border:1px solid #ddd; border-radius:3px; cursor:pointer; padding:4px;">▼ 예정 이동</button>`:`<button onclick="window.openDateModal('start_reading_toread', ${i})" style="font-size:0.7rem; background:#e3f2fd; border:none; border-radius:3px; cursor:pointer; padding:4px;">▶ 읽기 시작</button>`}
                     </div>
                 </div>`;
             });
         }
 
-        // [알라딘 무적 듀얼 검색 엔진 (구글 폴백 탑재)]
+        // [핵심] JSONP 무적의 이중 검색 엔진
         window.openSearch = function() { document.getElementById('searchModal').style.display='block'; document.getElementById('searchInput').focus(); }
         
         window.searchBooks = function() {
@@ -884,8 +885,7 @@
             list.innerHTML = '<div style="padding:20px; text-align:center; color:var(--primary-color);">알라딘 서점에서 찾는 중... 📚</div>';
 
             let isBarcode = /^\d{10,13}$/.test(q);
-            // 바코드 스캔시에는 ISBN 대신 Keyword로 검색해야 알라딘에서 에러가 덜 납니다
-            let queryType = 'Keyword'; 
+            let queryType = isBarcode ? 'ISBN' : 'Keyword';
 
             let oldScript = document.getElementById('aladin-jsonp');
             if(oldScript) oldScript.remove();
@@ -894,7 +894,7 @@
             window.aladinTimeout = setTimeout(() => {
                 window.aladinFallbackFired = true;
                 window.searchGoogleFallback(q, isBarcode);
-            }, 3000); // 3초 지나면 무조건 구글 북스 발동
+            }, 3000);
 
             let script = document.createElement('script');
             script.id = 'aladin-jsonp';
@@ -1069,7 +1069,6 @@
                     const dStr = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
                     let books = [];
                     
-                    // 비어있는 데이터는 절대 들어가지 못하게 방어
                     if(window.db && window.db.library) {
                         const validLibrary = window.db.library.filter(x => x && typeof x === 'object');
                         books = books.concat(validLibrary.filter(x => x.date === dStr));
