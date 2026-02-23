@@ -11,12 +11,13 @@
     <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/ridibatang/1.0.0/ridibatang.min.css">
     
-    <!-- 바코드 및 AI OCR 라이브러리 -->
     <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+    
+    <!-- [NEW] 사진 속 글자를 읽어내는 AI OCR 라이브러리 추가 -->
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 
     <style>
-        /* 🌈 테마 변수 설정 */
+        /* 🌈 [핵심] 테마 변수 설정 (배경은 깔끔하게, 포인트는 파스텔로!) */
         body.theme-blue {
             --bg-color: #fafafa;
             --primary-color: #6a9cce;
@@ -96,7 +97,7 @@
         .reading-cover { width: 60px; height: 90px; object-fit: cover; border-radius: 4px; background: #eee; flex-shrink: 0; pointer-events: none;}
         .progress-bar { background: #eee; height: 6px; border-radius: 3px; margin-top: 8px; overflow: hidden; }
         .progress-fill { background: var(--accent-color); height: 100%; width: 0%; transition: width 0.5s, background-color 0.5s; }
-        .btn-round { padding: 6px 12px; font-size: 0.8rem; border-radius: 20px; border: none; cursor: pointer; font-weight: bold; transition: 0.3s; }
+        .btn-round { padding: 6px 12px; font-size: 0.8rem; border-radius: 20px; border: none; cursor: pointer; font-weight: bold; transition: 0.2s; }
         .btn-record { background: #f0f0f0; color: #333; }
         .btn-finish { background: var(--accent-color); color: white; }
         .btn-edit { background: none; border: 1px solid #ddd; color: #888; margin-left: 5px; }
@@ -105,14 +106,19 @@
         .mini-card { width: 105px; flex: 0 0 auto; text-align: center; position: relative; margin-top:10px; display: flex; flex-direction: column; align-items: center; }
         .mini-cover { width: 90px; height: 130px; object-fit: cover; border-radius: 5px; box-shadow: 2px 2px 5px rgba(0,0,0,0.1); pointer-events: none; }
         .mini-title { font-size: 0.75rem; margin-top: 8px; width: 100%; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; text-overflow: ellipsis; white-space: normal; line-height: 1.3; height: 2.6em; word-break: keep-all; color: #444; }
-        .mini-btn-wrap { margin-top: auto; padding-top: 5px; width: 100%; display: flex; flex-direction: column; gap: 4px; }
-        .btn-mini-del { position: absolute; top: -5px; right: 0px; background: red; color: white; width: 20px; height: 20px; border-radius: 50%; border: none; cursor: pointer; font-size: 0.8rem; z-index: 5;}
-        .btn-mini-edit { position: absolute; top: 20px; right: 0px; background: rgba(255,255,255,0.9); color: #333; width: 20px; height: 20px; border-radius: 50%; border: none; cursor: pointer; font-size: 0.7rem; box-shadow: 0 1px 3px rgba(0,0,0,0.2); z-index: 5;}
+        .mini-btn-wrap { margin-top: auto; padding-top: 8px; width: 100%; display: flex; flex-direction: column; gap: 4px; }
         
-        .shelf-wrapper { margin: 0 20px; background: var(--shelf-bg); padding: 40px 20px 20px; border-radius: 5px; box-shadow: inset 2px 2px 10px rgba(0,0,0,0.1); transition: background-color 0.5s;}
-        .shelf-flex-container { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 2px; width: 100%; border-bottom: 20px solid var(--shelf-wood); padding-bottom: 0; min-height: 180px; transition: border-color 0.5s;}
-        .spine { writing-mode: vertical-rl; text-orientation: mixed; color: rgba(255,255,255,0.95); border: 1px solid rgba(0,0,0,0.1); border-radius: 3px 3px 0 0; padding: 10px 4px; font-size: 0.8rem; box-shadow: 2px 0 4px rgba(0,0,0,0.2); text-align: left; font-family: var(--font-book); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.5; margin-bottom: 0; transition: transform 0.2s; cursor: pointer; }
-        .spine:hover { transform: translateY(-10px); z-index: 10; }
+        .btn-action-mini { width: 100%; padding: 6px 0; font-size: 0.75rem; font-weight: bold; border-radius: 15px; border: 1px solid var(--primary-color); background: transparent; color: var(--primary-color); cursor: pointer; transition: all 0.2s ease; }
+        .btn-action-mini:hover { background: var(--primary-color); color: white; }
+
+        .btn-mini-del { position: absolute; top: -5px; right: 0px; background: #ff4d4d; color: white; width: 22px; height: 22px; border-radius: 50%; border: none; cursor: pointer; font-size: 0.8rem; z-index: 5; box-shadow: 0 2px 4px rgba(0,0,0,0.2);}
+        .btn-mini-edit { position: absolute; top: 22px; right: 0px; background: rgba(255,255,255,0.95); color: #333; width: 22px; height: 22px; border-radius: 50%; border: none; cursor: pointer; font-size: 0.7rem; box-shadow: 0 2px 4px rgba(0,0,0,0.2); z-index: 5;}
+        
+        .shelf-wrapper { margin: 0 20px; background: var(--shelf-bg); padding: 30px 15px 0px; border-radius: 12px; box-shadow: inset 0 4px 8px rgba(0,0,0,0.05); transition: background-color 0.5s; }
+        .shelf-flex-container { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 4px; width: 100%; border-bottom: 15px solid var(--shelf-wood); padding-bottom: 0; min-height: 160px; position: relative; transition: border-color 0.5s;}
+        .shelf-flex-container::after { content: ''; position: absolute; bottom: -20px; left: 0; width: 100%; height: 5px; background: rgba(0,0,0,0.08); border-radius: 50%; filter: blur(2px); }
+        .spine { writing-mode: vertical-rl; text-orientation: mixed; color: #333; border: 1px solid rgba(255,255,255,0.4); border-left: 2px solid rgba(255,255,255,0.7); border-radius: 4px 4px 0 0; padding: 10px 6px; font-size: 0.8rem; font-weight: bold; box-shadow: 3px 0 5px rgba(0,0,0,0.1); text-align: left; font-family: var(--font-book); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.4; margin-bottom: 0; transition: transform 0.2s ease, box-shadow 0.2s ease; cursor: pointer; position: relative; z-index: 1; }
+        .spine:hover { transform: translateY(-10px); z-index: 10; box-shadow: 5px 5px 15px rgba(0,0,0,0.2); }
         
         .tab-content { display: none; }
         .tab-content.active { display: block; animation: fadeIn 0.3s; }
@@ -127,7 +133,7 @@
         .full-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg-color); z-index: 2000; overflow-y: auto; }
         .search-header { position: sticky; top: 0; background: var(--bg-color); padding: 15px; display: flex; gap: 10px; border-bottom: 1px solid #ddd; z-index: 10; transition: background-color 0.5s;}
         .search-header input { flex: 1; padding: 12px; border: 1px solid #ccc; border-radius: 8px; font-size: 1rem; }
-        .result-item { display: flex; gap: 15px; background: white; padding: 15px; margin: 15px; border-radius: 12px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .result-item { display: flex; gap: 15px; background: white; padding: 15px; margin: 15px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
         .result-actions button { margin-right: 5px; padding: 6px 12px; font-size: 0.8rem; border-radius: 5px; border: none; cursor: pointer; font-weight: bold; transition: 0.3s; }
         
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 3000; justify-content: center; align-items: center; }
@@ -141,7 +147,7 @@
         
         .gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 15px; padding: 0 20px 20px; }
         .gallery-item { text-align: center; position: relative; }
-        .gallery-item img { width: 100%; height: 140px; object-fit: cover; border-radius: 5px; box-shadow: 2px 2px 5px rgba(0,0,0,0.1); margin-bottom: 5px; cursor: pointer; transition: transform 0.2s;}
+        .gallery-item img { width: 100%; height: 140px; object-fit: cover; border-radius: 5px; box-shadow: 2px 2px 8px rgba(0,0,0,0.1); margin-bottom: 5px; cursor: pointer; transition: transform 0.2s;}
         .gallery-item img:hover { transform: scale(1.03); }
         .gallery-title { font-weight: bold; font-size: 0.85rem; color: #333; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
         .gallery-author { font-size: 0.75rem; color: #888; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
@@ -200,6 +206,7 @@
     </style>
 </head>
 
+<!-- 기본 테마를 세련된 파스텔 블루(theme-blue)로 설정 -->
 <body class="theme-blue">
 
     <div id="themeModal" class="modal-overlay" style="z-index: 4000;">
@@ -217,11 +224,13 @@
         </div>
     </div>
 
+    <!-- 로딩 화면 -->
     <div id="loading-screen">
         <div class="spinner"></div>
         <div>📚 서재 문을 여는 중...</div>
     </div>
 
+    <!-- 로그인 폼 -->
     <div id="auth-screen">
         <div class="auth-box">
             <h2 style="margin-bottom:20px;">📚 My Reading Log</h2>
@@ -240,6 +249,7 @@
         </div>
     </div>
 
+    <!-- 앱 메인 화면 -->
     <div id="app-container">
         <header>
             <div class="header-left-btns">
@@ -250,6 +260,7 @@
             <button class="btn-logout" onclick="window.handleLogout()">로그아웃</button>
         </header>
 
+        <!-- 탭 1: 홈 -->
         <div id="tab-home" class="tab-content active">
             <div class="home-search-box">
                 <span style="font-size:1.2rem;">🔍</span>
@@ -275,6 +286,7 @@
             </div>
         </div>
 
+        <!-- 탭 2: 달력 -->
         <div id="tab-calendar" class="tab-content">
             <div style="display:flex; justify-content:space-between; padding:0 20px 10px; font-weight:bold; font-size:1.2rem; color:var(--primary-color);">
                 <span onclick="window.changeMonth(-1)" style="cursor:pointer">◀</span>
@@ -286,6 +298,7 @@
             <div class="gallery-grid" id="galleryGrid"></div>
         </div>
 
+        <!-- 탭 3: 문장 -->
         <div id="tab-quotes" class="tab-content">
             <div id="quoteMainView" class="quote-main-view">
                 <div style="height:20px;"></div>
@@ -311,6 +324,7 @@
             </div>
         </div>
 
+        <!-- 탭 4: 단어장 -->
         <div id="tab-voca" class="tab-content">
             <div class="section-title" style="margin-top:10px;">
                 <span>🔖 새 단어 추가</span>
@@ -358,6 +372,7 @@
             <div id="vocaListContainer" style="padding-bottom: 30px;"></div>
         </div>
 
+        <!-- 탭 5: 랭킹 -->
         <div id="tab-stats" class="tab-content">
             <div style="padding:20px;">
                 <div class="rank-box"><div class="rank-title">🏆 선호 분야 TOP 5</div><div id="rankCategory"></div></div>
@@ -453,53 +468,29 @@
         </div>
     </div>
 
-    <!-- 문장 추가 모달 -->
+    <!-- [NEW] 문장 추가 모달 (사진 추출 기능 포함!) -->
     <div id="quoteModal" class="modal-overlay">
         <div class="modal-box">
             <h3 style="color:var(--primary-color); margin-top:0;">✏️ 문장 추가</h3>
-            <select id="qBook" style="width:100%; padding:10px; border:1px solid #ccc; border-radius:5px; font-family:var(--font-main); margin-bottom:10px;"></select>
-            <input type="number" id="qPage" placeholder="페이지 (선택)" style="width:100%; padding:10px; border:1px solid #ccc; border-radius:5px; margin-bottom:10px;">
+            <select id="qBook" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:5px; font-family:var(--font-main); margin-bottom:10px;"></select>
+            <input type="number" id="qPage" placeholder="페이지 (선택)" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:5px; margin-bottom:10px;">
             
+            <!-- 사진으로 텍스트 추출 버튼 영역 -->
             <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:5px;">
                 <label style="font-size:0.8rem; color:#666;">문장 내용</label>
-                <!-- 카메라/앨범 열기 (캡처 기능 포함) -->
                 <button onclick="document.getElementById('ocrInput').click()" style="background:#e6f2fa; color:var(--primary-color); border:none; padding:5px 10px; border-radius:15px; font-size:0.75rem; font-weight:bold; cursor:pointer; display:flex; align-items:center; gap:3px;">
-                    📷 사진에서 추출
+                    📷 사진으로 추출
                 </button>
-                <input type="file" id="ocrInput" accept="image/*" capture="environment" style="display:none;" onchange="window.openHighlightModal(event)">
+                <input type="file" id="ocrInput" accept="image/*" style="display:none;" onchange="window.processOCR(event)">
             </div>
+            <!-- OCR 로딩 상태 표시 -->
+            <div id="ocrStatus" style="font-size:0.75rem; color:#d87093; display:none; margin-bottom:5px; text-align:right;">AI가 글자를 읽고 있습니다... ⏳</div>
             
-            <textarea id="qText" rows="5" placeholder="기억하고 싶은 문장을 직접 입력하거나, [사진에서 추출]을 눌러 원하는 문장만 형광펜으로 칠해보세요!" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:5px; font-family:var(--font-main); resize:none;"></textarea>
+            <textarea id="qText" rows="5" placeholder="기억하고 싶은 문장을 직접 입력하거나, 사진으로 추출해보세요!" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:5px; font-family:var(--font-main); resize:none;"></textarea>
             
             <div style="display:flex; gap:10px; margin-top:15px;">
                 <button onclick="document.getElementById('quoteModal').style.display='none'" style="flex:1; padding:12px; background:#eee; border:none; border-radius:8px; font-weight:bold; color:#555; cursor:pointer;">취소</button>
                 <button onclick="window.saveQuote()" style="flex:1; padding:12px; background:var(--primary-color); color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer;">저장</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- [NEW] 형광펜 추출 (스마트 마스킹 OCR) 모달 -->
-    <div id="highlightModal" class="modal-overlay" style="z-index: 3500;">
-        <div class="modal-box" style="width: 95%; max-width: 500px; height: 85vh; display: flex; flex-direction: column;">
-            <h3 style="color:var(--primary-color); margin-top:0; text-align:center;">🖍️ 추출할 문장 칠하기</h3>
-            <p style="font-size:0.8rem; color:#666; margin-bottom:10px; text-align:center;">글씨로 변환할 문장만 형광펜으로 슥슥 칠해주세요!</p>
-            
-            <div style="display:flex; justify-content:flex-end; margin-bottom:5px;">
-                <button onclick="window.clearHighlight()" style="font-size:0.75rem; background:#fff; border:1px solid #ccc; padding:4px 8px; border-radius:4px; cursor:pointer;">지우기 (초기화)</button>
-            </div>
-
-            <div style="flex: 1; min-height: 0; background: #eee; border-radius: 8px; margin-bottom: 10px; display:flex; align-items:center; justify-content:center; overflow:hidden;" id="canvasContainer">
-                <div style="position:relative; display:inline-block; max-width:100%; max-height:100%;">
-                    <img id="bgImg" style="display:block; max-width:100%; max-height:100%; border-radius:4px; pointer-events:none;">
-                    <canvas id="drawCanvas" style="position:absolute; top:0; left:0; width:100%; height:100%; cursor:crosshair; touch-action:none;"></canvas>
-                </div>
-            </div>
-            
-            <div id="ocrStatus" style="font-size:0.85rem; color:#d87093; display:none; text-align:center; margin-bottom: 10px; font-weight:bold;">AI가 글자를 읽고 있습니다... ⏳</div>
-            
-            <div style="display:flex; gap:10px;">
-                <button onclick="window.closeHighlightModal()" style="flex:1; padding:12px; background:#eee; border:none; border-radius:8px; font-weight:bold; color:#555; cursor:pointer;">취소</button>
-                <button onclick="window.runOcrOnHighlight()" id="btnRunOcr" style="flex:2; padding:12px; background:var(--primary-color); color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer;">✨ 형광펜 영역만 변환</button>
             </div>
         </div>
     </div>
@@ -524,7 +515,6 @@
         </div>
     </div>
 
-    <!-- 파이어베이스 데이터베이스 설정 -->
     <script type="module">
         window.sanitizeArray = function(data) {
             if (!data) return [];
@@ -649,7 +639,6 @@
         }
     </script>
 
-    <!-- UI 및 메인 로직 스크립트 -->
     <script>
         const savedTheme = localStorage.getItem('myReadingLogTheme') || 'theme-blue';
         document.body.className = savedTheme;
@@ -663,7 +652,8 @@
         window.curDate = new Date();
         window.currentAction = null;
         window.targetIndex = null;
-        
+        window.html5QrcodeScanner = null;
+
         function getLocalYYYYMMDD(dateObj) {
             const offset = dateObj.getTimezoneOffset() * 60000;
             return new Date(dateObj.getTime() - offset).toISOString().split('T')[0];
@@ -687,11 +677,11 @@
         }
 
         window.initUI = function() { 
-            try { window.renderHome(); } catch(e){ console.error(e); }
-            try { window.renderCalendar(); } catch(e){ console.error(e); }
-            try { window.renderQuotesList(); } catch(e){ console.error(e); }
-            try { window.renderVoca(); } catch(e){ console.error(e); }
-            try { window.renderStats(); } catch(e){ console.error(e); }
+            try { window.renderHome(); } catch(e){}
+            try { window.renderCalendar(); } catch(e){}
+            try { window.renderQuotesList(); } catch(e){}
+            try { window.renderVoca(); } catch(e){}
+            try { window.renderStats(); } catch(e){}
         }
         
         window.switchAuthMode = function(mode) {
@@ -800,181 +790,43 @@
             });
         }
 
-        // --- 🖍️ [NEW] 스마트 형광펜 추출 마스킹 로직 ---
-        window.openHighlightModal = function(event) {
+        // [NEW] 사진에서 글자를 추출하는 OCR 마법 함수
+        window.processOCR = async function(event) {
             const file = event.target.files[0];
             if (!file) return;
 
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const img = new Image();
-                img.onload = function() {
-                    const bgImg = document.getElementById('bgImg');
-                    const drawCanvas = document.getElementById('drawCanvas');
-                    
-                    bgImg.src = e.target.result;
-                    window.clearHighlight();
-                    document.getElementById('highlightModal').style.display = 'flex';
-                    
-                    // 모달이 완전히 화면에 표시될 때까지 아주 살짝 기다린 후 캔버스 세팅
-                    setTimeout(() => {
-                        drawCanvas.width = img.naturalWidth;
-                        drawCanvas.height = img.naturalHeight;
-                        window.setupCanvasDrawing(drawCanvas, img.naturalWidth);
-                    }, 50);
-                };
-                img.src = e.target.result;
-            };
-            reader.readAsDataURL(file);
-            event.target.value = ''; // 재사용을 위해 초기화
-        };
-
-        window.clearHighlight = function() {
-            const drawCanvas = document.getElementById('drawCanvas');
-            const ctx = drawCanvas.getContext('2d');
-            ctx.clearRect(0, 0, drawCanvas.width, drawCanvas.height);
-        }
-        
-        window.closeHighlightModal = function() {
-            document.getElementById('highlightModal').style.display = 'none';
-        }
-
-        window.setupCanvasDrawing = function(canvas, imgWidth) {
-            let isDrawing = false;
-            let lastX = 0; let lastY = 0;
-            const ctx = canvas.getContext('2d');
-            
-            // 사진 크기에 맞춰 형광펜 두께 자동 조절
-            ctx.lineWidth = Math.max(15, imgWidth * 0.04); 
-            ctx.lineJoin = 'round';
-            ctx.lineCap = 'round';
-            ctx.strokeStyle = 'rgba(255, 235, 59, 0.5)'; // 형광펜 노란색 (반투명)
-
-            function getMousePos(evt) {
-                var rect = canvas.getBoundingClientRect();
-                var scaleX = canvas.width / rect.width;
-                var scaleY = canvas.height / rect.height;
-                let clientX = evt.clientX; let clientY = evt.clientY;
-                if(evt.touches && evt.touches.length > 0) {
-                    clientX = evt.touches[0].clientX;
-                    clientY = evt.touches[0].clientY;
-                }
-                return {
-                    x: (clientX - rect.left) * scaleX,
-                    y: (clientY - rect.top) * scaleY
-                };
-            }
-
-            const start = (e) => {
-                e.preventDefault(); 
-                isDrawing = true;
-                const pos = getMousePos(e);
-                lastX = pos.x; lastY = pos.y;
-                ctx.beginPath();
-                ctx.arc(lastX, lastY, ctx.lineWidth / 2, 0, Math.PI * 2);
-                ctx.fillStyle = ctx.strokeStyle;
-                ctx.fill();
-            };
-
-            const draw = (e) => {
-                if (!isDrawing) return;
-                e.preventDefault();
-                const pos = getMousePos(e);
-                ctx.beginPath();
-                ctx.moveTo(lastX, lastY);
-                ctx.lineTo(pos.x, pos.y);
-                ctx.stroke();
-                lastX = pos.x; lastY = pos.y;
-            };
-
-            const stop = (e) => { isDrawing = false; };
-
-            canvas.onmousedown = start; canvas.ontouchstart = start;
-            canvas.onmousemove = draw;  canvas.ontouchmove = draw;
-            canvas.onmouseup = stop;    canvas.onmouseout = stop;
-            canvas.ontouchend = stop;
-        }
-
-        window.runOcrOnHighlight = async function() {
-            const bgImg = document.getElementById('bgImg');
-            const drawCanvas = document.getElementById('drawCanvas');
             const statusEl = document.getElementById('ocrStatus');
-            const btn = document.getElementById('btnRunOcr');
             const textArea = document.getElementById('qText');
-
-            const drawCtx = drawCanvas.getContext('2d');
-            const drawData = drawCtx.getImageData(0, 0, drawCanvas.width, drawCanvas.height).data;
             
-            let hasDrawing = false;
-            for(let i=3; i<drawData.length; i+=4) {
-                if(drawData[i] > 0) { hasDrawing = true; break; }
-            }
-
             statusEl.style.display = 'block';
-            btn.disabled = true;
-            btn.style.opacity = '0.5';
-
-            // 원본 배경 이미지를 분석용 캔버스에 그리기
-            const bgCanvas = document.createElement('canvas');
-            bgCanvas.width = bgImg.naturalWidth;
-            bgCanvas.height = bgImg.naturalHeight;
-            const bgCtx = bgCanvas.getContext('2d');
-            bgCtx.drawImage(bgImg, 0, 0);
-
-            let dataUrlToOcr = bgCanvas.toDataURL('image/jpeg');
-
-            if(hasDrawing) {
-                // 형광펜 칠한 부분의 원본 이미지만 흰 바탕에 오려내기 (마스킹 기술)
-                const bgImgData = bgCtx.getImageData(0, 0, bgCanvas.width, bgCanvas.height);
-                
-                const maskCanvas = document.createElement('canvas');
-                maskCanvas.width = bgCanvas.width; maskCanvas.height = bgCanvas.height;
-                const maskCtx = maskCanvas.getContext('2d');
-                
-                maskCtx.fillStyle = 'white';
-                maskCtx.fillRect(0, 0, maskCanvas.width, maskCanvas.height);
-                const maskedData = maskCtx.getImageData(0, 0, maskCanvas.width, maskCanvas.height);
-                
-                for (let i = 0; i < drawData.length; i += 4) {
-                    if (drawData[i + 3] > 0) { // 형광펜이 칠해진 곳이면 원본 픽셀 복사
-                        maskedData.data[i] = bgImgData.data[i];
-                        maskedData.data[i+1] = bgImgData.data[i+1];
-                        maskedData.data[i+2] = bgImgData.data[i+2];
-                    }
-                }
-                maskCtx.putImageData(maskedData, 0, 0);
-                dataUrlToOcr = maskCanvas.toDataURL('image/jpeg');
-            }
-
+            statusEl.innerText = "로딩 중... (한국어 인식 팩 다운로드 등 최대 10초 소요될 수 있습니다) ⏳";
+            
             try {
-                statusEl.innerText = "로딩 중... (한국어 인식 팩 확인 중) ⏳";
-                const result = await Tesseract.recognize(dataUrlToOcr, 'kor', {
+                const result = await Tesseract.recognize(file, 'kor', {
                     logger: m => {
                         if (m.status === 'recognizing text') {
-                            statusEl.innerText = `문장을 추출 중입니다... ${Math.round(m.progress * 100)}% ⏳`;
+                            statusEl.innerText = `텍스트 인식 중... ${Math.round(m.progress * 100)}% ⏳`;
                         }
                     }
                 });
-
-                if (result.data.text && result.data.text.trim().length > 0) {
-                    let extracted = result.data.text.trim().replace(/\n/g, ' ');
+                
+                if (result.data.text) {
                     const currentText = textArea.value;
-                    textArea.value = currentText ? currentText + '\n\n' + extracted : extracted;
-                    alert("✨ 문장 추출 성공! (필요한 부분을 수정해서 저장하세요)");
+                    textArea.value = currentText ? currentText + '\n\n' + result.data.text.trim() : result.data.text.trim();
+                    statusEl.innerText = "✨ 인식 완료! (필요한 부분만 수정해서 저장하세요)";
+                    setTimeout(() => { statusEl.style.display = 'none'; }, 4000);
                 } else {
-                    alert("인식된 글자가 없습니다. 형광펜을 더 꼼꼼히 칠하거나 사진을 다시 찍어주세요.");
+                    statusEl.innerText = "인식된 글자가 없습니다.";
+                    setTimeout(() => { statusEl.style.display = 'none'; }, 3000);
                 }
             } catch (error) {
                 console.error(error);
-                alert("❌ 글자 인식 중 오류가 발생했습니다.");
+                statusEl.innerText = "❌ 오류가 발생했습니다.";
+                setTimeout(() => { statusEl.style.display = 'none'; }, 3000);
             }
-
-            btn.disabled = false;
-            btn.style.opacity = '1';
-            statusEl.style.display = 'none';
-            window.closeHighlightModal();
-        }
-        // --- 🖍️ 스마트 형광펜 로직 끝 ---
+            
+            event.target.value = ''; // 똑같은 사진 다시 올릴 수 있도록 초기화
+        };
 
         window.openDateModal = function(action, index) {
             window.currentAction = action; window.targetIndex = index;
