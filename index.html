@@ -488,9 +488,9 @@
                 <button onclick="window.clearHighlight()" style="font-size:0.75rem; background:#fff; border:1px solid #ccc; padding:4px 8px; border-radius:4px; cursor:pointer;">지우기 (초기화)</button>
             </div>
 
-            <div style="flex: 1; overflow: hidden; background: #eee; border-radius: 8px; margin-bottom: 10px; display:flex; align-items:center; justify-content:center;" id="canvasContainer">
+            <div style="flex: 1; min-height: 0; background: #eee; border-radius: 8px; margin-bottom: 10px; display:flex; align-items:center; justify-content:center; overflow:hidden;" id="canvasContainer">
                 <div style="position:relative; display:inline-block; max-width:100%; max-height:100%;">
-                    <canvas id="bgCanvas" style="display:block; max-width:100%; max-height:100%; border-radius:4px;"></canvas>
+                    <img id="bgImg" style="display:block; max-width:100%; max-height:100%; border-radius:4px; pointer-events:none;">
                     <canvas id="drawCanvas" style="position:absolute; top:0; left:0; width:100%; height:100%; cursor:crosshair; touch-action:none;"></canvas>
                 </div>
             </div>
@@ -809,27 +809,19 @@
             reader.onload = function(e) {
                 const img = new Image();
                 img.onload = function() {
-                    const bgCanvas = document.getElementById('bgCanvas');
+                    const bgImg = document.getElementById('bgImg');
                     const drawCanvas = document.getElementById('drawCanvas');
                     
-                    // 성능 최적화: 너무 크면 1000px로 축소해서 OCR 분석
-                    let maxDim = 1000;
-                    let scale = 1;
-                    if(img.width > maxDim || img.height > maxDim) {
-                        scale = Math.min(maxDim/img.width, maxDim/img.height);
-                    }
-                    const w = img.width * scale;
-                    const h = img.height * scale;
-                    
-                    bgCanvas.width = w; bgCanvas.height = h;
-                    drawCanvas.width = w; drawCanvas.height = h;
-                    
-                    const bgCtx = bgCanvas.getContext('2d');
-                    bgCtx.drawImage(img, 0, 0, w, h);
-                    
+                    bgImg.src = e.target.result;
                     window.clearHighlight();
                     document.getElementById('highlightModal').style.display = 'flex';
-                    window.setupCanvasDrawing(drawCanvas, w);
+                    
+                    // 모달이 완전히 화면에 표시될 때까지 아주 살짝 기다린 후 캔버스 세팅
+                    setTimeout(() => {
+                        drawCanvas.width = img.naturalWidth;
+                        drawCanvas.height = img.naturalHeight;
+                        window.setupCanvasDrawing(drawCanvas, img.naturalWidth);
+                    }, 50);
                 };
                 img.src = e.target.result;
             };
@@ -904,7 +896,7 @@
         }
 
         window.runOcrOnHighlight = async function() {
-            const bgCanvas = document.getElementById('bgCanvas');
+            const bgImg = document.getElementById('bgImg');
             const drawCanvas = document.getElementById('drawCanvas');
             const statusEl = document.getElementById('ocrStatus');
             const btn = document.getElementById('btnRunOcr');
@@ -922,11 +914,17 @@
             btn.disabled = true;
             btn.style.opacity = '0.5';
 
+            // 원본 배경 이미지를 분석용 캔버스에 그리기
+            const bgCanvas = document.createElement('canvas');
+            bgCanvas.width = bgImg.naturalWidth;
+            bgCanvas.height = bgImg.naturalHeight;
+            const bgCtx = bgCanvas.getContext('2d');
+            bgCtx.drawImage(bgImg, 0, 0);
+
             let dataUrlToOcr = bgCanvas.toDataURL('image/jpeg');
 
             if(hasDrawing) {
                 // 형광펜 칠한 부분의 원본 이미지만 흰 바탕에 오려내기 (마스킹 기술)
-                const bgCtx = bgCanvas.getContext('2d');
                 const bgImgData = bgCtx.getImageData(0, 0, bgCanvas.width, bgCanvas.height);
                 
                 const maskCanvas = document.createElement('canvas');
