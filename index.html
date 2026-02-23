@@ -3,159 +3,269 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>나만의 독서 기록장</title>
+    <title>My Reading Log</title>
+    
+    <!-- 귀여운 📚 책 이모지 아이콘 적용 -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📚</text></svg>">
+    
     <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/ridibatang/1.0.0/ridibatang.min.css">
     
-    <style>
-        :root { --bg-color: #fdfbf7; --primary-color: #5d4037; --accent-color: #d84315; --font-main: 'Pretendard', sans-serif; --font-book: 'RIDIBatang', serif; }
-        * { box-sizing: border-box; }
-        body { font-family: var(--font-main); background-color: var(--bg-color); color: #333; margin: 0; padding: 0; max-width: 600px; margin: 0 auto; min-height: 100vh; padding-bottom: 90px; border-left: 1px solid #eee; border-right: 1px solid #eee; position: relative;}
+    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+    
+    <!-- [NEW] 사진 속 글자를 읽어내는 AI OCR 라이브러리 추가 -->
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 
-        /* 로그인 화면 */
-        #auth-screen {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: var(--bg-color); z-index: 5000;
-            display: flex; flex-direction: column; justify-content: center; align-items: center;
-            padding: 20px;
+    <style>
+        /* 🌈 [핵심] 테마 변수 설정 (배경은 깔끔하게, 포인트는 파스텔로!) */
+        body.theme-blue {
+            --bg-color: #fafafa;
+            --primary-color: #6a9cce;
+            --accent-color: #9ac2e6;
+            --shelf-bg: #f0f6fa;
+            --shelf-wood: #d1e2f0;
         }
-        .auth-box {
-            background: white; padding: 30px; border-radius: 20px;
-            box-shadow: 0 10px 25px rgba(93, 64, 55, 0.15); width: 100%; max-width: 400px;
-            text-align: center;
+        body.theme-pink {
+            --bg-color: #fafafa; 
+            --primary-color: #db889f; 
+            --accent-color: #f0b9c8; 
+            --shelf-bg: #fcf0f3;
+            --shelf-wood: #fad7e1;
         }
+        body.theme-mint {
+            --bg-color: #fafafa;
+            --primary-color: #63b590;
+            --accent-color: #92d6b8;
+            --shelf-bg: #f0f9f5;
+            --shelf-wood: #d0ebd4;
+        }
+        body.theme-lavender {
+            --bg-color: #fafafa;
+            --primary-color: #9b82c7;
+            --accent-color: #c1aee3;
+            --shelf-bg: #f5f2fa;
+            --shelf-wood: #e1d8f2;
+        }
+        body.theme-beige {
+            --bg-color: #fafafa;
+            --primary-color: #9c8071;
+            --accent-color: #cfb8ab;
+            --shelf-bg: #fcfaf8;
+            --shelf-wood: #ede6e1;
+        }
+
+        * { box-sizing: border-box; }
+        body { font-family: var(--font-main); background-color: var(--bg-color); color: #333; margin: 0; padding: 0; max-width: 600px; margin: 0 auto; min-height: 100vh; padding-bottom: 90px; border-left: 1px solid rgba(0,0,0,0.05); border-right: 1px solid rgba(0,0,0,0.05); position: relative; transition: background-color 0.5s ease;}
+
+        #loading-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg-color); z-index: 9999; display: flex; justify-content: center; align-items: center; font-size: 1.2rem; color: var(--primary-color); font-weight: bold; font-family: var(--font-book); flex-direction: column; gap: 10px; }
+        .spinner { width: 40px; height: 40px; border: 4px solid rgba(0,0,0,0.1); border-top-color: var(--primary-color); border-radius: 50%; animation: spin 1s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        #auth-screen { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg-color); z-index: 5000; flex-direction: column; justify-content: center; align-items: center; padding: 20px; }
+        .auth-box { background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 100%; max-width: 400px; text-align: center; }
         .auth-input { width: 100%; padding: 12px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 1rem; }
-        .btn-auth-submit { width: 100%; padding: 12px; background: var(--primary-color); color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 1rem; margin-top: 10px; }
+        .btn-auth-submit { width: 100%; padding: 12px; background: var(--primary-color); color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 1rem; margin-top: 10px; transition: 0.3s;}
+        .btn-auth-submit:hover { opacity: 0.9; }
         .auth-switch { margin-top: 20px; font-size: 0.9rem; color: #666; cursor: pointer; text-decoration: underline; }
 
-        /* 메인 앱 (초기 숨김) */
         #app-container { display: none; }
 
         header { padding: 20px; text-align: center; position: relative; }
-        h2 { font-family: var(--font-book); color: var(--primary-color); margin: 0; font-size: 1.5rem; }
-        
-        .btn-logout { position: absolute; top: 20px; right: 20px; font-size: 0.8rem; color: #999; background: none; border: none; cursor: pointer; text-decoration: underline; }
-        .btn-reset-all { position: absolute; top: 20px; left: 20px; font-size: 0.8rem; color: #999; background: none; border: none; cursor: pointer; text-decoration: underline; }
+        h2 { font-family: var(--font-book); color: var(--primary-color); margin: 0; font-size: 1.5rem; transition: color 0.5s; }
+        .header-left-btns { position: absolute; top: 20px; left: 20px; display: flex; flex-direction: column; gap: 5px; align-items: flex-start;}
+        .btn-header { font-size: 0.8rem; color: #888; background: none; border: none; cursor: pointer; text-decoration: underline; padding: 0; transition: color 0.3s;}
+        .btn-header:hover { color: var(--primary-color); }
+        .btn-logout { position: absolute; top: 20px; right: 20px; font-size: 0.8rem; color: #888; background: none; border: none; cursor: pointer; text-decoration: underline; padding: 0; transition: color 0.3s;}
+        .btn-logout:hover { color: red; }
 
-        /* 스타일 */
-        .home-search-box { margin: 0 20px 20px; background: white; border: 2px solid var(--primary-color); border-radius: 12px; padding: 10px; display: flex; align-items: center; box-shadow: 0 4px 10px rgba(93, 64, 55, 0.1); }
+        .home-search-box { margin: 0 20px 20px; background: white; border: 2px solid var(--primary-color); border-radius: 12px; padding: 10px; display: flex; align-items: center; box-shadow: 0 4px 10px rgba(0,0,0,0.05); transition: border-color 0.5s;}
         .search-input { flex: 1; border: none; outline: none; font-size: 1rem; padding: 5px; }
         .btn-camera { font-size: 1.5rem; background: none; border: none; cursor: pointer; padding: 5px; }
         .tracker-box { background: white; padding: 20px; margin: 0 20px 25px; border-radius: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); text-align: center; }
-        .streak-info { font-size: 1.1rem; font-weight: bold; color: var(--accent-color); margin-bottom: 15px; }
+        .streak-info { font-size: 1.1rem; font-weight: bold; color: var(--accent-color); margin-bottom: 15px; transition: color 0.5s;}
         .week-circles { display: flex; justify-content: space-between; }
-        .day-circle { width: 38px; height: 38px; border-radius: 50%; background: #f0f0f0; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; color: #aaa; transition: 0.3s; }
-        .day-circle.active { background: var(--accent-color); color: white; font-weight: bold; transform: scale(1.1); }
+        .day-circle { width: 38px; height: 38px; border-radius: 50%; background: #f5f5f5; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; color: #aaa; transition: 0.3s; }
+        .day-circle.active { background: var(--accent-color); color: white; font-weight: bold; transform: scale(1.1); box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
         .day-label { font-size: 0.7rem; color: #999; margin-top: 5px; }
-        .section-title { padding: 0 20px; margin-bottom: 10px; font-weight: bold; color: var(--primary-color); font-size: 1.1rem; display: flex; justify-content: space-between; align-items: flex-end; }
-        .h-scroll-container { display: flex; gap: 15px; overflow-x: auto; padding: 0 20px 20px; scroll-behavior: smooth; flex-wrap: nowrap; }
+        .section-title { padding: 0 20px; margin-bottom: 10px; font-weight: bold; color: var(--primary-color); font-size: 1.1rem; display: flex; justify-content: space-between; align-items: flex-end; transition: color 0.5s;}
+        
+        .h-scroll-container { display: flex; gap: 15px; overflow-x: auto; padding: 0 20px 20px; scroll-behavior: smooth; flex-wrap: nowrap; cursor: grab; user-select: none; }
+        .h-scroll-container.active { cursor: grabbing; scroll-behavior: auto; }
         .h-scroll-container::-webkit-scrollbar { display: none; }
-        .reading-card { min-width: 280px; flex: 0 0 auto; background: white; padding: 15px; border-radius: 12px; display: flex; gap: 15px; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05); border: 1px solid #eee; position: relative; }
-        .reading-cover { width: 60px; height: 90px; object-fit: cover; border-radius: 4px; background: #eee; flex-shrink: 0; }
+        
+        .reading-card { min-width: 280px; flex: 0 0 auto; background: white; padding: 15px; border-radius: 12px; display: flex; gap: 15px; align-items: center; box-shadow: 0 3px 8px rgba(0,0,0,0.06); border: 1px solid #eee; position: relative; }
+        .reading-cover { width: 60px; height: 90px; object-fit: cover; border-radius: 4px; background: #eee; flex-shrink: 0; pointer-events: none;}
         .progress-bar { background: #eee; height: 6px; border-radius: 3px; margin-top: 8px; overflow: hidden; }
-        .progress-fill { background: var(--accent-color); height: 100%; width: 0%; transition: width 0.5s; }
+        .progress-fill { background: var(--accent-color); height: 100%; width: 0%; transition: width 0.5s, background-color 0.5s; }
         .btn-round { padding: 6px 12px; font-size: 0.8rem; border-radius: 20px; border: none; cursor: pointer; font-weight: bold; transition: 0.2s; }
         .btn-record { background: #f0f0f0; color: #333; }
         .btn-finish { background: var(--accent-color); color: white; }
         .btn-edit { background: none; border: 1px solid #ddd; color: #888; margin-left: 5px; }
         .btn-card-close { position: absolute; top: 10px; right: 10px; background: none; border: none; color: #999; font-size: 1.2rem; cursor: pointer; line-height: 1; }
-        .mini-card { min-width: 90px; flex: 0 0 auto; text-align: center; position: relative; }
-        .mini-cover { width: 90px; height: 130px; object-fit: cover; border-radius: 5px; box-shadow: 2px 2px 5px rgba(0,0,0,0.1); }
-        .mini-title { font-size: 0.8rem; margin-top: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .btn-mini-del { position: absolute; top: -5px; right: -5px; background: red; color: white; width: 20px; height: 20px; border-radius: 50%; border: none; cursor: pointer; font-size: 0.8rem; }
-        .shelf-wrapper { margin: 0 20px; background: #d7ccc8; padding: 40px 20px 20px; border-radius: 5px; box-shadow: inset 2px 2px 10px rgba(0,0,0,0.1); }
-        .shelf-flex-container { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 2px; width: 100%; border-bottom: 20px solid #5d4037; padding-bottom: 0; min-height: 180px; }
-        .spine { writing-mode: vertical-rl; text-orientation: mixed; color: rgba(255,255,255,0.95); border: 1px solid rgba(0,0,0,0.1); border-radius: 3px 3px 0 0; padding: 10px 4px; font-size: 0.8rem; box-shadow: 2px 0 4px rgba(0,0,0,0.2); text-align: left; font-family: var(--font-book); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.5; margin-bottom: 0; transition: transform 0.2s; }
-        .spine:hover { transform: translateY(-10px); z-index: 10; }
+        
+        .mini-card { width: 105px; flex: 0 0 auto; text-align: center; position: relative; margin-top:10px; display: flex; flex-direction: column; align-items: center; }
+        .mini-cover { width: 90px; height: 130px; object-fit: cover; border-radius: 5px; box-shadow: 2px 2px 5px rgba(0,0,0,0.1); pointer-events: none; }
+        .mini-title { font-size: 0.75rem; margin-top: 8px; width: 100%; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; text-overflow: ellipsis; white-space: normal; line-height: 1.3; height: 2.6em; word-break: keep-all; color: #444; }
+        .mini-btn-wrap { margin-top: auto; padding-top: 8px; width: 100%; display: flex; flex-direction: column; gap: 4px; }
+        
+        .btn-action-mini { width: 100%; padding: 6px 0; font-size: 0.75rem; font-weight: bold; border-radius: 15px; border: 1px solid var(--primary-color); background: transparent; color: var(--primary-color); cursor: pointer; transition: all 0.2s ease; }
+        .btn-action-mini:hover { background: var(--primary-color); color: white; }
+
+        .btn-mini-del { position: absolute; top: -5px; right: 0px; background: #ff4d4d; color: white; width: 22px; height: 22px; border-radius: 50%; border: none; cursor: pointer; font-size: 0.8rem; z-index: 5; box-shadow: 0 2px 4px rgba(0,0,0,0.2);}
+        .btn-mini-edit { position: absolute; top: 22px; right: 0px; background: rgba(255,255,255,0.95); color: #333; width: 22px; height: 22px; border-radius: 50%; border: none; cursor: pointer; font-size: 0.7rem; box-shadow: 0 2px 4px rgba(0,0,0,0.2); z-index: 5;}
+        
+        .shelf-wrapper { margin: 0 20px; background: var(--shelf-bg); padding: 30px 15px 0px; border-radius: 12px; box-shadow: inset 0 4px 8px rgba(0,0,0,0.05); transition: background-color 0.5s; }
+        .shelf-flex-container { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 4px; width: 100%; border-bottom: 15px solid var(--shelf-wood); padding-bottom: 0; min-height: 160px; position: relative; transition: border-color 0.5s;}
+        .shelf-flex-container::after { content: ''; position: absolute; bottom: -20px; left: 0; width: 100%; height: 5px; background: rgba(0,0,0,0.08); border-radius: 50%; filter: blur(2px); }
+        .spine { writing-mode: vertical-rl; text-orientation: mixed; color: #333; border: 1px solid rgba(255,255,255,0.4); border-left: 2px solid rgba(255,255,255,0.7); border-radius: 4px 4px 0 0; padding: 10px 6px; font-size: 0.8rem; font-weight: bold; box-shadow: 3px 0 5px rgba(0,0,0,0.1); text-align: left; font-family: var(--font-book); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.4; margin-bottom: 0; transition: transform 0.2s ease, box-shadow 0.2s ease; cursor: pointer; position: relative; z-index: 1; }
+        .spine:hover { transform: translateY(-10px); z-index: 10; box-shadow: 5px 5px 15px rgba(0,0,0,0.2); }
+        
+        .tab-content { display: none; }
+        .tab-content.active { display: block; animation: fadeIn 0.3s; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .bottom-nav { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 600px; background: white; border-top: 1px solid #ddd; display: flex; justify-content: space-around; padding: 12px 0; z-index: 1000; }
+        .nav-item { text-align: center; cursor: pointer; color: #aaa; flex: 1; transition: color 0.3s;}
+        .nav-item.active { color: var(--primary-color); font-weight: bold; }
+
+        .theme-circle { width: 45px; height: 45px; border-radius: 50%; cursor: pointer; box-shadow: 0 3px 6px rgba(0,0,0,0.15); transition: transform 0.2s; }
+        .theme-circle:hover { transform: scale(1.1); }
+
+        .full-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg-color); z-index: 2000; overflow-y: auto; }
+        .search-header { position: sticky; top: 0; background: var(--bg-color); padding: 15px; display: flex; gap: 10px; border-bottom: 1px solid #ddd; z-index: 10; transition: background-color 0.5s;}
+        .search-header input { flex: 1; padding: 12px; border: 1px solid #ccc; border-radius: 8px; font-size: 1rem; }
+        .result-item { display: flex; gap: 15px; background: white; padding: 15px; margin: 15px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+        .result-actions button { margin-right: 5px; padding: 6px 12px; font-size: 0.8rem; border-radius: 5px; border: none; cursor: pointer; font-weight: bold; transition: 0.3s; }
+        
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 3000; justify-content: center; align-items: center; }
+        .modal-box { background: white; width: 90%; max-width: 350px; padding: 25px; border-radius: 15px; display: flex; flex-direction: column; gap: 10px; max-height: 80vh; overflow-y: auto;}
+        
+        .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); background: #eee; gap: 1px; border: 1px solid #eee; margin: 0 20px; }
+        .cal-day { background: white; min-height: 100px; position: relative; display: flex; }
+        .cal-split { flex: 1; height: 100%; overflow: hidden; position: relative; border-right: 1px solid white; }
+        .cal-split:last-child { border-right: none; }
+        .cal-num { position: absolute; top: 3px; left: 3px; font-size: 0.75rem; font-weight: bold; background: rgba(255,255,255,0.8); padding: 0 4px; border-radius: 3px; z-index: 5;}
+        
+        .gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 15px; padding: 0 20px 20px; }
+        .gallery-item { text-align: center; position: relative; }
+        .gallery-item img { width: 100%; height: 140px; object-fit: cover; border-radius: 5px; box-shadow: 2px 2px 8px rgba(0,0,0,0.1); margin-bottom: 5px; cursor: pointer; transition: transform 0.2s;}
+        .gallery-item img:hover { transform: scale(1.03); }
+        .gallery-title { font-weight: bold; font-size: 0.85rem; color: #333; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+        .gallery-author { font-size: 0.75rem; color: #888; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+        .gallery-date { font-size: 0.7rem; color: var(--accent-color); margin-top: 2px; }
+        .btn-gal-edit { position: absolute; top: 5px; right: 5px; background: rgba(255,255,255,0.9); color: #333; width: 25px; height: 25px; border-radius: 50%; border: none; cursor: pointer; font-size: 0.8rem; line-height: 25px; box-shadow: 0 2px 5px rgba(0,0,0,0.2); z-index: 10; }
+        
         .quote-main-view { padding: 0 20px; }
         .quote-list-view { display: none; }
         .big-menu-grid { display: grid; grid-template-columns: 1fr; gap: 15px; margin-bottom: 20px; }
-        .big-card-btn { padding: 30px 20px; border-radius: 15px; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(0,0,0,0.08); transition: transform 0.2s; text-align: center; color: white; }
-        .big-card-btn:hover { transform: translateY(-3px); }
-        .btn-treasure { background: linear-gradient(135deg, #5d4037, #4e342e); }
-        .btn-list { background: linear-gradient(135deg, #8d6e63, #6d4c41); }
+        .big-card-btn { padding: 30px 20px; border-radius: 15px; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(0,0,0,0.08); transition: transform 0.2s; text-align: center; color: white; background: var(--primary-color); opacity: 0.9;}
+        .big-card-btn:hover { transform: translateY(-3px); opacity: 1;}
+        .btn-list { background: var(--accent-color); }
         .big-icon { font-size: 2.5rem; margin-bottom: 10px; }
         .big-title { font-weight: bold; font-size: 1.1rem; margin-bottom: 5px; }
         .big-desc { font-size: 0.85rem; opacity: 0.9; }
         .btn-back-list { background: white; border: 1px solid #ddd; padding: 8px 15px; border-radius: 20px; cursor: pointer; font-weight: bold; color: #555; margin-bottom: 15px;}
         .quote-list-container { margin-top: 10px; }
-        .quote-item { background: white; padding: 20px; margin-bottom: 15px; border-radius: 12px; border-left: 4px solid var(--primary-color); box-shadow: 0 2px 5px rgba(0,0,0,0.05); text-align: left;}
-        .rank-box { background:white; padding:20px; border-radius:15px; margin-bottom:20px; box-shadow:0 2px 5px rgba(0,0,0,0.05); }
-        .rank-title { margin:0 0 15px; font-size: 1.1rem; color: var(--primary-color); font-weight: bold; }
-        .rank-row { margin-bottom: 15px; }
-        .rank-info { display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 0.95rem; }
-        .rank-bar-bg { background: #eee; height: 10px; border-radius: 5px; overflow: hidden; }
-        .rank-bar-fill { background: var(--accent-color); height: 100%; border-radius: 5px; width: 0; transition: width 1s; }
-        .full-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg-color); z-index: 2000; overflow-y: auto; }
-        .search-header { position: sticky; top: 0; background: var(--bg-color); padding: 15px; display: flex; gap: 10px; border-bottom: 1px solid #ddd; z-index: 10; }
-        .search-header input { flex: 1; padding: 12px; border: 1px solid #ccc; border-radius: 8px; font-size: 1rem; }
-        .result-item { display: flex; gap: 15px; background: white; padding: 15px; margin: 15px; border-radius: 12px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-        .result-actions button { margin-right: 5px; padding: 6px 12px; font-size: 0.8rem; border-radius: 5px; border: none; cursor: pointer; font-weight: bold; }
-        .bottom-nav { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 600px; background: white; border-top: 1px solid #ddd; display: flex; justify-content: space-around; padding: 12px 0; z-index: 1000; }
-        .nav-item { text-align: center; cursor: pointer; color: #aaa; flex: 1; }
-        .nav-item.active { color: var(--primary-color); font-weight: bold; }
-        .tab-content { display: none; }
-        .tab-content.active { display: block; animation: fadeIn 0.3s; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); background: #eee; gap: 1px; border: 1px solid #eee; margin: 0 20px; }
-        .cal-day { background: white; min-height: 100px; position: relative; display: flex; }
-        .cal-split { flex: 1; height: 100%; overflow: hidden; position: relative; border-right: 1px solid white; }
-        .cal-split:last-child { border-right: none; }
-        .cal-img { width: 100%; height: 100%; object-fit: cover; }
-        .cal-num { position: absolute; top: 3px; left: 3px; font-size: 0.75rem; font-weight: bold; background: rgba(255,255,255,0.8); padding: 0 4px; border-radius: 3px; z-index: 5;}
-        .gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 15px; padding: 0 20px 20px; }
-        .gallery-item { text-align: center; position: relative; }
-        .gallery-item img { width: 100%; height: 140px; object-fit: cover; border-radius: 5px; box-shadow: 2px 2px 5px rgba(0,0,0,0.1); margin-bottom: 5px; }
-        .gallery-title { font-weight: bold; font-size: 0.85rem; color: #333; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
-        .gallery-author { font-size: 0.75rem; color: #888; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
-        .gallery-date { font-size: 0.7rem; color: var(--accent-color); margin-top: 2px; }
-        .btn-gal-edit { position: absolute; top: 5px; right: 5px; background: rgba(255,255,255,0.9); color: #333; width: 25px; height: 25px; border-radius: 50%; border: none; cursor: pointer; font-size: 0.8rem; line-height: 25px; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
-        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 3000; justify-content: center; align-items: center; }
-        .modal-box { background: white; width: 90%; max-width: 350px; padding: 25px; border-radius: 15px; display: flex; flex-direction: column; gap: 10px; max-height: 80vh; overflow-y: auto;}
+        .quote-item { background: white; padding: 20px; margin-bottom: 15px; border-radius: 12px; border-left: 4px solid var(--primary-color); box-shadow: 0 2px 5px rgba(0,0,0,0.05); text-align: left; transition: border-color 0.5s;}
+        
         .mystery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 15px; width: 100%; padding: 10px;}
-        .mystery-card { background: #fffaf0; padding: 20px; border-radius: 12px; cursor: pointer; font-family: 'RIDIBatang'; font-size: 0.9rem; line-height: 1.5; color: #444; height: 140px; overflow: hidden; position: relative; box-shadow: 0 3px 8px rgba(0,0,0,0.08); border: 1px solid #eee; transition: 0.3s; display: flex; align-items: center; justify-content: center; text-align: center; }
-        .mystery-card:hover { transform: translateY(-5px); box-shadow: 0 5px 12px rgba(0,0,0,0.12); background: #fff; }
+        .mystery-card { background: white; padding: 20px; border-radius: 12px; cursor: pointer; font-family: 'RIDIBatang'; font-size: 0.9rem; line-height: 1.5; color: #444; height: 140px; overflow: hidden; position: relative; box-shadow: 0 3px 8px rgba(0,0,0,0.08); border: 1px solid #eee; transition: 0.3s; display: flex; align-items: center; justify-content: center; text-align: center; }
+        .mystery-card:hover { transform: translateY(-5px); box-shadow: 0 5px 12px rgba(0,0,0,0.12); }
         .mystery-card-text { display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; text-overflow: ellipsis; }
         .quote-detail-cover { width: 100px; height: 150px; object-fit: cover; border-radius: 5px; box-shadow: 2px 2px 8px rgba(0,0,0,0.15); margin: 0 auto 15px; display: block;}
         .quote-detail-text { font-family: 'RIDIBatang'; font-size: 1.1rem; line-height: 1.6; margin: 20px 0; padding: 15px; background: #f9f9f9; border-radius: 8px; }
-        .placeholder-cover { width: 100%; height: 100%; background: #eee; display: flex; align-items: center; justify-content: center; text-align: center; font-size: 0.8rem; color: #555; padding: 5px; font-weight: bold; border-radius: 4px; }
+        
+        .rank-box { background:white; padding:20px; border-radius:15px; margin-bottom:20px; box-shadow:0 2px 5px rgba(0,0,0,0.05); }
+        .rank-title { margin:0 0 15px; font-size: 1.1rem; color: var(--primary-color); font-weight: bold; transition: color 0.5s;}
+        .rank-row { margin-bottom: 15px; }
+        .rank-info { display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 0.95rem; }
+        .rank-bar-bg { background: #eee; height: 10px; border-radius: 5px; overflow: hidden; }
+        .rank-bar-fill { background: var(--accent-color); height: 100%; border-radius: 5px; width: 0; transition: width 1s, background-color 0.5s; }
+
+        .voca-input-box { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); margin: 0 20px 20px; }
+        .voca-input { width: 100%; padding: 12px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 1rem; font-family: var(--font-main); }
+        .voca-btn-group { display: flex; gap: 8px; margin-bottom: 10px; }
+        .btn-dict-search { flex: 1; padding: 12px; background: #f0f0f0; color: #333; border: 1px solid #ccc; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 0.85rem; display: flex; align-items: center; justify-content: center; gap: 5px;}
+        .btn-naver-dict { flex: 1; padding: 12px; background: #03c75a; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 0.85rem; display: flex; align-items: center; justify-content: center; gap: 5px;}
+        
+        .voca-filter { display: flex; justify-content: space-between; align-items: center; padding: 0 20px; margin-bottom: 10px; }
+        .voca-filter select { padding: 5px 10px; border-radius: 5px; border: 1px solid #ccc; outline: none; }
+        .voca-cons-bar { display: none; overflow-x: auto; white-space: nowrap; padding: 0 20px 15px; gap: 8px; scroll-behavior: smooth; cursor: grab; user-select: none; }
+        .voca-cons-bar::-webkit-scrollbar { display: none; }
+        .btn-cons { background: #eee; border: none; padding: 6px 14px; border-radius: 15px; cursor: pointer; font-weight: bold; color: #555; transition: 0.3s;}
+        .btn-cons.active { background: var(--primary-color); color: white; }
+
+        .voca-card { background: white; padding: 15px 20px; margin: 0 20px 15px; border-radius: 12px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); position: relative; border-left: 4px solid var(--primary-color); transition: border-color 0.5s;}
+        .voca-word { font-weight: bold; font-size: 1.1rem; color: var(--primary-color); margin-bottom: 5px; transition: color 0.5s;}
+        .voca-meaning { font-size: 0.9rem; color: #555; line-height: 1.4; }
+        .btn-voca-del { position: absolute; top: 15px; right: 15px; background: none; border: none; color: #ccc; cursor: pointer; font-size: 1.2rem; }
+        .btn-voca-del:hover { color: red; }
+        
+        .placeholder-cover { width: 100%; height: 100%; background: #eee; display: flex; align-items: center; justify-content: center; text-align: center; font-size: 0.8rem; color: #555; padding: 5px; font-weight: bold; border-radius: 4px; overflow: hidden; }
         .btn-delete-red { background: #ffebee; color: #d32f2f; border: 1px solid #d32f2f; padding: 10px; border-radius: 5px; width: 100%; margin-top: 20px; cursor: pointer; font-weight: bold; }
         #scanner-container { width: 100%; height: 250px; background: black; overflow: hidden; position: relative; }
-        #scanner-video { width: 100%; height: 100%; object-fit: cover; }
     </style>
 </head>
-<body>
 
+<!-- 기본 테마를 세련된 파스텔 블루(theme-blue)로 설정 -->
+<body class="theme-blue">
+
+    <div id="themeModal" class="modal-overlay" style="z-index: 4000;">
+        <div class="modal-box" style="text-align: center;">
+            <h3 style="margin-top:0; color:#333;">🎨 테마 색상 선택</h3>
+            <p style="font-size:0.8rem; color:#666; margin-bottom:15px;">원하는 분위기로 기록장을 꾸며보세요!</p>
+            <div style="display: flex; gap: 15px; justify-content: center; flex-wrap: wrap; margin-top: 10px;">
+                <div class="theme-circle" style="background: #6a9cce;" onclick="window.changeTheme('theme-blue')" title="스카이 블루"></div>
+                <div class="theme-circle" style="background: #db889f;" onclick="window.changeTheme('theme-pink')" title="파스텔 핑크"></div>
+                <div class="theme-circle" style="background: #63b590;" onclick="window.changeTheme('theme-mint')" title="프레시 민트"></div>
+                <div class="theme-circle" style="background: #9b82c7;" onclick="window.changeTheme('theme-lavender')" title="소프트 라벤더"></div>
+                <div class="theme-circle" style="background: #9c8071;" onclick="window.changeTheme('theme-beige')" title="클래식 우드"></div>
+            </div>
+            <button onclick="document.getElementById('themeModal').style.display='none'" style="padding:10px; background:#eee; border:none; border-radius:5px; margin-top:25px; width:100%; font-weight:bold; cursor:pointer;">닫기</button>
+        </div>
+    </div>
+
+    <!-- 로딩 화면 -->
+    <div id="loading-screen">
+        <div class="spinner"></div>
+        <div>📚 서재 문을 여는 중...</div>
+    </div>
+
+    <!-- 로그인 폼 -->
     <div id="auth-screen">
         <div class="auth-box">
-            <h2 style="margin-bottom:20px;">📚 독서 기록장</h2>
+            <h2 style="margin-bottom:20px;">📚 My Reading Log</h2>
             <div id="login-form">
                 <input type="email" id="login-email" class="auth-input" placeholder="이메일">
                 <input type="password" id="login-pw" class="auth-input" placeholder="비밀번호">
-                <button class="btn-auth-submit" onclick="handleLogin()">로그인</button>
-                <div class="auth-switch" onclick="switchAuthMode('signup')">계정이 없으신가요? 회원가입</div>
+                <button class="btn-auth-submit" onclick="window.handleLogin()">로그인</button>
+                <div class="auth-switch" onclick="window.switchAuthMode('signup')">계정이 없으신가요? 회원가입</div>
             </div>
             <div id="signup-form" style="display:none;">
                 <input type="email" id="signup-email" class="auth-input" placeholder="이메일 입력">
                 <input type="password" id="signup-pw" class="auth-input" placeholder="비밀번호 설정 (6자리 이상)">
-                <button class="btn-auth-submit" onclick="handleSignup()">회원가입</button>
-                <div class="auth-switch" onclick="switchAuthMode('login')">이미 계정이 있으신가요? 로그인</div>
+                <button class="btn-auth-submit" onclick="window.handleSignup()">회원가입</button>
+                <div class="auth-switch" onclick="window.switchAuthMode('login')">이미 계정이 있으신가요? 로그인</div>
             </div>
         </div>
     </div>
 
+    <!-- 앱 메인 화면 -->
     <div id="app-container">
         <header>
+            <div class="header-left-btns">
+                <button class="btn-header" onclick="window.resetToday()">오늘 초기화</button>
+                <button class="btn-header" onclick="document.getElementById('themeModal').style.display='flex'">🎨 테마 변경</button>
+            </div>
             <h2>My Reading Log</h2>
-            <button class="btn-reset-all" onclick="resetAll()">전체 초기화</button>
-            <button class="btn-logout" onclick="handleLogout()">로그아웃</button>
+            <button class="btn-logout" onclick="window.handleLogout()">로그아웃</button>
         </header>
 
+        <!-- 탭 1: 홈 -->
         <div id="tab-home" class="tab-content active">
             <div class="home-search-box">
                 <span style="font-size:1.2rem;">🔍</span>
-                <input type="text" class="search-input" placeholder="책 검색 또는 바코드" onclick="openSearch()" readonly>
-                <button class="btn-camera" onclick="openScanner()">📷</button>
+                <input type="text" class="search-input" placeholder="도서 검색 (제목, 작가, 바코드)" onclick="window.openSearch()" readonly>
+                <button class="btn-camera" onclick="window.openScanner()">📷</button>
             </div>
             <div class="tracker-box">
                 <div class="streak-info" id="streakDisplay">🔥 0일 연속 독서 중</div>
@@ -176,42 +286,93 @@
             </div>
         </div>
 
+        <!-- 탭 2: 달력 -->
         <div id="tab-calendar" class="tab-content">
-            <div style="display:flex; justify-content:space-between; padding:0 20px 10px; font-weight:bold; font-size:1.2rem;">
-                <span onclick="changeMonth(-1)" style="cursor:pointer">◀</span>
+            <div style="display:flex; justify-content:space-between; padding:0 20px 10px; font-weight:bold; font-size:1.2rem; color:var(--primary-color);">
+                <span onclick="window.changeMonth(-1)" style="cursor:pointer">◀</span>
                 <span id="calTitle"></span>
-                <span onclick="changeMonth(1)" style="cursor:pointer">▶</span>
+                <span onclick="window.changeMonth(1)" style="cursor:pointer">▶</span>
             </div>
             <div class="cal-grid" id="calGrid"></div>
-            <div class="section-title" style="margin-top:30px;">🖼 완독한 책들 (수정)</div>
+            <div class="section-title" style="margin-top:30px;">🖼 완독한 책들</div>
             <div class="gallery-grid" id="galleryGrid"></div>
         </div>
 
+        <!-- 탭 3: 문장 -->
         <div id="tab-quotes" class="tab-content">
             <div id="quoteMainView" class="quote-main-view">
                 <div style="height:20px;"></div>
                 <div class="big-menu-grid">
-                    <div class="big-card-btn btn-treasure" onclick="openMysteryModal()">
+                    <div class="big-card-btn btn-treasure" onclick="window.openMysteryModal()">
                         <div class="big-icon">🎁</div>
                         <div class="big-title">문장 보물상자 열기</div>
                         <div class="big-desc">랜덤으로 문장을 뽑아보세요!</div>
                     </div>
-                    <div class="big-card-btn btn-list" onclick="toggleQuoteView('list')">
+                    <div class="big-card-btn btn-list" onclick="window.toggleQuoteView('list')">
                         <div class="big-icon">📜</div>
                         <div class="big-title">전체 문장 보기</div>
                         <div class="big-desc">저장된 모든 문장을 확인하세요</div>
                     </div>
                 </div>
-                <button onclick="openQuoteModal()" style="width:100%; font-size:0.9rem; background:white; color:#5d4037; border:1px solid #5d4037; padding:15px; border-radius:12px; cursor:pointer; font-weight:bold;">+ 문장 직접 추가하기</button>
+                <button onclick="window.openQuoteModal()" style="width:100%; font-size:0.9rem; background:white; color:var(--primary-color); border:1px solid var(--primary-color); padding:15px; border-radius:12px; cursor:pointer; font-weight:bold; transition:0.3s;">+ 문장 직접 추가하기</button>
             </div>
             <div id="quoteListView" class="quote-list-view">
                 <div style="padding:20px 20px 0;">
-                    <button class="btn-back-list" onclick="toggleQuoteView('main')">↩ 뒤로가기</button>
+                    <button class="btn-back-list" onclick="window.toggleQuoteView('main')">↩ 뒤로가기</button>
                 </div>
                 <div class="quote-list-container" id="quoteList"></div>
             </div>
         </div>
 
+        <!-- 탭 4: 단어장 -->
+        <div id="tab-voca" class="tab-content">
+            <div class="section-title" style="margin-top:10px;">
+                <span>🔖 새 단어 추가</span>
+            </div>
+            <div class="voca-input-box">
+                <input type="text" id="vocaWordInput" class="voca-input" placeholder="단어, 사자성어, 속담을 입력하세요">
+                <div class="voca-btn-group">
+                    <button id="btnDictSearch" class="btn-dict-search" onclick="window.searchDict()"><span>🤖</span> AI 자동 검색</button>
+                    <button class="btn-naver-dict" onclick="window.openNaverDict()"><span>📗</span> 네이버 사전</button>
+                </div>
+                <textarea id="vocaMeaningInput" class="voca-input" rows="3" placeholder="뜻이 여기에 표시됩니다. 직접 수정할 수도 있어요!"></textarea>
+                <button onclick="window.addVoca()" style="width:100%; padding:12px; background:var(--primary-color); color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer; transition:0.3s;">단어장에 저장</button>
+            </div>
+
+            <div class="section-title">
+                <span>📚 내 단어장</span>
+            </div>
+            <div class="voca-filter">
+                <div style="font-size:0.8rem; color:#888;">단어 목록</div>
+                <select id="vocaSortSelect" onchange="window.toggleVocaFilter()">
+                    <option value="latest">최신순</option>
+                    <option value="abc">가나다순</option>
+                </select>
+            </div>
+            
+            <div id="vocaConsonantFilter" class="voca-cons-bar">
+                <button class="btn-cons active" onclick="window.filterVoca('ALL')">전체</button>
+                <button class="btn-cons" onclick="window.filterVoca('ㄱ')">ㄱ</button>
+                <button class="btn-cons" onclick="window.filterVoca('ㄴ')">ㄴ</button>
+                <button class="btn-cons" onclick="window.filterVoca('ㄷ')">ㄷ</button>
+                <button class="btn-cons" onclick="window.filterVoca('ㄹ')">ㄹ</button>
+                <button class="btn-cons" onclick="window.filterVoca('ㅁ')">ㅁ</button>
+                <button class="btn-cons" onclick="window.filterVoca('ㅂ')">ㅂ</button>
+                <button class="btn-cons" onclick="window.filterVoca('ㅅ')">ㅅ</button>
+                <button class="btn-cons" onclick="window.filterVoca('ㅇ')">ㅇ</button>
+                <button class="btn-cons" onclick="window.filterVoca('ㅈ')">ㅈ</button>
+                <button class="btn-cons" onclick="window.filterVoca('ㅊ')">ㅊ</button>
+                <button class="btn-cons" onclick="window.filterVoca('ㅋ')">ㅋ</button>
+                <button class="btn-cons" onclick="window.filterVoca('ㅌ')">ㅌ</button>
+                <button class="btn-cons" onclick="window.filterVoca('ㅍ')">ㅍ</button>
+                <button class="btn-cons" onclick="window.filterVoca('ㅎ')">ㅎ</button>
+                <button class="btn-cons" onclick="window.filterVoca('기타')">A-Z</button>
+            </div>
+
+            <div id="vocaListContainer" style="padding-bottom: 30px;"></div>
+        </div>
+
+        <!-- 탭 5: 랭킹 -->
         <div id="tab-stats" class="tab-content">
             <div style="padding:20px;">
                 <div class="rank-box"><div class="rank-title">🏆 선호 분야 TOP 5</div><div id="rankCategory"></div></div>
@@ -221,88 +382,150 @@
         </div>
 
         <div class="bottom-nav">
-            <div class="nav-item active" onclick="switchTab('home', this)"><span>🏠</span><div style="font-size:0.7rem">홈</div></div>
-            <div class="nav-item" onclick="switchTab('calendar', this)"><span>📅</span><div style="font-size:0.7rem">달력</div></div>
-            <div class="nav-item" onclick="switchTab('quotes', this)"><span>✏️</span><div style="font-size:0.7rem">문장</div></div>
-            <div class="nav-item" onclick="switchTab('stats', this)"><span>📊</span><div style="font-size:0.7rem">랭킹</div></div>
+            <div class="nav-item active" onclick="window.switchTab('home', this)"><span>🏠</span><div style="font-size:0.7rem">홈</div></div>
+            <div class="nav-item" onclick="window.switchTab('calendar', this)"><span>📅</span><div style="font-size:0.7rem">달력</div></div>
+            <div class="nav-item" onclick="window.switchTab('quotes', this)"><span>✏️</span><div style="font-size:0.7rem">문장</div></div>
+            <div class="nav-item" onclick="window.switchTab('voca', this)"><span>🔖</span><div style="font-size:0.7rem">단어</div></div>
+            <div class="nav-item" onclick="window.switchTab('stats', this)"><span>📊</span><div style="font-size:0.7rem">랭킹</div></div>
         </div>
     </div>
 
+    <!-- 검색창 모달 -->
     <div id="searchModal" class="full-modal">
         <div class="search-header">
-            <button onclick="document.getElementById('searchModal').style.display='none'" style="font-size:1.5rem; background:none; border:none;">&larr;</button>
-            <input type="text" id="searchInput" placeholder="책 제목, 작가 입력" onkeypress="if(event.key==='Enter') searchBooks()">
-            <button onclick="searchBooks()" style="background:var(--accent-color); color:white; border:none; padding:0 15px; border-radius:5px;">검색</button>
+            <button onclick="document.getElementById('searchModal').style.display='none'" style="font-size:1.5rem; background:none; border:none; color:var(--primary-color);">&larr;</button>
+            <input type="text" id="searchInput" placeholder="도서 검색 (제목, 작가, 바코드 번호)" onkeypress="if(event.key==='Enter') window.searchBooks()">
+            <button onclick="window.searchBooks()" style="background:var(--accent-color); color:white; border:none; padding:0 15px; border-radius:5px;">검색</button>
         </div>
         <div id="searchResultList"></div>
     </div>
 
+    <!-- 바코드 스캐너 모달 -->
     <div id="scannerModal" class="modal-overlay">
         <div class="modal-box" style="max-width:500px;">
-            <h3>📷 바코드 스캔</h3>
-            <div id="scanner-container"></div>
-            <button onclick="closeScanner()" style="padding:10px; background:#eee; border:none; border-radius:5px; width:100%; margin-top:10px;">닫기</button>
+            <h3 style="color:var(--primary-color);">📷 바코드 스캔</h3>
+            <div id="scanner-container" style="width: 100%; height: 250px;"></div>
+            <button onclick="window.closeScanner()" style="padding:10px; background:#eee; border:none; border-radius:5px; width:100%; margin-top:10px; font-weight:bold;">닫기</button>
         </div>
     </div>
 
+    <!-- 통합 날짜 & 정보 입력 모달 -->
     <div id="dateModal" class="modal-overlay">
         <div class="modal-box">
-            <h3 id="dateModalTitle">기록 수정</h3>
-            <label style="font-size:0.8rem; color:#666;">날짜</label>
-            <input type="date" id="dateInput" style="padding:10px; border:1px solid #ddd; border-radius:5px; font-size:1rem;">
+            <h3 id="dateModalTitle" style="color:var(--primary-color);">날짜 선택</h3>
+            
+            <div id="dateInputWrap">
+                <label style="font-size:0.8rem; color:#666;">날짜</label>
+                <input type="date" id="dateInput" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:5px; font-size:1rem; margin-bottom: 10px;">
+            </div>
+            
             <div id="pageInputWrap" style="display:none;">
-                <label style="font-size:0.8rem; color:#666; margin-top:10px; display:block;">읽은 페이지</label>
-                <input type="number" id="pageInput" placeholder="페이지 수" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:5px;">
+                <label id="pageInputLabel" style="font-size:0.8rem; color:#666; display:block;">읽은 페이지</label>
+                <input type="number" id="pageInput" placeholder="예: 30" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:5px;">
             </div>
+
+            <div id="totalPageInputWrap" style="display:none; margin-top:10px;">
+                <label style="font-size:0.8rem; color:#666; display:block;">총 페이지 수 (필수)</label>
+                <input type="number" id="editTotalPage" value="300" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:5px;">
+            </div>
+
+            <textarea id="bookComment" rows="3" placeholder="책에 대한 자유로운 코멘트를 남겨보세요. (선택 사항)" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:5px; margin-top:10px; display:none; font-family:var(--font-main); font-size:0.9rem; resize:none;"></textarea>
+
+            <div id="extraEditWrap" style="display:none; margin-top:10px;">
+                <label style="font-size:0.8rem; color:#666; display:block;">출판사 (랭킹 반영)</label>
+                <input type="text" id="editPublisher" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:5px; margin-bottom:10px;">
+                
+                <label style="font-size:0.8rem; color:#666; display:block;">카테고리 (랭킹 반영)</label>
+                <input type="text" id="editCategory" placeholder="소설, 에세이, 경제 등" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:5px; margin-bottom:10px;">
+                
+                <label style="font-size:0.8rem; color:#666; display:block;">표지 이미지 직접 등록 (선택)</label>
+                <input type="file" id="coverUploadInput" accept="image/*" style="width:100%; padding:5px; border:1px solid #ddd; border-radius:5px;">
+            </div>
+            
             <div style="display:flex; gap:10px; margin-top:15px;">
-                <button onclick="document.getElementById('dateModal').style.display='none'" style="flex:1; padding:10px; background:#eee; border:none; border-radius:5px;">취소</button>
-                <button onclick="confirmDateAction()" style="flex:1; padding:10px; background:var(--primary-color); color:white; border:none; border-radius:5px;">저장</button>
+                <button onclick="document.getElementById('dateModal').style.display='none'" style="flex:1; padding:10px; background:#eee; border:none; border-radius:5px; font-weight:bold;">취소</button>
+                <button onclick="window.confirmDateAction()" style="flex:1; padding:10px; background:var(--primary-color); color:white; border:none; border-radius:5px; font-weight:bold;">확인</button>
             </div>
-            <button id="btnDeleteBook" class="btn-delete-red" style="display:none;" onclick="deleteCurrentBook()">🗑️ 이 책 삭제하기</button>
+            <button id="btnDeleteBook" class="btn-delete-red" style="display:none;" onclick="window.deleteCurrentBook()">🗑️ 이 책 삭제하기</button>
         </div>
     </div>
 
+    <!-- 책 상세 정보 모달 -->
+    <div id="bookDetailModal" class="modal-overlay" style="z-index: 3100;">
+        <div class="modal-box" style="text-align:center;">
+            <div id="bdCoverContainer"></div>
+            <h3 id="bdTitle" style="margin:0; color:var(--primary-color);">책 제목</h3>
+            <div id="bdInfo" style="font-size:0.85rem; color:#666; margin-top:5px;">작가 | 출판사 | 장르</div>
+            
+            <div style="font-size:0.85rem; color:#555; margin-top:10px;" id="bdDate">완독일 표시 영역</div>
+            
+            <div id="bdCommentWrap" style="margin-top:15px; text-align:left; background:#f9f9f9; padding:15px; border-radius:8px; display:none;">
+                <div style="font-size:0.8rem; color:var(--primary-color); margin-bottom:5px; font-weight:bold;">나의 코멘트</div>
+                <div id="bdComment" style="font-size:0.95rem; line-height:1.5; white-space:pre-wrap; color:#444; font-family:var(--font-book);"></div>
+            </div>
+            
+            <button onclick="document.getElementById('bookDetailModal').style.display='none'" style="padding:10px; background:var(--primary-color); color:white; border:none; border-radius:5px; margin-top:20px; width:100%; font-weight:bold;">닫기</button>
+        </div>
+    </div>
+
+    <!-- [NEW] 문장 추가 모달 (사진 추출 기능 포함!) -->
     <div id="quoteModal" class="modal-overlay">
         <div class="modal-box">
-            <h3>문장 추가</h3>
-            <select id="qBook" style="padding:8px; border:1px solid #ccc; border-radius:5px;"></select>
-            <input type="number" id="qPage" placeholder="페이지 (선택)" style="padding:8px; border:1px solid #ccc; border-radius:5px;">
-            <textarea id="qText" rows="4" placeholder="문장을 입력하세요" style="padding:8px; border:1px solid #ccc; border-radius:5px;"></textarea>
-            <div style="display:flex; gap:10px; margin-top:10px;">
-                <button onclick="document.getElementById('quoteModal').style.display='none'" style="flex:1; padding:10px; background:#eee; border:none; border-radius:5px;">취소</button>
-                <button onclick="saveQuote()" style="flex:1; padding:10px; background:var(--primary-color); color:white; border:none; border-radius:5px;">저장</button>
+            <h3 style="color:var(--primary-color); margin-top:0;">✏️ 문장 추가</h3>
+            <select id="qBook" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:5px; font-family:var(--font-main); margin-bottom:10px;"></select>
+            <input type="number" id="qPage" placeholder="페이지 (선택)" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:5px; margin-bottom:10px;">
+            
+            <!-- 사진으로 텍스트 추출 버튼 영역 -->
+            <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:5px;">
+                <label style="font-size:0.8rem; color:#666;">문장 내용</label>
+                <button onclick="document.getElementById('ocrInput').click()" style="background:#e6f2fa; color:var(--primary-color); border:none; padding:5px 10px; border-radius:15px; font-size:0.75rem; font-weight:bold; cursor:pointer; display:flex; align-items:center; gap:3px;">
+                    📷 사진으로 추출
+                </button>
+                <input type="file" id="ocrInput" accept="image/*" style="display:none;" onchange="window.processOCR(event)">
+            </div>
+            <!-- OCR 로딩 상태 표시 -->
+            <div id="ocrStatus" style="font-size:0.75rem; color:#d87093; display:none; margin-bottom:5px; text-align:right;">AI가 글자를 읽고 있습니다... ⏳</div>
+            
+            <textarea id="qText" rows="5" placeholder="기억하고 싶은 문장을 직접 입력하거나, 사진으로 추출해보세요!" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:5px; font-family:var(--font-main); resize:none;"></textarea>
+            
+            <div style="display:flex; gap:10px; margin-top:15px;">
+                <button onclick="document.getElementById('quoteModal').style.display='none'" style="flex:1; padding:12px; background:#eee; border:none; border-radius:8px; font-weight:bold; color:#555; cursor:pointer;">취소</button>
+                <button onclick="window.saveQuote()" style="flex:1; padding:12px; background:var(--primary-color); color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer;">저장</button>
             </div>
         </div>
     </div>
 
     <div id="mysteryModal" class="modal-overlay">
         <div class="modal-box" style="max-width:600px; background: #fdfbf7;">
-            <h3 style="margin-top:0; text-align:center;">📜 문장 보물상자</h3>
+            <h3 style="margin-top:0; text-align:center; color:var(--primary-color);">📜 문장 보물상자</h3>
             <p style="font-size:0.8rem; color:#666; margin-bottom:15px; text-align:center;">구절을 클릭해 출처를 확인하세요!</p>
             <div class="mystery-grid" id="mysteryGrid" style="max-height: 60vh; overflow-y: auto;"></div>
-            <button onclick="document.getElementById('mysteryModal').style.display='none'" style="padding:10px; background:#eee; border:none; border-radius:5px; margin-top:15px; width:100%;">닫기</button>
+            <button onclick="document.getElementById('mysteryModal').style.display='none'" style="padding:10px; background:#eee; border:none; border-radius:5px; margin-top:15px; width:100%; font-weight:bold;">닫기</button>
         </div>
     </div>
 
     <div id="quoteDetailModal" class="modal-overlay" style="z-index: 3100;">
         <div class="modal-box" style="text-align:center;">
             <div id="qdCoverContainer"></div>
-            <h3 id="qdTitle" style="margin:0;">책 제목</h3>
+            <h3 id="qdTitle" style="margin:0; color:var(--primary-color);">책 제목</h3>
             <div id="qdAuthor" style="font-size:0.9rem; color:#666; margin-top:5px;">작가</div>
             <div class="quote-detail-text">"<span id="qdText">문장 내용</span>"</div>
             <div style="font-size:0.9rem; color:#666;">- p.<span id="qdPage"></span> -</div>
-            <button onclick="document.getElementById('quoteDetailModal').style.display='none'" style="padding:10px; background:var(--primary-color); color:white; border:none; border-radius:5px; margin-top:20px; width:100%;">확인</button>
+            <button onclick="document.getElementById('quoteDetailModal').style.display='none'" style="padding:10px; background:var(--primary-color); color:white; border:none; border-radius:5px; margin-top:20px; width:100%; font-weight:bold;">확인</button>
         </div>
     </div>
 
-    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
     <script type="module">
-        // ================= FIREBASE 설정 =================
+        window.sanitizeArray = function(data) {
+            if (!data) return [];
+            let arr = Array.isArray(data) ? data : Object.values(data);
+            return arr.filter(item => item !== null && item !== undefined && typeof item === 'object'); 
+        };
+
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
         import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
         import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
 
-        // ★ 여기를 본인의 Firebase 설정으로 바꿔주세요! ★
         const firebaseConfig = {
             apiKey: "AIzaSyCfalVdpUZ0YaFjt6_gaOBvq1TeIzb40eg",
             authDomain: "book-yum-5babd.firebaseapp.com",
@@ -311,7 +534,6 @@
             messagingSenderId: "131924542195",
             appId: "1:131924542195:web:a6f959517f002c0ca86d86"
         };
-        // ==============================================
 
         let dbRef = null;
         let auth = null;
@@ -321,319 +543,850 @@
             const firestore = getFirestore(app);
             auth = getAuth(app);
 
-            // Auth 상태 감지 (자동 로그인)
+            const loadTimer = setTimeout(() => {
+                const loader = document.getElementById('loading-screen');
+                if(loader && loader.style.display !== 'none') {
+                    loader.style.display = 'none';
+                    document.getElementById('auth-screen').style.display = 'flex';
+                }
+            }, 5000);
+
             onAuthStateChanged(auth, (user) => {
+                clearTimeout(loadTimer); 
+                document.getElementById('loading-screen').style.display = 'none';
+                
                 if (user) {
-                    console.log("Logged in:", user.email);
-                    dbRef = doc(firestore, "users", user.uid); // 유저별 DB 경로
+                    dbRef = doc(firestore, "users", user.uid);
                     document.getElementById('auth-screen').style.display = 'none';
                     document.getElementById('app-container').style.display = 'block';
                     loadData();
                 } else {
-                    console.log("No user");
                     document.getElementById('auth-screen').style.display = 'flex';
                     document.getElementById('app-container').style.display = 'none';
                 }
             });
 
-            // 전역 함수로 등록 (HTML onclick에서 쓰기 위해)
             window.handleLogin = async () => {
                 const email = document.getElementById('login-email').value;
                 const pw = document.getElementById('login-pw').value;
-                try {
-                    await signInWithEmailAndPassword(auth, email, pw);
-                } catch(e) { alert("로그인 실패: " + e.message); }
+                try { await signInWithEmailAndPassword(auth, email, pw); } 
+                catch(e) { alert("로그인 실패: 이메일과 비밀번호를 확인해주세요."); }
             };
 
             window.handleSignup = async () => {
                 const email = document.getElementById('signup-email').value;
                 const pw = document.getElementById('signup-pw').value;
+                if(pw.length < 6) return alert("비밀번호는 6자리 이상이어야 합니다.");
                 try {
                     await createUserWithEmailAndPassword(auth, email, pw);
-                    alert("회원가입 성공! 자동 로그인됩니다.");
-                } catch(e) { alert("가입 실패: " + e.message); }
+                    alert("회원가입 성공! 환영합니다.");
+                } catch(e) { alert("가입 실패: 이미 있는 계정이거나 이메일 형식이 틀렸습니다."); }
             };
 
             window.handleLogout = async () => {
                 if(confirm("로그아웃 하시겠습니까?")) {
                     await signOut(auth);
-                    window.db = { reading: [], library: [], wish: [], toread: [], quotes: [], logs: [] }; // 초기화
+                    window.db = { reading: [], library: [], wish: [], toread: [], quotes: [], logs: [], voca: [] };
                 }
             };
 
-        } catch(e) {
-            console.error("Firebase Init Error:", e);
-            alert("파이어베이스 설정이 필요합니다. 코드를 확인해주세요.");
+        } catch(e) { 
+            document.getElementById('loading-screen').style.display = 'none';
+            document.getElementById('auth-screen').style.display = 'flex';
+            alert("파이어베이스 설정 오류 또는 네트워크 연결 문제입니다."); 
         }
 
-        // 전역 변수
         window.API_KEY = 'AIzaSyB9SjdXwflGS-oUZfmaVGE1vWhBEahY4L0';
-        window.db = { reading: [], library: [], wish: [], toread: [], quotes: [], logs: [] };
+        window.ALADIN_KEY = 'ttbyulim12041101001'; 
+        
+        window.db = { reading: [], library: [], wish: [], toread: [], quotes: [], logs: [], voca: [] };
+        window.currentSearchResults = [];
+        window.tempBookData = null;
+        window.currentVocaFilter = 'ALL';
+        window.lastClickedSearchBtn = null;
         
         async function loadData() {
             if(dbRef) {
                 try {
                     const docSnap = await getDoc(dbRef);
                     if (docSnap.exists()) {
-                        window.db = docSnap.data();
-                        if(window.db.library) window.db.library.sort((a,b) => new Date(a.date) - new Date(b.date));
+                        let d = docSnap.data();
+                        window.db = {
+                            reading: window.sanitizeArray(d.reading),
+                            library: window.sanitizeArray(d.library),
+                            wish: window.sanitizeArray(d.wish),
+                            toread: window.sanitizeArray(d.toread),
+                            quotes: window.sanitizeArray(d.quotes),
+                            voca: window.sanitizeArray(d.voca),
+                            logs: (Array.isArray(d.logs) ? d.logs : []).filter(item => typeof item === 'string') 
+                        };
+                        window.db.library.sort((a,b) => {
+                            if(!a || !a.date) return 1;
+                            if(!b || !b.date) return -1;
+                            return new Date(a.date) - new Date(b.date);
+                        });
+                    } else { 
+                        window.db = { reading: [], library: [], wish: [], toread: [], quotes: [], logs: [], voca: [] };
+                        await setDoc(dbRef, window.db); 
                     }
-                } catch(e) { console.error("Load Error:", e); }
+                } catch(e) { console.error("Data Load Error:", e); }
             }
             if(window.initUI) window.initUI();
         }
 
         window.save = async function() {
-            if(dbRef) {
-                try { await setDoc(dbRef, window.db); } catch(e) { console.error("Save Error:", e); }
-            }
+            if(dbRef) { try { await setDoc(dbRef, window.db); } catch(e) { console.error(e); } }
         }
     </script>
 
     <script>
-        // ================= UI 로직 =================
-        let curDate = new Date();
-        let currentAction = null;
-        let targetIndex = null;
-        let html5QrcodeScanner = null;
+        const savedTheme = localStorage.getItem('myReadingLogTheme') || 'theme-blue';
+        document.body.className = savedTheme;
 
-        function initUI() { renderHome(); renderCalendar(); renderQuotesList(); renderStats(); }
-        
-        // 로그인/가입 화면 전환
-        function switchAuthMode(mode) {
-            if(mode === 'signup') {
-                document.getElementById('login-form').style.display = 'none';
-                document.getElementById('signup-form').style.display = 'block';
-            } else {
-                document.getElementById('login-form').style.display = 'block';
-                document.getElementById('signup-form').style.display = 'none';
-            }
+        window.changeTheme = function(themeName) {
+            document.body.className = themeName;
+            localStorage.setItem('myReadingLogTheme', themeName);
+            document.getElementById('themeModal').style.display = 'none';
         }
 
-        function switchTab(id, el) {
+        window.curDate = new Date();
+        window.currentAction = null;
+        window.targetIndex = null;
+        window.html5QrcodeScanner = null;
+
+        function getLocalYYYYMMDD(dateObj) {
+            const offset = dateObj.getTimezoneOffset() * 60000;
+            return new Date(dateObj.getTime() - offset).toISOString().split('T')[0];
+        }
+
+        function makeScrollable(id) {
+            const slider = document.getElementById(id);
+            if(!slider) return;
+            slider.onmousedown = (e) => {
+                slider.isDown = true; slider.classList.add('active');
+                slider.startX = e.pageX - slider.offsetLeft; slider.scrollLeftPos = slider.scrollLeft;
+            };
+            slider.onmouseleave = () => { slider.isDown = false; slider.classList.remove('active'); };
+            slider.onmouseup = () => { slider.isDown = false; slider.classList.remove('active'); };
+            slider.onmousemove = (e) => {
+                if(!slider.isDown) return;
+                e.preventDefault();
+                const x = e.pageX - slider.offsetLeft;
+                slider.scrollLeft = slider.scrollLeftPos - (x - slider.startX) * 1.5;
+            };
+        }
+
+        window.initUI = function() { 
+            try { window.renderHome(); } catch(e){}
+            try { window.renderCalendar(); } catch(e){}
+            try { window.renderQuotesList(); } catch(e){}
+            try { window.renderVoca(); } catch(e){}
+            try { window.renderStats(); } catch(e){}
+        }
+        
+        window.switchAuthMode = function(mode) {
+            document.getElementById('login-form').style.display = mode === 'signup' ? 'none' : 'block';
+            document.getElementById('signup-form').style.display = mode === 'signup' ? 'block' : 'none';
+        }
+
+        window.switchTab = function(id, el) {
             document.querySelectorAll('.tab-content').forEach(e => e.classList.remove('active'));
             document.getElementById('tab-' + id).classList.add('active');
             document.querySelectorAll('.nav-item').forEach(e => e.classList.remove('active'));
             el.classList.add('active');
-            if(id === 'calendar') renderCalendar();
-            if(id === 'stats') renderStats();
+            if(id === 'calendar') window.renderCalendar();
+            if(id === 'voca') { document.getElementById('vocaSortSelect').value = 'latest'; window.toggleVocaFilter(); }
+            if(id === 'stats') window.renderStats();
         }
 
         function getCoverHtml(url, title) {
-            if (!url || url.includes('placeholder') || url === 'undefined') {
-                return `<div class="placeholder-cover" style="width:100%; height:100%; background:#eee; display:flex; align-items:center; justify-content:center; text-align:center; padding:5px; font-size:0.8rem; color:#555; border-radius:4px; font-weight:bold;">${title}</div>`;
+            let safeTitle = title ? String(title).replace(/"/g, '&quot;').replace(/'/g, '&#39;') : '제목없음';
+            if (!url || typeof url !== 'string' || url.includes('placeholder') || url.includes('noimage') || url.includes('no_cover') || url === 'undefined') {
+                return `<div class="placeholder-cover" style="width:100%; height:100%; background:#eee; display:flex; align-items:center; justify-content:center; text-align:center; padding:5px; font-size:0.8rem; color:#555; border-radius:4px; font-weight:bold; overflow:hidden;">${safeTitle}</div>`;
             }
-            return `<img src="${url}" style="width:100%; height:100%; object-fit:cover; border-radius:4px;">`;
+            return `<img src="${url}" draggable="false" style="width:100%; height:100%; object-fit:cover; border-radius:4px; pointer-events:none;" title="${safeTitle}">`;
         }
 
-        // --- 바코드 스캐너 ---
-        function openScanner() {
-            document.getElementById('scannerModal').style.display = 'flex';
-            if(!html5QrcodeScanner) { html5QrcodeScanner = new Html5Qrcode("scanner-container"); }
-            html5QrcodeScanner.start({ facingMode: "environment" }, { fps: 10, qrbox: { width: 250, height: 150 } }, onScanSuccess);
+        function updateLogs() {
+            let activeDates = new Set();
+            window.db.reading.forEach(b => { 
+                if(!b) return;
+                if(b.startDate) activeDates.add(b.startDate); 
+                if(b.lastDate) activeDates.add(b.lastDate); 
+                if(b.history) b.history.forEach(d => activeDates.add(d));
+            });
+            window.db.library.forEach(b => { 
+                if(!b) return;
+                if(b.date) activeDates.add(b.date); 
+                if(b.history) b.history.forEach(d => activeDates.add(d));
+            });
+            window.db.logs = Array.from(activeDates);
         }
-        function onScanSuccess(decodedText) { closeScanner(); document.getElementById('searchInput').value = decodedText; openSearch(); searchBooks(); }
-        function closeScanner() {
-            if(html5QrcodeScanner) html5QrcodeScanner.stop().then(() => document.getElementById('scannerModal').style.display = 'none').catch(console.log);
+
+        window.resetToday = async function() {
+            const todayStr = getLocalYYYYMMDD(new Date());
+            if(confirm("오늘 기록한 모든 독서 내역(페이지 갱신, 완독)을 취소할까요?")) {
+                for(let i = window.db.library.length - 1; i >= 0; i--) {
+                    if(window.db.library[i] && window.db.library[i].date === todayStr) {
+                        let b = window.db.library.splice(i, 1)[0]; b.date = null; b.comment = null; window.db.reading.push(b);
+                    }
+                }
+                window.db.reading.forEach(b => {
+                    if(!b) return;
+                    if(b.lastDate === todayStr) { b.lastDate = null; b.current = 0; }
+                    if(b.startDate === todayStr) { b.startDate = null; }
+                    if(b.history) b.history = b.history.filter(d => d !== todayStr);
+                });
+                updateLogs(); await window.save(); window.renderHome(); window.renderCalendar(); alert("오늘 기록이 초기화되었습니다.");
+            }
+        }
+        
+        window.resetAll = async function() {
+            if(confirm('모든 데이터를 삭제하시겠습니까? (이 계정의 데이터만 지워집니다)')) {
+                if(confirm('정말 삭제합니다. 복구할 수 없습니다!')) {
+                    window.db = { reading: [], library: [], wish: [], toread: [], quotes: [], logs: [], voca: [] };
+                    await window.save(); location.reload();   
+                }
+            }
+        }
+
+        window.openScanner = function() {
+            document.getElementById('scannerModal').style.display = 'flex';
+            if(!window.html5QrcodeScanner) { window.html5QrcodeScanner = new Html5Qrcode("scanner-container"); }
+            window.html5QrcodeScanner.start(
+                { facingMode: "environment" }, 
+                { fps: 10, qrbox: { width: 250, height: 150 } }, 
+                (decodedText) => {
+                    window.closeScanner(); 
+                    document.getElementById('searchInput').value = decodedText; 
+                    window.openSearch(); 
+                    window.searchBooks();
+                }
+            ).catch(err => {
+                alert("카메라를 사용할 수 없습니다. 브라우저 설정에서 카메라 권한을 허용해주세요!");
+                document.getElementById('scannerModal').style.display = 'none';
+            });
+        }
+        window.closeScanner = function() {
+            if(window.html5QrcodeScanner) window.html5QrcodeScanner.stop().then(() => document.getElementById('scannerModal').style.display = 'none').catch(console.log);
             else document.getElementById('scannerModal').style.display = 'none';
         }
 
-        // --- 날짜/수정 모달 ---
-        function openDateModal(action, index) {
-            currentAction = action; targetIndex = index;
-            const today = new Date().toISOString().split('T')[0];
-            document.getElementById('dateInput').value = today;
+        async function processImageUpload(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const img = new Image();
+                    img.onload = function() {
+                        const canvas = document.createElement('canvas'); const ctx = canvas.getContext('2d');
+                        const MAX_WIDTH = 200; const scaleSize = MAX_WIDTH / img.width;
+                        canvas.width = MAX_WIDTH; canvas.height = img.height * scaleSize;
+                        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                        resolve(canvas.toDataURL('image/jpeg', 0.8)); 
+                    };
+                    img.onerror = reject; img.src = e.target.result;
+                };
+                reader.onerror = reject; reader.readAsDataURL(file);
+            });
+        }
+
+        // [NEW] 사진에서 글자를 추출하는 OCR 마법 함수
+        window.processOCR = async function(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const statusEl = document.getElementById('ocrStatus');
+            const textArea = document.getElementById('qText');
+            
+            statusEl.style.display = 'block';
+            statusEl.innerText = "로딩 중... (한국어 인식 팩 다운로드 등 최대 10초 소요될 수 있습니다) ⏳";
+            
+            try {
+                const result = await Tesseract.recognize(file, 'kor', {
+                    logger: m => {
+                        if (m.status === 'recognizing text') {
+                            statusEl.innerText = `텍스트 인식 중... ${Math.round(m.progress * 100)}% ⏳`;
+                        }
+                    }
+                });
+                
+                if (result.data.text) {
+                    const currentText = textArea.value;
+                    textArea.value = currentText ? currentText + '\n\n' + result.data.text.trim() : result.data.text.trim();
+                    statusEl.innerText = "✨ 인식 완료! (필요한 부분만 수정해서 저장하세요)";
+                    setTimeout(() => { statusEl.style.display = 'none'; }, 4000);
+                } else {
+                    statusEl.innerText = "인식된 글자가 없습니다.";
+                    setTimeout(() => { statusEl.style.display = 'none'; }, 3000);
+                }
+            } catch (error) {
+                console.error(error);
+                statusEl.innerText = "❌ 오류가 발생했습니다.";
+                setTimeout(() => { statusEl.style.display = 'none'; }, 3000);
+            }
+            
+            event.target.value = ''; // 똑같은 사진 다시 올릴 수 있도록 초기화
+        };
+
+        window.openDateModal = function(action, index) {
+            window.currentAction = action; window.targetIndex = index;
+            const todayStr = getLocalYYYYMMDD(new Date());
+            document.getElementById('dateInput').value = todayStr;
             document.getElementById('dateModal').style.display = 'flex';
+            
+            const dateWrap = document.getElementById('dateInputWrap');
             const pageWrap = document.getElementById('pageInputWrap');
+            const pageLabel = document.getElementById('pageInputLabel');
+            const totalPageWrap = document.getElementById('totalPageInputWrap');
+            const extraEditWrap = document.getElementById('extraEditWrap');
+            const commentInput = document.getElementById('bookComment');
             const title = document.getElementById('dateModalTitle');
             const delBtn = document.getElementById('btnDeleteBook');
-            delBtn.style.display = 'none';
+            
+            delBtn.style.display = 'none'; extraEditWrap.style.display = 'none'; 
+            commentInput.style.display = 'none'; totalPageWrap.style.display = 'none';
+            document.getElementById('coverUploadInput').value = ''; 
 
-            if (action === 'record' || action === 'edit_reading') {
-                pageWrap.style.display = 'block';
-                title.innerText = action === 'record' ? '독서 기록' : '기록 수정';
-                document.getElementById('pageInput').value = db.reading[index].current;
-                if(db.reading[index].lastDate) document.getElementById('dateInput').value = db.reading[index].lastDate;
-            } else if (action === 'edit_library') {
-                pageWrap.style.display = 'none';
-                title.innerText = '완독 정보 수정';
-                document.getElementById('dateInput').value = db.library[index].date;
-                delBtn.style.display = 'block';
+            if (action === 'start_reading_search') {
+                dateWrap.style.display = 'block'; pageWrap.style.display = 'none'; totalPageWrap.style.display = 'block';
+                title.innerText = '새 책 읽기 시작'; extraEditWrap.style.display = 'block';
+                document.getElementById('editTotalPage').value = window.tempBookData.total || 300;
+                document.getElementById('editPublisher').value = window.tempBookData.publisher || '미상';
+                document.getElementById('editCategory').value = window.tempBookData.category || '기타';
+            } 
+            else if (action === 'start_reading_toread') {
+                dateWrap.style.display = 'block'; pageWrap.style.display = 'none'; totalPageWrap.style.display = 'block';
+                title.innerText = '읽기 시작'; document.getElementById('editTotalPage').value = window.db.toread[index].total || 300;
+            } 
+            else if (action === 'record') {
+                dateWrap.style.display = 'block'; pageWrap.style.display = 'block';
+                title.innerText = '독서 기록';
+                pageLabel.innerText = '오늘 추가로 읽은 페이지 수 (예: 30)';
+                pageLabel.style.color = 'var(--primary-color)';
+                pageLabel.style.fontWeight = 'bold';
+                document.getElementById('pageInput').value = ''; 
+            } 
+            else if (action === 'edit_reading') {
+                dateWrap.style.display = 'block'; pageWrap.style.display = 'block';
+                title.innerText = '기록 수정';
+                pageLabel.innerText = '현재까지 읽은 총 누적 페이지 수';
+                pageLabel.style.color = '#666';
+                pageLabel.style.fontWeight = 'normal';
+                document.getElementById('pageInput').value = window.db.reading[index].current || 0;
+                
+                extraEditWrap.style.display = 'block'; totalPageWrap.style.display = 'block';
+                document.getElementById('editTotalPage').value = window.db.reading[index].total || 300;
+                document.getElementById('editPublisher').value = window.db.reading[index].publisher || '미상';
+                document.getElementById('editCategory').value = window.db.reading[index].category || '기타';
+            } 
+            else if (action === 'edit_library') {
+                dateWrap.style.display = 'block'; pageWrap.style.display = 'none';
+                title.innerText = '완독 정보 수정'; document.getElementById('dateInput').value = window.db.library[index].date;
+                delBtn.style.display = 'block'; extraEditWrap.style.display = 'block';
+                document.getElementById('editPublisher').value = window.db.library[index].publisher || '미상';
+                document.getElementById('editCategory').value = window.db.library[index].category || '기타';
+                commentInput.style.display = 'block'; commentInput.value = window.db.library[index].comment || '';
+            } 
+            else if (action === 'finish') {
+                dateWrap.style.display = 'block'; pageWrap.style.display = 'none';
+                title.innerText = '완독 기록'; commentInput.style.display = 'block'; commentInput.value = '';
+            } 
+            else if (action.startsWith('edit_mini_')) { 
+                dateWrap.style.display = 'none'; pageWrap.style.display = 'none';
+                title.innerText = '책 정보 수정'; extraEditWrap.style.display = 'block';
+                const listType = action.replace('edit_mini_', '');
+                document.getElementById('editPublisher').value = window.db[listType][index].publisher || '미상';
+                document.getElementById('editCategory').value = window.db[listType][index].category || '기타';
             }
         }
 
-        function confirmDateAction() {
+        window.confirmDateAction = async function() {
+            const dateWrap = document.getElementById('dateInputWrap');
             const date = document.getElementById('dateInput').value;
-            if(!date) return alert('날짜 선택!');
-            if(currentAction === 'record' || currentAction === 'edit_reading') {
-                const page = document.getElementById('pageInput').value;
-                db.reading[targetIndex].current = Math.min(parseInt(page), db.reading[targetIndex].total);
-                db.reading[targetIndex].lastDate = date; 
-                if(!db.logs.includes(date)) db.logs.push(date);
-                window.save(); renderHome();
-            } else if(currentAction === 'edit_library') {
-                db.library[targetIndex].date = date;
-                if(!db.logs.includes(date)) db.logs.push(date);
-                db.library.sort((a,b) => new Date(a.date) - new Date(b.date));
-                window.save(); renderHome(); renderCalendar();
-            } else if(currentAction === 'finish') {
-                const b = db.reading[targetIndex]; b.date = date;
-                db.library.push(b); db.reading.splice(targetIndex, 1);
-                if(!db.logs.includes(date)) db.logs.push(date);
-                db.library.sort((a,b) => new Date(a.date) - new Date(b.date));
-                window.save(); renderHome(); renderCalendar();
+            if(dateWrap.style.display !== 'none' && !date) return alert('날짜를 선택해주세요.');
+
+            let newCoverData = null;
+            const fileInput = document.getElementById('coverUploadInput');
+            if (fileInput.files && fileInput.files[0]) newCoverData = await processImageUpload(fileInput.files[0]);
+
+            const pub = document.getElementById('editPublisher').value;
+            const cat = document.getElementById('editCategory').value;
+            const cmt = document.getElementById('bookComment').value.trim();
+            const totalP = parseInt(document.getElementById('editTotalPage').value) || 300;
+
+            if(window.currentAction === 'start_reading_search') {
+                window.tempBookData.startDate = date; window.tempBookData.total = totalP;
+                window.tempBookData.publisher = pub; window.tempBookData.category = cat;
+                if(newCoverData) window.tempBookData.cover = newCoverData;
+                window.db.reading.push(window.tempBookData); window.tempBookData = null;
+                if(window.lastClickedSearchBtn) {
+                    let btn = window.lastClickedSearchBtn; btn.innerText = '✔ 읽는 중'; btn.style.background = '#4CAF50';
+                    setTimeout(() => { btn.innerText = '읽기'; btn.style.background = 'var(--accent-color)'; }, 1500);
+                }
+            } 
+            else if(window.currentAction === 'start_reading_toread') {
+                const b = window.db.toread[window.targetIndex]; b.startDate = date; b.total = totalP; window.db.reading.push(b); window.db.toread.splice(window.targetIndex, 1);
             }
+            else if(window.currentAction === 'record') {
+                const readP = parseInt(document.getElementById('pageInput').value) || 0;
+                let b = window.db.reading[window.targetIndex];
+                b.current = Math.min((b.current || 0) + readP, b.total);
+                b.lastDate = date; 
+                if(!b.history) b.history = [];
+                if(!b.history.includes(date)) b.history.push(date);
+            }
+            else if(window.currentAction === 'edit_reading') {
+                const page = parseInt(document.getElementById('pageInput').value) || 0;
+                let b = window.db.reading[window.targetIndex];
+                b.total = totalP;
+                b.current = Math.min(page, b.total);
+                b.lastDate = date; 
+                if(!b.history) b.history = [];
+                if(!b.history.includes(date)) b.history.push(date);
+                b.publisher = pub; b.category = cat;
+                if(newCoverData) b.cover = newCoverData;
+            } 
+            else if(window.currentAction === 'edit_library') {
+                window.db.library[window.targetIndex].date = date; window.db.library[window.targetIndex].publisher = pub;
+                window.db.library[window.targetIndex].category = cat; window.db.library[window.targetIndex].comment = cmt;
+                if(newCoverData) window.db.library[window.targetIndex].cover = newCoverData;
+            } 
+            else if(window.currentAction === 'finish') {
+                const b = window.db.reading[window.targetIndex]; b.date = date; b.comment = cmt;
+                if(!b.history) b.history = [];
+                if(!b.history.includes(date)) b.history.push(date);
+                window.db.library.push(b); window.db.reading.splice(window.targetIndex, 1);
+            }
+            else if(window.currentAction.startsWith('edit_mini_')) {
+                const listType = window.currentAction.replace('edit_mini_', '');
+                window.db[listType][window.targetIndex].publisher = pub; window.db[listType][window.targetIndex].category = cat;
+                if(newCoverData) window.db[listType][window.targetIndex].cover = newCoverData;
+            }
+            
+            updateLogs(); window.db.library.sort((a,b) => new Date(a.date) - new Date(b.date));
+            await window.save(); window.renderHome(); window.renderCalendar(); window.renderStats();
             document.getElementById('dateModal').style.display = 'none';
         }
 
-        function deleteCurrentBook() {
-            if(confirm("삭제하시겠습니까?")) {
-                db.library.splice(targetIndex, 1);
-                window.save(); renderHome(); renderCalendar();
+        window.deleteCurrentBook = function() {
+            if(confirm("정말 이 책을 삭제하시겠습니까?")) {
+                window.db.library.splice(window.targetIndex, 1); updateLogs();
+                window.save().then(() => { window.renderHome(); window.renderCalendar(); window.renderStats(); });
                 document.getElementById('dateModal').style.display = 'none';
             }
         }
 
-        // --- 렌더링 ---
-        function renderHome() {
+        window.showBookDetail = function(index) {
+            const b = window.db.library[index];
+            const container = document.getElementById('bdCoverContainer');
+            container.innerHTML = `<div style="width:120px; height:180px; margin:0 auto 15px; box-shadow:2px 2px 8px rgba(0,0,0,0.15);">${getCoverHtml(b.cover, b.title)}</div>`;
+            document.getElementById('bdTitle').innerText = b.title;
+            document.getElementById('bdInfo').innerText = `${b.author} | ${b.publisher} | ${b.category}`;
+            
+            let dateText = `완독일: ${b.date || '기록없음'}`;
+            let durationHtml = '';
+            if(b.startDate && b.date) {
+                let start = new Date(b.startDate);
+                let end = new Date(b.date);
+                let diffTime = end.getTime() - start.getTime();
+                let diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1; 
+                
+                if(diffDays > 0) {
+                    dateText = `${start.getFullYear()}년 ${start.getMonth()+1}월 ${start.getDate()}일 ~ ${end.getFullYear()}년 ${end.getMonth()+1}월 ${end.getDate()}일`;
+                    durationHtml = `<div style="display:inline-block; margin-top:8px; background:var(--accent-color); color:white; padding:4px 12px; border-radius:20px; font-size:0.8rem; font-weight:bold;">🏆 완독까지 ${diffDays}일 소요</div>`;
+                }
+            }
+            document.getElementById('bdDate').innerHTML = `${dateText}<br>${durationHtml}`;
+            
+            const commentWrap = document.getElementById('bdCommentWrap');
+            const commentBox = document.getElementById('bdComment');
+            if(b.comment && b.comment.length > 0) {
+                commentWrap.style.display = 'block'; commentBox.innerText = b.comment;
+            } else { commentWrap.style.display = 'none'; }
+            document.getElementById('bookDetailModal').style.display = 'flex';
+        }
+
+        window.renderHome = function() {
             const weekDiv = document.getElementById('weekCircles'); weekDiv.innerHTML = '';
+            
+            let streak = 0;
+            if(window.db.logs && window.db.logs.length > 0) {
+                let dates = [...new Set(window.db.logs)].sort().reverse(); 
+                let t = new Date();
+                let tStr = getLocalYYYYMMDD(t); 
+                t.setDate(t.getDate() - 1);
+                let yStr = getLocalYYYYMMDD(t); 
+
+                let checkStr = '';
+                if(dates.includes(tStr)) checkStr = tStr;      
+                else if(dates.includes(yStr)) checkStr = yStr; 
+
+                if(checkStr) {
+                    let currD = new Date(checkStr);
+                    while(true) {
+                        let dString = getLocalYYYYMMDD(currD);
+                        if(dates.includes(dString)) {
+                            streak++;
+                            currD.setDate(currD.getDate() - 1); 
+                        } else { break; }
+                    }
+                }
+            }
+            
+            const streakDisplay = document.getElementById('streakDisplay');
+            if(streak > 0) {
+                streakDisplay.innerText = `🔥 ${streak}일 연속 독서 중!`;
+                streakDisplay.style.color = '#e53935';
+            } else {
+                streakDisplay.innerText = "📚 오늘 책을 읽어보세요";
+                streakDisplay.style.color = 'var(--primary-color)';
+            }
+
             const today = new Date(); const startOfWeek = new Date(today); startOfWeek.setDate(today.getDate() - today.getDay());
-            let streak = db.logs.includes(today.toISOString().split('T')[0]) ? 1 : 0;
-            document.getElementById('streakDisplay').innerText = streak ? "🔥 오늘 독서 완료!" : "📚 오늘 책을 읽어보세요";
             for(let i=0; i<7; i++) {
                 const d = new Date(startOfWeek); d.setDate(startOfWeek.getDate() + i);
-                const dStr = d.toISOString().split('T')[0];
-                const isDone = db.logs.includes(dStr);
+                const dStr = getLocalYYYYMMDD(d);
+                const isDone = window.db.logs.includes(dStr);
                 weekDiv.innerHTML += `<div><div class="day-circle ${isDone?'active':''}">${['일','월','화','수','목','금','토'][i]}</div><div class="day-label">${d.getDate()}</div></div>`;
             }
+
             const rDiv = document.getElementById('readingList'); rDiv.innerHTML = '';
-            if(db.reading.length===0) rDiv.innerHTML='<div style="padding:10px; color:#999; font-size:0.9rem;">읽고 있는 책이 없습니다.</div>';
-            db.reading.forEach((b, i) => {
-                const pct = Math.round((b.current / b.total) * 100);
+            if(window.db.reading.length===0) rDiv.innerHTML='<div style="padding:10px; color:#999; font-size:0.9rem;">읽고 있는 책이 없습니다.</div>';
+            window.db.reading.forEach((b, i) => {
+                if(!b) return;
+                const pct = Math.round((b.current / b.total) * 100) || 0;
                 const coverHtml = getCoverHtml(b.cover, b.title);
-                rDiv.innerHTML += `<div class="reading-card"><button class="btn-card-close" onclick="delReading(${i})">×</button><div style="width:60px; height:90px; flex-shrink:0;">${coverHtml}</div><div style="flex:1; margin-left:15px;"><div style="font-weight:bold; font-size:0.95rem; margin-bottom:5px;">${b.title}</div><div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div><div style="font-size:0.8rem; color:#888; margin-top:8px; display:flex; align-items:center; justify-content:space-between;"><span>${pct}% (${b.current}p)</span><div><button class="btn-round btn-record" onclick="openDateModal('record', ${i})">기록</button><button class="btn-round btn-edit" onclick="openDateModal('edit_reading', ${i})">수정</button><button class="btn-round btn-finish" onclick="openDateModal('finish', ${i})">완독</button></div></div></div></div>`;
+                let safeTitle = b.title ? String(b.title).replace(/"/g, '&quot;') : '제목없음';
+                rDiv.innerHTML += `<div class="reading-card"><button class="btn-card-close" onclick="window.delReading(${i})">×</button><div style="width:60px; height:90px; flex-shrink:0;">${coverHtml}</div><div style="flex:1; margin-left:15px;"><div style="font-weight:bold; font-size:0.95rem; margin-bottom:5px; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;" title="${safeTitle}">${b.title}</div><div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div><div style="font-size:0.8rem; color:#888; margin-top:8px; display:flex; align-items:center; justify-content:space-between;"><span>${pct}% (${b.current}p / ${b.total}p)</span><div><button class="btn-round btn-record" onclick="window.openDateModal('record', ${i})">기록</button><button class="btn-round btn-edit" onclick="window.openDateModal('edit_reading', ${i})">수정</button><button class="btn-round btn-finish" onclick="window.openDateModal('finish', ${i})">완독</button></div></div></div></div>`;
             });
-            renderMiniList(db.wish, 'wishList', 'wish'); renderMiniList(db.toread, 'toreadList', 'toread');
-            document.getElementById('wishCount').innerText=db.wish.length+'권'; document.getElementById('toreadCount').innerText=db.toread.length+'권';
+            window.renderMiniList(window.db.wish, 'wishList', 'wish'); window.renderMiniList(window.db.toread, 'toreadList', 'toread');
+            document.getElementById('wishCount').innerText=window.db.wish.length+'권'; document.getElementById('toreadCount').innerText=window.db.toread.length+'권';
+            
             const shelf = document.getElementById('bookShelf'); shelf.innerHTML = '';
-            if(db.library.length===0) shelf.innerHTML = '<div style="width:100%; text-align:center; padding:30px; color:rgba(255,255,255,0.5);">서재가 비었습니다.</div>';
-            else db.library.forEach((b, i) => {
+            if(window.db.library.length===0) shelf.innerHTML = '<div style="width:100%; text-align:center; padding:30px; color:rgba(255,255,255,0.5);">서재가 비었습니다.</div>';
+            else window.db.library.forEach((b, i) => {
+                if(!b) return;
                 const w=Math.min(65, Math.max(30, b.total/10)); const h=Math.min(160, Math.max(120, 120+(b.total%40)));
-                const hue=Math.floor(Math.random()*30)+10;
-                shelf.innerHTML += `<div class="spine" style="background:hsl(${hue},40%,40%); width:${w}px; height:${h}px;" title="${b.title}">${b.title}</div>`;
+                const hue=Math.floor(Math.random()*360);
+                let safeTitle = b.title ? String(b.title).replace(/"/g, '&quot;') : '';
+                shelf.innerHTML += `<div class="spine" style="background:hsl(${hue}, 70%, 85%); width:${w}px; height:${h}px;" title="${safeTitle}" onclick="window.showBookDetail(${i})">${b.title}</div>`;
             });
+
+            makeScrollable('readingList'); makeScrollable('wishList'); makeScrollable('toreadList');
         }
-        function renderMiniList(l,id,t) {
+        
+        window.renderMiniList = function(l,id,t) {
             const el=document.getElementById(id); el.innerHTML=''; if(l.length===0) {el.innerHTML='<div style="padding:10px; color:#999; font-size:0.8rem;">비어있음</div>'; return;}
             l.forEach((b,i)=>{
+                if(!b) return;
                 const cv=getCoverHtml(b.cover,b.title).replace('style="','style="border-radius:5px;');
-                el.innerHTML+=`<div class="mini-card"><button class="btn-mini-del" onclick="delMini('${t}',${i})">×</button><div style="width:90px; height:130px; margin:0 auto; box-shadow:2px 2px 5px rgba(0,0,0,0.1);">${cv}</div><div class="mini-title">${b.title}</div>${t==='wish'?`<button onclick="moveWishToToread(${i})" style="font-size:0.7rem; margin-top:2px;">▼ 예정 이동</button>`:`<button onclick="moveToreadToReading(${i})" style="font-size:0.7rem; margin-top:2px;">▶ 읽기 시작</button>`}</div>`;
+                let safeTitle = b.title ? String(b.title).replace(/"/g, '&quot;') : '';
+                el.innerHTML+=`
+                <div class="mini-card">
+                    <button class="btn-mini-del" onclick="window.delMini('${t}',${i})">×</button>
+                    <button class="btn-mini-edit" onclick="window.openDateModal('edit_mini_${t}', ${i})">✏️</button>
+                    <div style="width:90px; height:130px; margin:0 auto; box-shadow:2px 2px 5px rgba(0,0,0,0.1);">${cv}</div>
+                    <div class="mini-title" title="${safeTitle}">${b.title}</div>
+                    <div class="mini-btn-wrap">
+                        ${t==='wish'?`<button onclick="window.moveWishToToread(${i})" class="btn-action-mini">▼ 예정 이동</button>`:`<button onclick="window.openDateModal('start_reading_toread', ${i})" class="btn-action-mini">▶ 읽기 시작</button>`}
+                    </div>
+                </div>`;
             });
         }
-        
-        // 검색/추가
-        function openSearch() { document.getElementById('searchModal').style.display='block'; document.getElementById('searchInput').focus(); }
-        async function searchBooks() {
-            const q = document.getElementById('searchInput').value; if(!q) return;
-            const list = document.getElementById('searchResultList'); list.innerHTML = '검색중...';
-            try {
-                const res = await fetch(`https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(q)}&langRestrict=ko&maxResults=15&key=${window.API_KEY}`);
-                const data = await res.json(); list.innerHTML = '';
-                if(!data.items) { list.innerHTML = '결과 없음'; return; }
-                data.items.forEach(item => {
-                    const i = item.volumeInfo; if((i.categories||[]).some(c=>/Comic|Manga|만화/i.test(c))) return;
-                    const b = { title: i.title, author: i.authors?i.authors[0]:'미상', publisher: i.publisher||'미상', cover: i.imageLinks?i.imageLinks.thumbnail:'', total: i.pageCount||300, category: translateCat((i.categories||[])[0]||'기타'), current: 0 };
-                    const bStr = JSON.stringify(b).replace(/"/g, '&quot;');
-                    let img = getCoverHtml(b.cover, b.title);
-                    list.innerHTML += `<div class="result-item"><div style="width:60px; height:90px; flex-shrink:0;">${img}</div><div style="flex:1;"><div style="font-weight:bold;">${b.title}</div><div style="font-size:0.8rem; color:#666;">${b.author} | ${b.category}</div><div class="result-actions" style="margin-top:10px;"><button onclick='addBook("reading",${bStr})' style="background:var(--accent-color); color:white;">읽기</button><button onclick='addBook("wish",${bStr})' style="background:#ffcc80;">위시</button><button onclick='addBook("toread",${bStr})' style="background:#bbdefb;">예정</button></div></div></div>`;
-                });
-            } catch(e) { list.innerHTML = '오류'; }
-        }
-        function translateCat(eng) { if(/[가-힣]/.test(eng)) return eng; const map={'Fiction':'소설','Novel':'소설','Poetry':'시','History':'역사','Science':'과학','Business':'경제경영','Self-Help':'자기계발','Essay':'에세이'}; for(let k in map) if(new RegExp(k,'i').test(eng)) return map[k]; return '기타'; }
-        function addBook(type, book) {
-            if(type === 'reading') {
-                const date = prompt("읽기 시작한 날짜?", new Date().toISOString().split('T')[0]);
-                if(date) { book.startDate = date; if(!db.logs.includes(date)) db.logs.push(date); db[type].push(book); window.save(); renderHome(); document.getElementById('searchModal').style.display='none'; alert('추가됨!'); }
-            } else { db[type].push(book); window.save(); renderHome(); document.getElementById('searchModal').style.display='none'; alert('추가됨!'); }
-        }
-        
-        // 관리
-        function delReading(i) { if(confirm('삭제?')) { db.reading.splice(i,1); window.save(); renderHome(); } }
-        function dropReading(i) { if(confirm('하차?')) { db.reading.splice(i,1); window.save(); renderHome(); } }
-        function delMini(t, i) { if(confirm('삭제?')) { db[t].splice(i,1); window.save(); renderHome(); } }
-        function moveWishToToread(i) { db.toread.push(db.wish[i]); db.wish.splice(i,1); window.save(); renderHome(); }
-        function moveToreadToReading(i) { const d=prompt("시작일?", new Date().toISOString().split('T')[0]); if(d) { const b=db.toread[i]; if(!db.logs.includes(d)) db.logs.push(d); db.reading.push(b); db.toread.splice(i,1); window.save(); renderHome(); } }
-        function resetAll() { if(confirm('전체 삭제?')) if(confirm('복구 불가!')) { localStorage.clear(); window.db = {reading:[],library:[],wish:[],toread:[],quotes:[],logs:[]}; window.save(); location.reload(); } }
 
-        // 달력
-        function renderCalendar() {
-            const grid = document.getElementById('calGrid'); grid.innerHTML = '';
-            ['일','월','화','수','목','금','토'].forEach(d=>grid.innerHTML+=`<div style="text-align:center; padding:5px; font-weight:bold; font-size:0.8rem;">${d}</div>`);
-            const y=curDate.getFullYear(), m=curDate.getMonth();
-            document.getElementById('calTitle').innerText = `${y}. ${m+1}`;
-            const first=new Date(y,m,1).getDay(), last=new Date(y,m+1,0).getDate();
-            for(let i=0; i<first; i++) grid.innerHTML+='<div></div>';
-            for(let d=1; d<=last; d++) {
-                const dStr = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-                const books = [...db.library.filter(x=>x.date===dStr), ...db.reading.filter(x=>x.startDate===dStr||x.lastDate===dStr)];
-                let html=`<div class="cal-day"><div class="cal-num" style="color:${new Date(y,m,d).getDay()===0?'red':'inherit'}">${d}</div>`;
-                if(books.length>0) {
-                    const uniq = [...new Map(books.map(i => [i['title'], i])).values()];
-                    uniq.slice(0,3).forEach(b => {
-                        let img = getCoverHtml(b.cover, b.title).replace('style="', 'style="border-radius:0;'); 
-                        html += `<div class="cal-split">${img}</div>`;
+        window.openSearch = function() { document.getElementById('searchModal').style.display='block'; document.getElementById('searchInput').focus(); }
+        
+        window.searchBooks = function() {
+            let q = document.getElementById('searchInput').value.trim(); 
+            if(!q) return;
+
+            const list = document.getElementById('searchResultList'); 
+            list.innerHTML = '<div style="padding:20px; text-align:center; color:var(--primary-color);">알라딘 서점에서 찾는 중... 📚</div>';
+
+            let isBarcode = /^\d{10,13}$/.test(q);
+            let queryType = 'Keyword'; 
+
+            let oldScript = document.getElementById('aladin-jsonp');
+            if(oldScript) oldScript.remove();
+
+            window.aladinFallbackFired = false;
+            window.aladinTimeout = setTimeout(() => {
+                window.aladinFallbackFired = true;
+                window.searchGoogleFallback(q, isBarcode);
+            }, 3500); 
+
+            let script = document.createElement('script');
+            script.id = 'aladin-jsonp';
+            script.src = `https://www.aladin.co.kr/ttb/api/ItemSearch.aspx?ttbkey=${window.ALADIN_KEY}&Query=${encodeURIComponent(q)}&QueryType=${queryType}&MaxResults=15&start=1&SearchTarget=Book&output=js&Version=20131101&CallBack=aladinCallback`;
+            document.body.appendChild(script);
+        }
+
+        window.aladinCallback = function(data) {
+            if(window.aladinFallbackFired) return; 
+            clearTimeout(window.aladinTimeout); 
+
+            const list = document.getElementById('searchResultList');
+            if(!data || !data.item || data.item.length === 0) {
+                 window.searchGoogleFallback(document.getElementById('searchInput').value.trim(), /^\d{10,13}$/.test(document.getElementById('searchInput').value.trim()));
+                 return;
+            }
+
+            window.currentSearchResults = data.item.map((item, i) => {
+                let cat = '기타';
+                if(item.categoryName) {
+                    let parts = item.categoryName.split('>');
+                    cat = parts.length > 1 ? parts[1].split('/')[0] : parts[0];
+                }
+                return { id: i, title: item.title, author: item.author, publisher: item.publisher, cover: item.cover, category: cat, total: 300, current: 0, isbn: item.isbn13 };
+            });
+
+            window.renderSearchResults(list);
+
+            window.currentSearchResults.forEach(b => {
+                if(b.isbn) {
+                    fetch(`https://www.googleapis.com/books/v1/volumes?q=isbn:${b.isbn}&key=${window.API_KEY}`)
+                    .then(r => r.json())
+                    .then(gData => {
+                        let pageSpan = document.getElementById(`page_txt_${b.id}`);
+                        if (gData.items && gData.items[0].volumeInfo.pageCount) {
+                            b.total = gData.items[0].volumeInfo.pageCount;
+                            if(pageSpan) pageSpan.innerText = b.total + '쪽';
+                        } else {
+                            if(pageSpan) pageSpan.innerText = '300쪽 (기본)';
+                        }
+                    }).catch(e => {
+                        let pageSpan = document.getElementById(`page_txt_${b.id}`);
+                        if(pageSpan) pageSpan.innerText = '300쪽 (기본)';
                     });
                 }
-                html+='</div>'; grid.innerHTML+=html;
+            });
+        }
+
+        window.searchGoogleFallback = async function(q, isBarcode) {
+            const list = document.getElementById('searchResultList');
+            list.innerHTML = '<div style="padding:20px; text-align:center; color:var(--primary-color);">구글 도서에서 찾는 중... 📚</div>';
+            try {
+                let apiQuery = isBarcode ? `isbn:${q}` : encodeURIComponent(q);
+                let res = await fetch(`https://www.googleapis.com/books/v1/volumes?q=${apiQuery}&langRestrict=ko&maxResults=15&key=${window.API_KEY}`);
+                let data = await res.json();
+                
+                if (isBarcode && (!data.items || data.items.length === 0)) {
+                    res = await fetch(`https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(q)}&langRestrict=ko&maxResults=15&key=${window.API_KEY}`);
+                    data = await res.json();
+                }
+                
+                if(!data.items || data.items.length === 0) {
+                    list.innerHTML = '<div style="padding:20px; text-align:center; color:#666;">검색 결과가 없습니다.</div>';
+                    return;
+                }
+                
+                function translateGoogleCat(categories) {
+                    if(!categories || categories.length === 0) return '기타';
+                    let cat = categories[0];
+                    if(/[가-힣]/.test(cat)) return cat;
+                    const map = {
+                        'science fiction': 'SF/과학소설', 'epistolary novel': '서간체 소설', 'metaphysical fiction': '형이상학 소설',
+                        'fiction': '소설', 'novel': '소설', 'poetry': '시', 'history': '역사', 'science': '과학',
+                        'business': '경제/경영', 'economics': '경제', 'self-help': '자기계발', 'essay': '에세이',
+                        'biography': '전기/위인전', 'computers': 'IT/컴퓨터', 'philosophy': '철학', 'psychology': '심리학',
+                        'religion': '종교', 'art': '예술', 'fantasy': '판타지', 'romance': '로맨스', 'thriller': '스릴러',
+                        'mystery': '미스터리', 'juvenile': '아동/청소년', 'young adult': '청소년', 'health': '건강', 'comics': '만화'
+                    };
+                    let lowerCat = cat.toLowerCase();
+                    for(let key in map) { if(lowerCat.includes(key)) return map[key]; }
+                    return cat;
+                }
+
+                window.currentSearchResults = data.items.map((item, i) => {
+                    const info = item.volumeInfo;
+                    return {
+                        id: i, title: info.title || '제목 미상', author: info.authors ? info.authors[0] : '작자 미상',
+                        publisher: info.publisher || '미상', cover: info.imageLinks ? info.imageLinks.thumbnail : '',
+                        category: translateGoogleCat(info.categories), total: info.pageCount || 300, current: 0, isbn: ''
+                    };
+                });
+                window.renderSearchResults(list);
+            } catch(e) {
+                list.innerHTML = '<div style="padding:20px; text-align:center; color:#d84315;">서버 연결에 실패했습니다.<br>잠시 후 다시 시도해주세요.</div>';
             }
-            const gal = document.getElementById('galleryGrid'); gal.innerHTML = '';
-            for(let i=db.library.length-1; i>=0; i--) {
-                const b = db.library[i]; let img = getCoverHtml(b.cover, b.title);
-                gal.innerHTML += `<div class="gallery-item"><button class="btn-gal-edit" onclick="openDateModal('edit_library', ${i})">✏️</button><div style="width:100%; height:140px; margin-bottom:5px; box-shadow:2px 2px 5px rgba(0,0,0,0.1);">${img}</div><div class="gallery-title">${b.title}</div><div class="gallery-author">${b.author}</div><div class="gallery-date">${b.date}</div></div>`;
+        };
+
+        window.renderSearchResults = function(listElement) {
+            listElement.innerHTML = '';
+            if(!window.currentSearchResults || window.currentSearchResults.length === 0) {
+                listElement.innerHTML = '<div style="padding:20px; text-align:center; color:#666;">검색 결과가 없습니다.</div>';
+                return;
+            }
+            window.currentSearchResults.forEach(b => {
+                let safeTitle = b.title ? String(b.title).replace(/"/g, '&quot;') : '';
+                let img = getCoverHtml(b.cover, b.title);
+                let pageText = b.total > 0 ? `${b.total}쪽` : '페이지 확인중...';
+                listElement.innerHTML += `
+                    <div class="result-item">
+                        <div style="width:60px; height:90px; flex-shrink:0;">${img}</div>
+                        <div style="flex:1;">
+                            <div style="font-weight:bold; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;" title="${safeTitle}">${b.title}</div>
+                            <div style="font-size:0.8rem; color:#666; margin-top:3px;">${b.author} | ${b.publisher}</div>
+                            <div style="font-size:0.8rem; margin-top:3px;">
+                                <span style="color:var(--primary-color); font-weight:bold;">${b.category}</span> | 
+                                <span id="page_txt_${b.id}" style="color:#888;">${pageText}</span>
+                            </div>
+                            <div class="result-actions" style="margin-top:10px;">
+                                <button onclick='window.addBookFast("reading", ${b.id}, this)' style="background:var(--accent-color); color:white;">읽기</button>
+                                <button onclick='window.addBookFast("wish", ${b.id}, this)' style="background:#ffcc80;">위시</button>
+                                <button onclick='window.addBookFast("toread", ${b.id}, this)' style="background:#bbdefb;">예정</button>
+                            </div>
+                        </div>
+                    </div>`;
+            });
+        }
+        
+        window.addBookFast = function(type, id, btnElem) {
+            let bookData = window.currentSearchResults.find(b => b.id === id);
+            let bCopy = JSON.parse(JSON.stringify(bookData));
+            delete bCopy.id; delete bCopy.isbn;
+
+            if(type === 'reading') {
+                window.tempBookData = bCopy;
+                window.lastClickedSearchBtn = btnElem; 
+                window.openDateModal('start_reading_search', null);
+            } else { 
+                if(bCopy.total === 0) bCopy.total = 300; 
+                window.db[type].push(bCopy); 
+                window.save().then(() => { 
+                    window.renderHome(); 
+                    let oldText = btnElem.innerText; let oldBg = btnElem.style.background;
+                    btnElem.innerText = '✔ 담김'; btnElem.style.background = '#4CAF50';
+                    setTimeout(() => { btnElem.innerText = oldText; btnElem.style.background = oldBg; }, 1000);
+                }); 
             }
         }
-        function changeMonth(n) { curDate.setMonth(curDate.getMonth()+n); renderCalendar(); }
+        
+        window.delReading = function(i) { if(confirm('삭제하시겠습니까?')) { window.db.reading.splice(i,1); updateLogs(); window.save().then(()=>window.renderHome()); } }
+        window.dropReading = function(i) { if(confirm('하차하시겠습니까?')) { window.db.reading.splice(i,1); updateLogs(); window.save().then(()=>window.renderHome()); } }
+        window.delMini = function(t, i) { if(confirm('삭제하시겠습니까?')) { window.db[t].splice(i,1); updateLogs(); window.save().then(()=>window.renderHome()); } }
+        window.moveWishToToread = function(i) { window.db.toread.push(window.db.wish[i]); window.db.wish.splice(i,1); window.save().then(()=>window.renderHome()); }
 
-        // 문장 & 랭킹
-        function toggleQuoteView(mode) {
+        window.renderCalendar = function() {
+            try {
+                const grid = document.getElementById('calGrid'); 
+                if(!grid) return; 
+                
+                grid.innerHTML = '';
+                ['일','월','화','수','목','금','토'].forEach(d=>grid.innerHTML+=`<div style="text-align:center; padding:5px; font-weight:bold; font-size:0.8rem;">${d}</div>`);
+                
+                const y = window.curDate.getFullYear();
+                const m = window.curDate.getMonth();
+                document.getElementById('calTitle').innerText = `${y}. ${m+1}`;
+                
+                const first = new Date(y, m, 1).getDay();
+                const last = new Date(y, m+1, 0).getDate();
+                
+                for(let i=0; i<first; i++) grid.innerHTML+='<div></div>';
+                
+                for(let d=1; d<=last; d++) {
+                    const dStr = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+                    let books = [];
+                    
+                    if(window.db && window.db.library) {
+                        const validLibrary = window.db.library.filter(x => x && typeof x === 'object');
+                        books = books.concat(validLibrary.filter(x => x.date === dStr));
+                    }
+                    
+                    let html=`<div class="cal-day"><div class="cal-num" style="color:${new Date(y,m,d).getDay()===0?'red':'inherit'}">${d}</div>`;
+                    if(books.length>0) {
+                        const validBooks = books.filter(i => i && i.title);
+                        const uniq = [...new Map(validBooks.map(i => [i.title, i])).values()];
+                        uniq.slice(0,3).forEach(b => {
+                            let imgHtml = getCoverHtml(b.cover, b.title);
+                            if(imgHtml.includes('<img')) { imgHtml = imgHtml.replace('border-radius:4px;', 'border-radius:0;'); }
+                            html += `<div class="cal-split">${imgHtml}</div>`;
+                        });
+                    }
+                    html+='</div>'; grid.innerHTML+=html;
+                }
+                
+                const gal = document.getElementById('galleryGrid'); 
+                if(!gal) return;
+                gal.innerHTML = '';
+                
+                if(window.db && window.db.library) {
+                    for(let i=window.db.library.length-1; i>=0; i--) {
+                        const b = window.db.library[i]; 
+                        if(!b || typeof b !== 'object') continue; 
+                        
+                        let safeTitle = b.title ? String(b.title).replace(/"/g, '&quot;') : '제목없음';
+                        let safeAuthor = b.author ? String(b.author).replace(/"/g, '&quot;') : '작자미상';
+                        let img = getCoverHtml(b.cover, b.title);
+                        
+                        gal.innerHTML += `
+                            <div class="gallery-item">
+                                <button class="btn-gal-edit" onclick="window.openDateModal('edit_library', ${i})">✏️</button>
+                                <div style="width:100%; height:140px; margin-bottom:5px; box-shadow:2px 2px 5px rgba(0,0,0,0.1); cursor:pointer;" onclick="window.showBookDetail(${i})">${img}</div>
+                                <div class="gallery-title" title="${safeTitle}">${safeTitle}</div>
+                                <div class="gallery-author">${safeAuthor}</div>
+                                <div class="gallery-date">${b.date || ''}</div>
+                            </div>`;
+                    }
+                }
+            } catch(e) { console.error("달력 렌더링 에러:", e); }
+        }
+        window.changeMonth = function(n) { window.curDate.setMonth(window.curDate.getMonth()+n); window.renderCalendar(); }
+
+        window.toggleQuoteView = function(mode) {
             document.getElementById('quoteMainView').style.display = mode==='list'?'none':'block';
             document.getElementById('quoteListView').style.display = mode==='list'?'block':'none';
-            if(mode==='list') renderQuotesList();
+            if(mode==='list') window.renderQuotesList();
         }
-        function openQuoteModal() {
+        window.openQuoteModal = function() {
             const sel = document.getElementById('qBook'); sel.innerHTML = '<option value="">책 선택</option>';
-            [...db.reading, ...db.library].forEach(b => {
-                const op=document.createElement('option'); op.value=b.title; op.innerText=b.title; op.dataset.cover=b.cover; op.dataset.author=b.author; sel.appendChild(op);
-            });
+            if (window.db.reading.length > 0) {
+                const g1 = document.createElement('optgroup'); g1.label = "📖 읽고 있는 책";
+                window.db.reading.forEach(b => {
+                    if(!b) return;
+                    const op=document.createElement('option'); op.value=b.title; op.innerText=b.title; op.dataset.cover=b.cover; op.dataset.author=b.author; g1.appendChild(op);
+                });
+                sel.appendChild(g1);
+            }
+            if (window.db.library.length > 0) {
+                const g2 = document.createElement('optgroup'); g2.label = "📚 완독한 책";
+                window.db.library.forEach(b => {
+                    if(!b) return;
+                    const op=document.createElement('option'); op.value=b.title; op.innerText=b.title; op.dataset.cover=b.cover; op.dataset.author=b.author; g2.appendChild(op);
+                });
+                sel.appendChild(g2);
+            }
             document.getElementById('quoteModal').style.display = 'flex';
         }
-        function saveQuote() {
+
+        window.saveQuote = function() {
             const s=document.getElementById('qBook'), t=document.getElementById('qText').value, p=document.getElementById('qPage').value;
-            if(!s.value || !t) return alert('입력!');
+            if(!s.value || !t) return alert('입력해주세요!');
             const opt = s.options[s.selectedIndex];
-            db.quotes.push({ book:s.value, page:p, text:t, cover:opt.dataset.cover, author:opt.dataset.author });
-            window.save(); toggleQuoteView('list'); document.getElementById('quoteModal').style.display='none';
+            window.db.quotes.push({ book:s.value, page:p, text:t, cover:opt.dataset.cover, author:opt.dataset.author });
+            window.save().then(() => { window.toggleQuoteView('list'); document.getElementById('quoteModal').style.display='none'; });
         }
-        function renderQuotesList() {
+        window.renderQuotesList = function() {
             const l=document.getElementById('quoteList'); l.innerHTML='';
-            db.quotes.slice().reverse().forEach(q => {
+            window.db.quotes.slice().reverse().forEach(q => {
+                if(!q) return;
                 l.innerHTML += `<div class="quote-item"><div style="font-family:'RIDIBatang'; font-size:1.05rem; line-height:1.5;">"${q.text}"</div><div style="text-align:right; font-size:0.8rem; color:#888; margin-top:10px;"><span style="font-weight:bold;">${q.book}</span> - ${q.author||'미상'} (p.${q.page})</div></div>`;
             });
         }
-        function openMysteryModal() {
-            if(db.quotes.length===0) return alert('문장 없음');
+        window.openMysteryModal = function() {
+            if(window.db.quotes.length===0) return alert('저장된 문장이 없습니다!');
             const g=document.getElementById('mysteryGrid'); g.innerHTML='';
-            [...db.quotes].sort(()=>Math.random()-0.5).forEach(q=>{
+            [...window.db.quotes].sort(()=>Math.random()-0.5).forEach(q=>{
+                if(!q) return;
                 const c=document.createElement('div'); c.className='mystery-card'; c.innerHTML=`<div class="mystery-card-text">"${q.text}"</div>`;
-                c.onclick=()=>showQuoteDetail(q); g.appendChild(c);
+                c.onclick=()=>window.showQuoteDetailQuoteMode(q); g.appendChild(c);
             });
             document.getElementById('mysteryModal').style.display='flex';
         }
-        function showQuoteDetail(q) {
+        window.showQuoteDetailQuoteMode = function(q) {
             let c = q.cover, a = q.author;
-            // 표지/작가 없으면 찾기 (Fallback)
-            if(!c || c.includes('placeholder') || c === 'undefined') {
-                const f = [...db.library, ...db.reading].find(b => b.title === q.book);
+            if(!c || typeof c !== 'string' || c.includes('placeholder') || c === 'undefined') {
+                const f = [...window.db.library, ...window.db.reading].find(b => b && b.title === q.book);
                 if(f) { c = f.cover; a = f.author; }
             }
             const ct = document.getElementById('qdCoverContainer');
@@ -644,11 +1397,160 @@
             document.getElementById('qdPage').innerText = q.page||'?';
             document.getElementById('quoteDetailModal').style.display = 'flex';
         }
-        function renderStats() {
-            const c={}, a={}, p={}; db.library.forEach(b=>{ const sc=translateCat(b.category); c[sc]=(c[sc]||0)+1; a[b.author]=(a[b.author]||0)+1; p[b.publisher]=(p[b.publisher]||0)+1; });
-            drawBarChart('rankCategory',c); drawBarChart('rankAuthor',a); drawBarChart('rankPublisher',p);
+
+        window.openNaverDict = function() {
+            const word = document.getElementById('vocaWordInput').value.trim();
+            if(!word) return alert("검색할 단어를 먼저 입력해주세요!");
+            window.open(`https://ko.dict.naver.com/#/search?query=${encodeURIComponent(word)}`, '_blank');
         }
-        function drawBarChart(id,d) {
+
+        window.searchDict = async function() {
+            const word = document.getElementById('vocaWordInput').value.trim();
+            if(!word) return alert("단어를 먼저 입력해주세요!");
+            
+            const btn = document.getElementById('btnDictSearch');
+            btn.innerHTML = "⏳ 뜻 찾는 중...";
+            
+            let text = "";
+            try {
+                const res = await fetch(`https://ko.wiktionary.org/w/api.php?action=query&prop=extracts&format=json&explaintext=1&titles=${encodeURIComponent(word)}&origin=*`);
+                const data = await res.json();
+                const page = Object.values(data.query.pages)[0];
+                
+                if (page.pageid && page.extract) { text = page.extract; } 
+                else {
+                    const wikiRes = await fetch(`https://ko.wikipedia.org/w/api.php?action=query&prop=extracts&format=json&exsentences=3&explaintext=1&titles=${encodeURIComponent(word)}&origin=*`);
+                    const wikiData = await wikiRes.json();
+                    const wikiPage = Object.values(wikiData.query.pages)[0];
+                    if(wikiPage.pageid && wikiPage.extract) text = wikiPage.extract;
+                }
+                
+                if (text) {
+                    text = text.replace(/==+.*?==+/g, ''); 
+                    let lines = text.split('\n');
+                    let cleanLines = lines.map(l => l.trim()).filter(line => {
+                        if(!line) return false;
+                        if (line.includes('표준어') || line.includes('IPA') || line.match(/\[.*?\]/) || line.match(/\(.*?\)/)) return false; 
+                        if (line.match(/^(발음|어원|동사|형용사|부사|명사|대명사|수사|관형사|감탄사|조사|유의어|반의어|파생어|참고|번역|속담|관용구|문법|유래|활용|한자|로마자|어구)(\s*:|\s*$)/)) return false;
+                        if(line.replace(/\s/g,'') === word.replace(/\s/g,'')) return false; 
+                        return true;
+                    });
+                    
+                    let finalText = cleanLines.slice(0, 3).join('\n').trim();
+                    if(finalText) document.getElementById('vocaMeaningInput').value = finalText;
+                    else alert("사전에 뜻이 명확하게 등록되어 있지 않습니다. 우측 네이버 사전 버튼을 이용해주세요!");
+                } else { alert("사전이나 백과사전에서 단어를 찾지 못했습니다. 우측 네이버 사전 버튼을 이용해주세요!"); }
+            } catch(e) { alert("검색 중 오류가 발생했습니다."); }
+            btn.innerHTML = "<span>🤖</span> AI 자동 검색";
+        }
+
+        window.addVoca = function() {
+            const word = document.getElementById('vocaWordInput').value.trim();
+            const meaning = document.getElementById('vocaMeaningInput').value.trim();
+            if(!word || !meaning) return alert("단어와 뜻을 모두 입력해주세요!");
+            if(!window.db.voca) window.db.voca = [];
+            window.db.voca.push({ word, meaning, date: new Date().toISOString() });
+            window.save().then(() => {
+                document.getElementById('vocaWordInput').value = ''; document.getElementById('vocaMeaningInput').value = '';
+                window.renderVoca(); alert("단어장에 추가되었습니다!");
+            });
+        }
+
+        window.deleteVoca = function(index) {
+            if(confirm("이 단어를 삭제하시겠습니까?")) {
+                window.db.voca.splice(index, 1); window.save().then(() => window.renderVoca());
+            }
+        }
+
+        function getChosung(str) {
+            const cho = ["ㄱ","ㄲ","ㄴ","ㄷ","ㄸ","ㄹ","ㅁ","ㅂ","ㅃ","ㅅ","ㅆ","ㅇ","ㅈ","ㅉ","ㅊ","ㅋ","ㅌ","ㅍ","ㅎ"];
+            let code = str.charCodeAt(0) - 44032;
+            if (code > -1 && code < 11172) return cho[Math.floor(code / 588)];
+            return '기타';
+        }
+
+        window.toggleVocaFilter = function() {
+            const sortType = document.getElementById('vocaSortSelect').value;
+            const filterBar = document.getElementById('vocaConsonantFilter');
+            if(sortType === 'abc') { filterBar.style.display = 'flex'; } 
+            else { filterBar.style.display = 'none'; window.currentVocaFilter = 'ALL'; }
+            window.renderVoca();
+        }
+
+        window.filterVoca = function(cons) {
+            window.currentVocaFilter = cons;
+            document.querySelectorAll('.btn-cons').forEach(btn => {
+                btn.classList.remove('active');
+                if(btn.innerText === cons || (cons === 'ALL' && btn.innerText === '전체') || (cons === '기타' && btn.innerText === 'A-Z')) {
+                    btn.classList.add('active');
+                }
+            });
+            window.renderVoca();
+        }
+
+        window.renderVoca = function() {
+            const container = document.getElementById('vocaListContainer');
+            const sortType = document.getElementById('vocaSortSelect').value;
+            container.innerHTML = '';
+            if(!window.db.voca || window.db.voca.length === 0) {
+                container.innerHTML = '<div style="text-align:center; color:#999; padding:20px;">단어장이 비어있습니다.</div>';
+                return;
+            }
+
+            let vocaList = [...window.db.voca].map((v, i) => ({...v, originalIndex: i}));
+            
+            if(sortType === 'abc') {
+                vocaList.sort((a,b) => {
+                    if(!a || !b) return 0;
+                    return a.word.localeCompare(b.word, 'ko-KR');
+                });
+                if(window.currentVocaFilter !== 'ALL') {
+                    vocaList = vocaList.filter(v => {
+                        if(!v) return false;
+                        let c = getChosung(v.word);
+                        if(window.currentVocaFilter === 'ㄱ' && c === 'ㄲ') return true;
+                        if(window.currentVocaFilter === 'ㄷ' && c === 'ㄸ') return true;
+                        if(window.currentVocaFilter === 'ㅂ' && c === 'ㅃ') return true;
+                        if(window.currentVocaFilter === 'ㅅ' && c === 'ㅆ') return true;
+                        if(window.currentVocaFilter === 'ㅈ' && c === 'ㅉ') return true;
+                        return c === window.currentVocaFilter;
+                    });
+                }
+            } else { vocaList.reverse(); }
+
+            if(vocaList.length === 0) {
+                container.innerHTML = `<div style="text-align:center; color:#999; padding:20px;">선택한 자음으로 시작하는 단어가 없습니다.</div>`;
+                return;
+            }
+
+            vocaList.forEach(v => {
+                if(!v) return;
+                container.innerHTML += `
+                    <div class="voca-card">
+                        <button class="btn-voca-del" onclick="window.deleteVoca(${v.originalIndex})">×</button>
+                        <div class="voca-word">${v.word}</div>
+                        <div class="voca-meaning">${v.meaning.replace(/\n/g, '<br>')}</div>
+                    </div>`;
+            });
+        }
+
+        window.renderStats = function() {
+            const c={}, a={}, p={}; 
+            if(window.db && window.db.library) {
+                window.db.library.forEach(b=>{ 
+                    if(!b) return;
+                    const sc = b.category || '기타'; 
+                    c[sc]=(c[sc]||0)+1; 
+                    a[b.author]=(a[b.author]||0)+1; 
+                    p[b.publisher]=(p[b.publisher]||0)+1; 
+                });
+            }
+            window.drawBarChart('rankCategory',c); 
+            window.drawBarChart('rankAuthor',a); 
+            window.drawBarChart('rankPublisher',p);
+        }
+        
+        window.drawBarChart = function(id,d) {
             const el=document.getElementById(id); el.innerHTML=''; const s=Object.entries(d).sort((a,b)=>b[1]-a[1]).slice(0,5);
             if(s.length===0) {el.innerHTML='<div style="color:#ccc; text-align:center;">데이터 없음</div>'; return;}
             const max=s[0][1]; const m=['🥇','🥈','🥉','4.','5.'];
