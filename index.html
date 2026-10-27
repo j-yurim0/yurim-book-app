@@ -11,7 +11,6 @@
     <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/ridibatang/1.0.0/ridibatang.min.css">
     
-    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
 
     <style>
         /* 🌈 [핵심] 테마 변수 설정 (배경은 깔끔하게, 포인트는 파스텔로!) */
@@ -72,12 +71,13 @@
         .header-left-btns { position: absolute; top: 20px; left: 20px; display: flex; flex-direction: column; gap: 5px; align-items: flex-start;}
         .btn-header { font-size: 0.8rem; color: #888; background: none; border: none; cursor: pointer; text-decoration: underline; padding: 0; transition: color 0.3s;}
         .btn-header:hover { color: var(--primary-color); }
+        .backup-actions { display:flex; flex-direction:column; gap:6px; margin:0 20px 18px; }
+        .backup-actions button { border:1px solid #ddd; background:white; color:var(--primary-color); border-radius:9px; padding:9px; cursor:pointer; font-size:0.85rem; font-weight:bold; }
         .btn-logout { position: absolute; top: 20px; right: 20px; font-size: 0.8rem; color: #888; background: none; border: none; cursor: pointer; text-decoration: underline; padding: 0; transition: color 0.3s;}
         .btn-logout:hover { color: red; }
 
         .home-search-box { margin: 0 20px 20px; background: white; border: 2px solid var(--primary-color); border-radius: 12px; padding: 10px; display: flex; align-items: center; box-shadow: 0 4px 10px rgba(0,0,0,0.05); transition: border-color 0.5s;}
         .search-input { flex: 1; border: none; outline: none; font-size: 1rem; padding: 5px; }
-        .btn-camera { font-size: 1.5rem; background: none; border: none; cursor: pointer; padding: 5px; }
         .tracker-box { background: white; padding: 20px; margin: 0 20px 25px; border-radius: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); text-align: center; }
         .streak-info { font-size: 1.1rem; font-weight: bold; color: var(--accent-color); margin-bottom: 15px; transition: color 0.5s;}
         .week-circles { display: flex; justify-content: space-between; }
@@ -207,7 +207,6 @@
         
         .placeholder-cover { width: 100%; height: 100%; background: #eee; display: flex; align-items: center; justify-content: center; text-align: center; font-size: 0.8rem; color: #555; padding: 5px; font-weight: bold; border-radius: 4px; overflow: hidden; }
         .btn-delete-red { background: #ffebee; color: #d32f2f; border: 1px solid #d32f2f; padding: 10px; border-radius: 5px; width: 100%; margin-top: 20px; cursor: pointer; font-weight: bold; }
-        #scanner-container { width: 100%; height: 250px; background: black; overflow: hidden; position: relative; }
     </style>
 </head>
 
@@ -243,6 +242,7 @@
                 <input type="email" id="login-email" class="auth-input" placeholder="이메일">
                 <input type="password" id="login-pw" class="auth-input" placeholder="비밀번호">
                 <button class="btn-auth-submit" onclick="window.handleLogin()">로그인</button>
+                <div class="auth-switch" onclick="window.handlePasswordReset()">비밀번호를 잊으셨나요?</div>
                 <div class="auth-switch" onclick="window.switchAuthMode('signup')">계정이 없으신가요? 회원가입</div>
             </div>
             <div id="signup-form" style="display:none;">
@@ -269,8 +269,12 @@
         <div id="tab-home" class="tab-content active">
             <div class="home-search-box">
                 <span style="font-size:1.2rem;">🔍</span>
-                <input type="text" class="search-input" placeholder="도서 검색 (제목, 작가, 바코드)" onclick="window.openSearch()" readonly>
-                <button class="btn-camera" onclick="window.openScanner()">📷</button>
+                <input type="text" class="search-input" placeholder="도서 검색 (제목, 작가, ISBN)" onclick="window.openSearch()" readonly>
+            </div>
+            <div class="backup-actions">
+                <button onclick="window.exportReadingBackup()">💾 내 독서 기록 백업하기 (.json)</button>
+                <button onclick="document.getElementById('backupRestoreInput').click()">📂 백업 파일에서 복원하기</button>
+                <input id="backupRestoreInput" type="file" accept=".json,application/json" style="display:none" onchange="window.importReadingBackup(this)">
             </div>
             <div class="tracker-box">
                 <div class="streak-info" id="streakDisplay">🔥 0일 연속 독서 중</div>
@@ -380,6 +384,13 @@
         <!-- 탭 5: 랭킹 -->
         <div id="tab-stats" class="tab-content">
             <div style="padding:20px;">
+                <div class="rank-box"><div class="rank-title">📖 나의 독서 현황</div><div id="readingSummary" style="line-height:2; font-size:0.95rem;"></div></div>
+                <div class="rank-box">
+                    <div class="rank-title">🎯 올해 독서 목표</div>
+                    <div id="readingGoalSummary" style="margin-bottom:10px;"></div>
+                    <div class="progress-bar" style="height:12px; margin-bottom:15px;"><div id="readingGoalProgress" class="progress-fill"></div></div>
+                    <button onclick="window.editReadingGoal()" style="background:white;border:1px solid var(--primary-color);color:var(--primary-color);padding:10px;border-radius:9px;cursor:pointer;">목표 권수 변경</button>
+                </div>
                 <div class="rank-box"><div class="rank-title">🏆 선호 분야 TOP 5</div><div id="rankCategory"></div></div>
                 <div class="rank-box"><div class="rank-title">✍️ 최애 작가 TOP 5</div><div id="rankAuthor"></div></div>
                 <div class="rank-box"><div class="rank-title">🏢 선호 출판사 TOP 5</div><div id="rankPublisher"></div></div>
@@ -399,18 +410,12 @@
     <div id="searchModal" class="full-modal">
         <div class="search-header">
             <button onclick="document.getElementById('searchModal').style.display='none'" style="font-size:1.5rem; background:none; border:none; color:var(--primary-color);">&larr;</button>
-            <input type="text" id="searchInput" placeholder="도서 검색 (제목, 작가, 바코드 번호)" onkeypress="if(event.key==='Enter') window.searchBooks()">
+            <input type="text" id="searchInput" placeholder="책 제목, 작가, ISBN" onkeypress="if(event.key==='Enter') window.searchBooks()">
             <button onclick="window.searchBooks()" style="background:var(--accent-color); color:white; border:none; padding:0 15px; border-radius:5px;">검색</button>
         </div>
         <div id="searchResultList"></div>
-    </div>
-
-    <!-- 바코드 스캐너 모달 -->
-    <div id="scannerModal" class="modal-overlay">
-        <div class="modal-box" style="max-width:500px;">
-            <h3 style="color:var(--primary-color);">📷 바코드 스캔</h3>
-            <div id="scanner-container" style="width: 100%; height: 250px;"></div>
-            <button onclick="window.closeScanner()" style="padding:10px; background:#eee; border:none; border-radius:5px; width:100%; margin-top:10px; font-weight:bold;">닫기</button>
+        <div style="padding:10px 20px 25px; text-align:center;">
+            <button onclick="window.addBookManually()" style="background:white; border:1px solid var(--primary-color); color:var(--primary-color); border-radius:9px; padding:12px 18px; font-weight:bold; width:100%;">＋ 검색되지 않는 책 직접 등록</button>
         </div>
     </div>
 
@@ -526,7 +531,7 @@
 
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
         import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
-        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
+        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyCfalVdpUZ0YaFjt6_gaOBvq1TeIzb40eg",
@@ -544,6 +549,12 @@
             const app = initializeApp(firebaseConfig);
             const firestore = getFirestore(app);
             auth = getAuth(app);
+            window.searchKakaoCatalog = async (query, isbn) => {
+                const { getFunctions, httpsCallable } = await import('https://www.gstatic.com/firebasejs/9.22.0/firebase-functions.js');
+                const functions = getFunctions(app, 'asia-northeast3');
+                const result = await httpsCallable(functions, 'searchKakaoBooks')({query, isbn});
+                return Array.isArray(result.data?.books) ? result.data.books : [];
+            };
 
             const loadTimer = setTimeout(() => {
                 const loader = document.getElementById('loading-screen');
@@ -575,6 +586,19 @@
                 catch(e) { alert("로그인 실패: 이메일과 비밀번호를 확인해주세요."); }
             };
 
+            window.handlePasswordReset = async () => {
+                const existing = document.getElementById('login-email').value.trim();
+                const email = existing || prompt('가입할 때 사용한 이메일을 입력해주세요.');
+                if(!email) return;
+                try {
+                    await sendPasswordResetEmail(auth, email.trim());
+                    alert('비밀번호 재설정 메일을 요청했어요. 메일함과 스팸함을 확인해주세요.');
+                } catch(e) {
+                    console.error('Password reset request failed:',e.code);
+                    alert('재설정 메일을 요청하지 못했어요. 이메일과 네트워크 상태를 확인해주세요.');
+                }
+            };
+
             window.handleSignup = async () => {
                 const email = document.getElementById('signup-email').value;
                 const pw = document.getElementById('signup-pw').value;
@@ -600,6 +624,8 @@
 
         window.API_KEY = 'AIzaSyB9SjdXwflGS-oUZfmaVGE1vWhBEahY4L0';
         window.ALADIN_KEY = 'ttbyulim12041101001'; 
+        // Enable after deploying the accompanying Firebase callable function.
+        window.KAKAO_SEARCH_ENABLED = false;
         
         window.db = { reading: [], library: [], wish: [], toread: [], quotes: [], logs: [], voca: [] };
         window.currentSearchResults = [];
@@ -620,7 +646,8 @@
                             toread: window.sanitizeArray(d.toread),
                             quotes: window.sanitizeArray(d.quotes),
                             voca: window.sanitizeArray(d.voca),
-                            logs: (Array.isArray(d.logs) ? d.logs : []).filter(item => typeof item === 'string') 
+                            logs: (Array.isArray(d.logs) ? d.logs : []).filter(item => typeof item === 'string'),
+                            readingGoal: Number.isInteger(d.readingGoal) && d.readingGoal > 0 ? d.readingGoal : 20
                         };
                         window.db.library.sort((a,b) => {
                             if(!a || !a.date) return 1;
@@ -636,8 +663,18 @@
             if(window.initUI) window.initUI();
         }
 
-        window.save = async function() {
-            if(dbRef) { try { await setDoc(dbRef, window.db); } catch(e) { console.error(e); } }
+        let pendingSave = Promise.resolve();
+        window.save = function() {
+            if(!dbRef) return Promise.reject(new Error('로그인 정보가 없습니다.'));
+            // Capture each edit at save time and serialize writes to avoid out-of-order overwrites.
+            const targetRef = dbRef;
+            const snapshot = JSON.parse(JSON.stringify(window.db));
+            pendingSave = pendingSave.catch(() => {}).then(() => setDoc(targetRef, snapshot));
+            return pendingSave.catch(e => {
+                console.error('저장 실패:', e);
+                alert('독서 기록을 저장하지 못했어요. 인터넷 연결을 확인하고 다시 시도해주세요.');
+                throw e;
+            });
         }
     </script>
 
@@ -655,7 +692,6 @@
         window.curDate = new Date();
         window.currentAction = null;
         window.targetIndex = null;
-        window.html5QrcodeScanner = null;
 
         function getLocalYYYYMMDD(dateObj) {
             const offset = dateObj.getTimezoneOffset() * 60000;
@@ -703,12 +739,74 @@
         }
 
         function getCoverHtml(url, title) {
-            let safeTitle = title ? String(title).replace(/"/g, '&quot;').replace(/'/g, '&#39;') : '제목없음';
+            let safeTitle = escapeHtml(title || '제목없음');
             if (!url || typeof url !== 'string' || url.includes('placeholder') || url.includes('noimage') || url.includes('no_cover') || url === 'undefined') {
                 return `<div class="placeholder-cover" style="width:100%; height:100%; background:#eee; display:flex; align-items:center; justify-content:center; text-align:center; padding:5px; font-size:0.8rem; color:#555; border-radius:4px; font-weight:bold; overflow:hidden;">${safeTitle}</div>`;
             }
-            return `<img src="${url}" draggable="false" style="width:100%; height:100%; object-fit:cover; border-radius:4px; pointer-events:none;" title="${safeTitle}">`;
+            const safeUrl = /^(https?:\/\/|data:image\/(png|jpeg|webp);base64,)/i.test(url) ? escapeHtml(url) : '';
+            if(!safeUrl) return `<div class="placeholder-cover">${safeTitle}</div>`;
+            return `<img src="${safeUrl}" draggable="false" style="width:100%; height:100%; object-fit:cover; border-radius:4px; pointer-events:none;" title="${safeTitle}">`;
         }
+        function escapeHtml(value) {
+            return String(value ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+        }
+
+        // Export the user's exact existing schema, including optional/new fields.
+        window.exportReadingBackup = function() {
+            if(!window.db) return alert('독서 기록을 불러온 후 다시 시도해주세요.');
+            const backup = {
+                format: 'yurim-reading-log-backup', version: 1,
+                exportedAt: new Date().toISOString(),
+                data: JSON.parse(JSON.stringify(window.db))
+            };
+            const blob = new Blob([JSON.stringify(backup,null,2)], {type:'application/json'});
+            const url = URL.createObjectURL(blob);
+            const anchor = document.createElement('a');
+            anchor.href = url;
+            anchor.download = `my-reading-log-${getLocalYYYYMMDD(new Date())}.json`;
+            document.body.appendChild(anchor);
+            anchor.click();
+            anchor.remove();
+            setTimeout(() => URL.revokeObjectURL(url), 2000);
+        };
+
+        window.importReadingBackup = async function(input) {
+            const file = input.files && input.files[0];
+            input.value = '';
+            if(!file) return;
+            if(file.size > 15 * 1024 * 1024) return alert('백업 파일이 너무 커요. 15MB 이하인지 확인해주세요.');
+            try {
+                const parsed = JSON.parse(await file.text());
+                if(parsed?.format !== 'yurim-reading-log-backup' || parsed.version !== 1 || !parsed.data) {
+                    return alert('이 앱에서 만든 JSON 백업 파일만 복원할 수 있어요.');
+                }
+                const data = parsed.data;
+                const keys = ['reading','library','wish','toread','quotes','logs','voca'];
+                if(!keys.every(key => Array.isArray(data[key]))) return alert('백업 데이터가 올바르지 않습니다.');
+                const message = `백업 파일: 완독 ${data.library.length}권, 읽는 중 ${data.reading.length}권, 문장 ${data.quotes.length}개.\n\n현재 계정의 모든 독서 데이터가 이 백업 파일의 내용으로 교체됩니다. 먼저 현재 데이터를 백업했는지 확인해주세요. 계속할까요?`;
+                if(!confirm(message)) return;
+                // Save a copy of the current dataset before any destructive replacement.
+                window.exportReadingBackup();
+                const previous = window.db;
+                window.db = {...data, readingGoal: Number.isInteger(data.readingGoal) && data.readingGoal > 0 ? data.readingGoal : 20};
+                try { await window.save(); }
+                catch(e) { window.db = previous; return; }
+                window.initUI();
+                alert('독서 기록을 복원했어요. 기존 데이터 백업 파일도 다운로드했습니다.');
+            } catch(e) {
+                console.error('백업 복원 오류:',e);
+                alert('백업 파일을 읽지 못했어요. JSON 파일을 확인해주세요.');
+            }
+        };
+
+        window.editReadingGoal = async function() {
+            const raw = prompt('올해 목표 완독 권수를 입력해주세요.', String(window.db.readingGoal || 20));
+            if(raw === null) return;
+            const count = Number(raw);
+            if(!Number.isInteger(count) || count < 1 || count > 1000) return alert('목표는 1~1000권 사이의 숫자로 입력해주세요.');
+            window.db.readingGoal = count;
+            try { await window.save(); window.renderStats(); } catch(e) { /* Save reports errors. */ }
+        };
 
         function updateLogs() {
             let activeDates = new Set();
@@ -739,6 +837,7 @@
                     if(b.lastDate === todayStr) { b.lastDate = null; b.current = 0; }
                     if(b.startDate === todayStr) { b.startDate = null; }
                     if(b.history) b.history = b.history.filter(d => d !== todayStr);
+                    if(b.pageRecords) delete b.pageRecords[todayStr];
                 });
                 updateLogs(); await window.save(); window.renderHome(); window.renderCalendar(); alert("오늘 기록이 초기화되었습니다.");
             }
@@ -751,29 +850,6 @@
                     await window.save(); location.reload();   
                 }
             }
-        }
-
-        window.openScanner = function() {
-            document.getElementById('scannerModal').style.display = 'flex';
-            if(!window.html5QrcodeScanner) { window.html5QrcodeScanner = new Html5Qrcode("scanner-container"); }
-            window.html5QrcodeScanner.start(
-                { facingMode: "environment" }, 
-                { fps: 10, qrbox: { width: 250, height: 150 } }, 
-                (decodedText) => {
-                    window.closeScanner(); 
-                    document.getElementById('searchInput').value = decodedText; 
-                    window.openSearch(); 
-                    window.searchBooks();
-                }
-            ).catch(err => {
-                console.error("Camera Error:", err);
-                alert("카메라를 사용할 수 없습니다. 브라우저 설정에서 카메라 권한을 허용해주세요!");
-                document.getElementById('scannerModal').style.display = 'none';
-            });
-        }
-        window.closeScanner = function() {
-            if(window.html5QrcodeScanner) window.html5QrcodeScanner.stop().then(() => document.getElementById('scannerModal').style.display = 'none').catch(console.log);
-            else document.getElementById('scannerModal').style.display = 'none';
         }
 
         async function processImageUpload(file) {
@@ -896,10 +972,13 @@
             else if(window.currentAction === 'record') {
                 const readP = parseInt(document.getElementById('pageInput').value) || 0;
                 let b = window.db.reading[window.targetIndex];
+                if(readP < 0 || readP > b.total) return alert('읽은 페이지가 총 페이지 수를 넘지 않는지 확인해주세요.');
                 b.current = Math.min(readP, b.total);
                 b.lastDate = date; 
                 if(!b.history) b.history = [];
                 if(!b.history.includes(date)) b.history.push(date);
+                if(!b.pageRecords) b.pageRecords = {};
+                b.pageRecords[date] = readP;
             }
             else if(window.currentAction === 'edit_reading') {
                 const page = parseInt(document.getElementById('pageInput').value) || 0;
@@ -909,6 +988,8 @@
                 b.lastDate = date; 
                 if(!b.history) b.history = [];
                 if(!b.history.includes(date)) b.history.push(date);
+                if(!b.pageRecords) b.pageRecords = {};
+                b.pageRecords[date] = page;
                 b.publisher = pub; b.category = cat;
                 if(newCoverData) b.cover = newCoverData;
             } 
@@ -1062,119 +1143,136 @@
 
         window.openSearch = function() { document.getElementById('searchModal').style.display='block'; document.getElementById('searchInput').focus(); }
         
-        window.searchBooks = function() {
-            let q = document.getElementById('searchInput').value.trim(); 
-            if(!q) return;
-
-            const list = document.getElementById('searchResultList'); 
-            list.innerHTML = '<div style="padding:20px; text-align:center; color:var(--primary-color);">알라딘 서점에서 찾는 중... 📚</div>';
-
-            let isBarcode = /^\d{10,13}$/.test(q);
-            let queryType = 'Keyword'; 
-
-            let oldScript = document.getElementById('aladin-jsonp');
-            if(oldScript) oldScript.remove();
-
-            window.aladinFallbackFired = false;
-            window.aladinTimeout = setTimeout(() => {
-                window.aladinFallbackFired = true;
-                window.searchGoogleFallback(q, isBarcode);
-            }, 3500); 
-
-            let script = document.createElement('script');
-            script.id = 'aladin-jsonp';
-            script.src = `https://www.aladin.co.kr/ttb/api/ItemSearch.aspx?ttbkey=${window.ALADIN_KEY}&Query=${encodeURIComponent(q)}&QueryType=${queryType}&MaxResults=15&start=1&SearchTarget=Book&output=js&Version=20131101&CallBack=aladinCallback`;
-            document.body.appendChild(script);
-        }
-
-        window.aladinCallback = function(data) {
-            if(window.aladinFallbackFired) return; 
-            clearTimeout(window.aladinTimeout); 
-
-            const list = document.getElementById('searchResultList');
-            if(!data || !data.item || data.item.length === 0) {
-                 window.searchGoogleFallback(document.getElementById('searchInput').value.trim(), /^\d{10,13}$/.test(document.getElementById('searchInput').value.trim()));
-                 return;
-            }
-
-            window.currentSearchResults = data.item.map((item, i) => {
-                let cat = '기타';
-                if(item.categoryName) {
-                    let parts = item.categoryName.split('>');
-                    cat = parts.length > 1 ? parts[1].split('/')[0] : parts[0];
-                }
-                return { id: i, title: item.title, author: item.author, publisher: item.publisher, cover: item.cover, category: cat, total: 300, current: 0, isbn: item.isbn13 };
-            });
-
-            window.renderSearchResults(list);
-
-            window.currentSearchResults.forEach(b => {
-                if(b.isbn) {
-                    fetch(`https://www.googleapis.com/books/v1/volumes?q=isbn:${b.isbn}&key=${window.API_KEY}`)
-                    .then(r => r.json())
-                    .then(gData => {
-                        let pageSpan = document.getElementById(`page_txt_${b.id}`);
-                        if (gData.items && gData.items[0].volumeInfo.pageCount) {
-                            b.total = gData.items[0].volumeInfo.pageCount;
-                            if(pageSpan) pageSpan.innerText = b.total + '쪽';
-                        } else {
-                            if(pageSpan) pageSpan.innerText = '300쪽 (기본)';
-                        }
-                    }).catch(e => {
-                        let pageSpan = document.getElementById(`page_txt_${b.id}`);
-                        if(pageSpan) pageSpan.innerText = '300쪽 (기본)';
-                    });
-                }
+        // Query both catalogs immediately. Show whichever answers first; merge late results.
+        let activeSearch = 0;
+        let lastSearchTimer = null;
+        const catalogCache = new Map();
+        function searchAladin(q, isbn) {
+            return new Promise(resolve => {
+                const callbackName = `readingAladin_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+                const script = document.createElement('script');
+                let finished = false;
+                const finish = data => {
+                    if(finished) return;
+                    finished = true;
+                    clearTimeout(timer);
+                    script.remove();
+                    delete window[callbackName];
+                    resolve(data && Array.isArray(data.item) ? data.item.map(item => {
+                        const parts = (item.categoryName || '').split('>');
+                        return { title: item.title || '제목 미상', author: item.author || '작자 미상',
+                            publisher: item.publisher || '미상', cover: item.cover || '',
+                            category: (parts[1] || parts[0] || '기타').split('/')[0],
+                            total: Number(item.subInfo?.itemPage) || 300, current: 0,
+                            isbn: item.isbn13 || item.isbn || '' };
+                    }) : []);
+                };
+                const timer = setTimeout(() => finish(null), 4500);
+                window[callbackName] = finish;
+                script.onerror = () => finish(null);
+                const endpoint = isbn ? 'ItemLookUp.aspx' : 'ItemSearch.aspx';
+                const params = new URLSearchParams({ ttbkey:window.ALADIN_KEY, output:'js', Version:'20131101', CallBack:callbackName });
+                if(isbn) { params.set('ItemId',q); params.set('ItemIdType','ISBN'); params.set('OptResult',''); }
+                else { params.set('Query',q); params.set('QueryType','Keyword'); params.set('MaxResults','20'); params.set('start','1'); params.set('SearchTarget','Book'); }
+                script.src = `https://www.aladin.co.kr/ttb/api/${endpoint}?${params}`;
+                document.body.appendChild(script);
             });
         }
-
-        window.searchGoogleFallback = async function(q, isBarcode) {
-            const list = document.getElementById('searchResultList');
-            list.innerHTML = '<div style="padding:20px; text-align:center; color:var(--primary-color);">구글 도서에서 찾는 중... 📚</div>';
+        async function searchGoogle(q, isbn) {
+            const controller = new AbortController();
+            const timer = setTimeout(() => controller.abort(), 5500);
             try {
-                let apiQuery = isBarcode ? `isbn:${q}` : encodeURIComponent(q);
-                let res = await fetch(`https://www.googleapis.com/books/v1/volumes?q=${apiQuery}&langRestrict=ko&maxResults=15&key=${window.API_KEY}`);
-                let data = await res.json();
-                
-                if (isBarcode && (!data.items || data.items.length === 0)) {
-                    res = await fetch(`https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(q)}&langRestrict=ko&maxResults=15&key=${window.API_KEY}`);
-                    data = await res.json();
-                }
-                
-                if(!data.items || data.items.length === 0) {
-                    list.innerHTML = '<div style="padding:20px; text-align:center; color:#666;">검색 결과가 없습니다.</div>';
-                    return;
-                }
-                
-                function translateGoogleCat(categories) {
-                    if(!categories || categories.length === 0) return '기타';
-                    let cat = categories[0];
-                    if(/[가-힣]/.test(cat)) return cat;
-                    const map = {
-                        'science fiction': 'SF/과학소설', 'epistolary novel': '서간체 소설', 'metaphysical fiction': '형이상학 소설',
-                        'fiction': '소설', 'novel': '소설', 'poetry': '시', 'history': '역사', 'science': '과학',
-                        'business': '경제/경영', 'economics': '경제', 'self-help': '자기계발', 'essay': '에세이',
-                        'biography': '전기/위인전', 'computers': 'IT/컴퓨터', 'philosophy': '철학', 'psychology': '심리학',
-                        'religion': '종교', 'art': '예술', 'fantasy': '판타지', 'romance': '로맨스', 'thriller': '스릴러',
-                        'mystery': '미스터리', 'juvenile': '아동/청소년', 'young adult': '청소년', 'health': '건강', 'comics': '만화'
-                    };
-                    let lowerCat = cat.toLowerCase();
-                    for(let key in map) { if(lowerCat.includes(key)) return map[key]; }
-                    return cat;
-                }
-
-                window.currentSearchResults = data.items.map((item, i) => {
-                    const info = item.volumeInfo;
-                    return {
-                        id: i, title: info.title || '제목 미상', author: info.authors ? info.authors[0] : '작자 미상',
-                        publisher: info.publisher || '미상', cover: info.imageLinks ? info.imageLinks.thumbnail : '',
-                        category: translateGoogleCat(info.categories), total: info.pageCount || 300, current: 0, isbn: ''
-                    };
+                const params = new URLSearchParams({ q: isbn ? `isbn:${q}` : q, maxResults:'25', printType:'books', key:window.API_KEY });
+                // No langRestrict: it hides Korean editions with missing/misclassified language tags.
+                const res = await fetch(`https://www.googleapis.com/books/v1/volumes?${params}`, {signal:controller.signal});
+                if(!res.ok) throw new Error(`Google Books HTTP ${res.status}`);
+                const data = await res.json();
+                return (data.items || []).map(item => {
+                    const info = item.volumeInfo || {};
+                    const ids = info.industryIdentifiers || [];
+                    const isbnId = ids.find(x => x.type === 'ISBN_13') || ids.find(x => x.type === 'ISBN_10');
+                    return { title:info.title || '제목 미상', author:(info.authors || ['작자 미상']).join(', '),
+                        publisher:info.publisher || '미상', cover:info.imageLinks?.thumbnail?.replace('http:', 'https:') || '',
+                        category:info.categories?.[0] || '기타', total:info.pageCount || 300,
+                        current:0, isbn:isbnId?.identifier || '' };
                 });
-                window.renderSearchResults(list);
-            } catch(e) {
-                list.innerHTML = '<div style="padding:20px; text-align:center; color:#d84315;">서버 연결에 실패했습니다.<br>잠시 후 다시 시도해주세요.</div>';
+            } catch(e) { console.warn('Google Books 검색 실패:', e); return []; }
+            finally { clearTimeout(timer); }
+        }
+        async function searchKakao(q,isbn) {
+            if(!window.KAKAO_SEARCH_ENABLED || !window.searchKakaoCatalog) return [];
+            try { return await window.searchKakaoCatalog(q,isbn); }
+            catch(e) { console.warn('카카오 도서 검색 연결 실패:',e); return []; }
+        }
+        function mergeCatalogResults(groups, query) {
+            const seen = new Map();
+            const normalized = text => String(text || '').toLowerCase().replace(/[\s\W_]+/g,'');
+            for(const books of groups) for(const book of books) {
+                const key = book.isbn ? `isbn:${book.isbn.replace(/[^0-9X]/gi,'')}` : `book:${normalized(book.title)}:${normalized(book.author)}`;
+                // Merge title/author duplicates even when only one catalog has an ISBN.
+                const titleKey = `book:${normalized(book.title)}:${normalized(book.author)}`;
+                const previousKey = seen.has(key) ? key : (seen.has(titleKey) ? titleKey : null);
+                if(previousKey) {
+                    const previous = seen.get(previousKey);
+                    if(previous.total === 300 && book.total !== 300) previous.total = book.total;
+                    if(!previous.cover && book.cover) previous.cover = book.cover;
+                    if(!previous.isbn && book.isbn) previous.isbn = book.isbn;
+                } else {
+                    const copy = {...book};
+                    seen.set(key,copy);
+                    if(key !== titleKey) seen.set(titleKey,copy);
+                }
             }
+            const unique = [...new Set(seen.values())];
+            const needle = normalized(query);
+            return unique.sort((a,b) => Number(normalized(b.title).includes(needle)) - Number(normalized(a.title).includes(needle))).slice(0,40).map((book,id) => ({...book,id}));
+        }
+        window.searchBooks = async function() {
+            const q = document.getElementById('searchInput').value.trim();
+            if(!q) return;
+            const requestId = ++activeSearch;
+            const list = document.getElementById('searchResultList');
+            const isbn = /^(?:\d{10}|\d{13})$/.test(q.replace(/[-\s]/g,''));
+            const term = isbn ? q.replace(/[-\s]/g,'') : q;
+            const cached = catalogCache.get(term.toLowerCase());
+            if(cached && Date.now() - cached.time < 5 * 60 * 1000) {
+                window.currentSearchResults = cached.results;
+                window.renderSearchResults(list);
+                return;
+            }
+            const kakaoEnabled = window.KAKAO_SEARCH_ENABLED;
+            const sourceCount = kakaoEnabled ? 3 : 2;
+            list.innerHTML = `<div style="padding:20px; text-align:center; color:var(--primary-color);">알라딘 · Google Books${kakaoEnabled ? ' · 카카오' : ''}에서 함께 찾는 중... 📚</div>`;
+            const groups = [[],[],[]];
+            let completed = 0;
+            const update = (index, results) => {
+                if(requestId !== activeSearch) return;
+                groups[index] = results;
+                completed++;
+                window.currentSearchResults = mergeCatalogResults(groups,term);
+                if(window.currentSearchResults.length) window.renderSearchResults(list);
+                else if(completed === sourceCount) list.innerHTML = '<div style="padding:20px; color:#666; text-align:center;">검색 결과가 없어요. 아래에서 직접 등록할 수 있어요.</div>';
+                if(completed === sourceCount && window.currentSearchResults.length) catalogCache.set(term.toLowerCase(),{time:Date.now(),results:window.currentSearchResults});
+            };
+            searchAladin(term,isbn).then(results => update(0,results));
+            searchGoogle(term,isbn).then(results => update(1,results));
+            if(kakaoEnabled) searchKakao(term,isbn).then(results => update(2,results));
+        };
+        window.searchGoogleFallback = (q) => { document.getElementById('searchInput').value=q; return window.searchBooks(); };
+        window.addBookManually = function() {
+            const title = prompt('책 제목을 입력해주세요.',document.getElementById('searchInput').value.trim());
+            if(!title || !title.trim()) return;
+            const author = prompt('작가 이름을 입력해주세요.','') || '작자 미상';
+            const publisher = prompt('출판사 (선택)','') || '미상';
+            const pageRaw = prompt('총 페이지 수를 입력해주세요. (나중에 수정 가능)','300');
+            if(pageRaw === null) return;
+            const total = Number(pageRaw);
+            if(!Number.isInteger(total) || total < 1 || total > 100000) return alert('페이지 수는 1 이상의 숫자로 입력해주세요.');
+            const book = { id:0, title:title.trim(), author:author.trim(),publisher:publisher.trim(),
+                cover:'', category:'기타',total,current:0,isbn:'' };
+            window.currentSearchResults = [book];
+            window.renderSearchResults(document.getElementById('searchResultList'));
+            alert('직접 등록할 책을 만들었어요! 아래에서 읽기 · 위시 · 예정을 선택해주세요.');
         };
 
         window.renderSearchResults = function(listElement) {
@@ -1184,17 +1282,17 @@
                 return;
             }
             window.currentSearchResults.forEach(b => {
-                let safeTitle = b.title ? String(b.title).replace(/"/g, '&quot;') : '';
+                let safeTitle = escapeHtml(b.title || '');
                 let img = getCoverHtml(b.cover, b.title);
                 let pageText = b.total > 0 ? `${b.total}쪽` : '페이지 확인중...';
                 listElement.innerHTML += `
                     <div class="result-item">
                         <div style="width:60px; height:90px; flex-shrink:0;">${img}</div>
                         <div style="flex:1;">
-                            <div style="font-weight:bold; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;" title="${safeTitle}">${b.title}</div>
-                            <div style="font-size:0.8rem; color:#666; margin-top:3px;">${b.author} | ${b.publisher}</div>
+                            <div style="font-weight:bold; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;" title="${safeTitle}">${safeTitle}</div>
+                            <div style="font-size:0.8rem; color:#666; margin-top:3px;">${escapeHtml(b.author)} | ${escapeHtml(b.publisher)}</div>
                             <div style="font-size:0.8rem; margin-top:3px;">
-                                <span style="color:var(--primary-color); font-weight:bold;">${b.category}</span> | 
+                                <span style="color:var(--primary-color); font-weight:bold;">${escapeHtml(b.category)}</span> | 
                                 <span id="page_txt_${b.id}" style="color:#888;">${pageText}</span>
                             </div>
                             <div class="result-actions" style="margin-top:10px;">
@@ -1502,6 +1600,17 @@
 
         window.renderStats = function() {
             const c={}, a={}, p={}; 
+            const finished = (window.db && window.db.library) || [];
+            const now = new Date();
+            const thisMonth = finished.filter(b => b?.date && b.date.startsWith(`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`)).length;
+            const thisYear = finished.filter(b => b?.date && b.date.startsWith(`${now.getFullYear()}-`)).length;
+            const summary = document.getElementById('readingSummary');
+            if(summary) summary.textContent = `올해 완독 ${thisYear}권  ·  이번 달 ${thisMonth}권  ·  전체 완독 ${finished.length}권  ·  읽는 중 ${window.db.reading.length}권`;
+            const target = window.db.readingGoal || 20;
+            const goalText = document.getElementById('readingGoalSummary');
+            if(goalText) goalText.textContent = `${thisYear} / ${target}권 달성 (${Math.round(thisYear / target * 100)}%)`;
+            const goalFill = document.getElementById('readingGoalProgress');
+            if(goalFill) goalFill.style.width = `${Math.min(100, thisYear / target * 100)}%`;
             if(window.db && window.db.library) {
                 window.db.library.forEach(b=>{ 
                     if(!b) return;
